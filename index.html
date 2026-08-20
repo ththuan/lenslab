@@ -1617,6 +1617,7 @@
   function logoutSession(){
     state.auth = null;
     state.googleAccessToken = null;
+    stopCamera();
     localStorage.removeItem('lenslab_auth');
     sessionStorage.removeItem('lenslab_google_access_token');
     showScreen('auth');
@@ -1983,20 +1984,36 @@
     });
   }
 
+  function stopCamera(){
+    if(state.stream){
+      state.stream.getTracks().forEach(t=>t.stop());
+      state.stream = null;
+    }
+    if(video){
+      video.pause();
+      video.srcObject = null;
+      try{ video.load(); }catch(e){}
+    }
+    if(noSignal) noSignal.classList.remove('hide');
+    if($('topStatus')){
+      $('topStatus').textContent = 'chưa kết nối';
+      $('topStatus').classList.remove('live');
+    }
+  }
+
   async function connectCamera(deviceId){
     hideErr();
     try{
       toast('Đang kết nối camera…');
+      stopCamera();
+      await new Promise(r=>setTimeout(r, 150));
       const stream = await getStreamWithFallback(deviceId);
       
-      if(state.stream){
-        state.stream.getTracks().forEach(t=>t.stop());
-      }
       state.stream = stream;
       video.srcObject = stream;
       video.muted = true;
       video.playsInline = true;
-      await video.play().catch(e=> console.warn('Video play catch:', e));
+      try{ await video.play(); }catch(e){ console.warn('Video play catch:', e); }
 
       const track = stream.getVideoTracks()[0];
       const settings = track.getSettings ? track.getSettings() : {};
@@ -2056,10 +2073,7 @@
 
   function goToProjects(){
     persistActiveShot();
-    if(state.stream){
-      state.stream.getTracks().forEach(t=>t.stop());
-      state.stream = null;
-    }
+    stopCamera();
     const badge = $('activeProjectBadge');
     if(badge) badge.style.display = 'none';
     $('topStatus').textContent = 'chưa kết nối';
