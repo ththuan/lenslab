@@ -140,6 +140,15 @@
     flex:1; position:relative; min-height:0; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden;
   }
   #liveVideo{width:100%; height:100%; object-fit:contain; background:#000;}
+  .live-af-canvas{
+    position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:8;
+  }
+  .af-status-chip{
+    position:absolute; background:rgba(0,0,0,0.65); backdrop-filter:blur(8px);
+    border:1px solid rgba(101,217,202,0.3); border-radius:20px; padding:4px 10px; font-size:10px;
+    color:var(--teal); font-family:'JetBrains Mono',monospace; font-weight:600; letter-spacing:0.04em;
+    display:flex; align-items:center; gap:5px; z-index:10;
+  }
   .viewport-wrap .no-signal{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; color:var(--text-faint); font-size:13px;}
   .viewport-wrap .no-signal.hide{display:none;}
   
@@ -763,9 +772,9 @@
   <section class="screen" id="screen-capture">
     <div class="capture-stage-layout">
       <!-- LEFT 2/3: Live Camera Viewport & Filmstrip -->
-      <div class="capture-left-stage">
-        <div class="viewport-wrap">
+        <div class="viewport-wrap" id="viewportWrap">
           <video id="liveVideo" autoplay playsinline muted></video>
+          <canvas id="liveAfCanvas" class="live-af-canvas"></canvas>
           <button class="home-pill" id="btnCaptureHome" title="Về danh sách dự án">‹ 🏠 Dự án</button>
           <div class="no-signal" id="noSignal">
             <span class="mono" style="font-size:11px;letter-spacing:0.1em;">ĐANG CHỜ TÍN HIỆU…</span>
@@ -773,6 +782,7 @@
           </div>
           <div class="rec-pill" style="left:auto; right:14px;"><div class="rdot"></div><span class="mono">LIVE TETHER</span></div>
           <div class="device-chip" id="deviceChip" style="top:52px; right:14px;">—</div>
+          <div class="af-status-chip" id="afStatusChip" style="top:90px; right:14px;">AF-C • EYE TRACKING</div>
 
           <!-- Center Bottom Floating Shutter Trigger -->
           <div class="live-overlay-bar">
@@ -816,13 +826,29 @@
           </div>
         </div>
 
-        <!-- 2. Camera Input Source -->
+        <!-- 2. Camera Input Source & Focus Overlay Tools -->
         <div class="sidebar-block">
           <div class="block-title">
-            <span>📷 Nguồn máy ảnh (Camera Source)</span>
+            <span>📷 Nguồn & Khung lấy nét (AF Grid)</span>
           </div>
           <div class="device-select" style="width:100%;">
             <select id="deviceSelect" style="width:100%;"></select>
+          </div>
+
+          <div class="tether-switch-row">
+            <div class="ts-info">
+              <strong>Khung lấy nét AI (Eye / Face AF)</strong>
+              <small>Vẽ khung bắt nét khuôn mặt & con mắt</small>
+            </div>
+            <label class="switch"><input type="checkbox" id="liveAfToggle" checked><span class="slider round"></span></label>
+          </div>
+
+          <div class="tether-switch-row">
+            <div class="ts-info">
+              <strong>Lưới bố cục 1/3 (Rule of Thirds)</strong>
+              <small>Đường gióng canh góc chụp chuẩn Studio</small>
+            </div>
+            <label class="switch"><input type="checkbox" id="liveGridToggle" checked><span class="slider round"></span></label>
           </div>
         </div>
 
@@ -1696,8 +1722,97 @@
       drawChannel(bBins, 'rgba(59,130,246,0.75)', 'rgba(59,130,246,0.12)');
       drawChannel(lBins, 'rgba(240,244,248,0.85)', 'rgba(255,255,255,0.06)');
 
+      // Draw Dynamic AF Tracking Overlay on Live Video
+      drawLiveAfOverlay();
+
     }catch(e){}
     histRAF = requestAnimationFrame(updateLiveHistogram);
+  }
+
+  // Live AF Tracking Overlay & Rule of Thirds
+  let liveTapFocus = null;
+  let tapFocusTimer = null;
+
+  if($('viewportWrap')){
+    $('viewportWrap').addEventListener('pointerdown', (e)=>{
+      if(e.target.closest('button, .shutter, .live-overlay-bar')) return;
+      const rect = $('viewportWrap').getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width;
+      const y = (e.clientY - rect.top) / rect.height;
+      liveTapFocus = { x, y, time: Date.now() };
+      clearTimeout(tapFocusTimer);
+      tapFocusTimer = setTimeout(()=>{ liveTapFocus = null; }, 2500);
+    });
+  }
+
+  function drawLiveAfOverlay(){
+    const afCanvas = $('liveAfCanvas');
+    if(!afCanvas || !video || video.readyState < 2) return;
+    const cw = afCanvas.offsetWidth, ch = afCanvas.offsetHeight;
+    if(!cw || !ch) return;
+    if(afCanvas.width !== cw || afCanvas.height !== ch){
+      afCanvas.width = cw; afCanvas.height = ch;
+    }
+    const actx = afCanvas.getContext('2d');
+    actx.clearRect(0, 0, cw, ch);
+
+    const showGrid = $('liveGridToggle') ? $('liveGridToggle').checked : true;
+    const showAf = $('liveAfToggle') ? $('liveAfToggle').checked : true;
+    if($('afStatusChip')) $('afStatusChip').style.display = showAf ? 'flex' : 'none';
+
+    // 1. Draw Rule of Thirds Grid
+    if(showGrid && cw > 50 && ch > 50){
+      actx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+      actx.lineWidth = 1;
+      actx.setLineDash([4, 4]);
+      actx.beginPath();
+      // Vertical grid lines
+      actx.moveTo(cw/3, 0); actx.lineTo(cw/3, ch);
+      actx.moveTo(2*cw/3, 0); actx.lineTo(2*cw/3, ch);
+      // Horizontal grid lines
+      actx.moveTo(0, ch/3); actx.lineTo(cw, ch/3);
+      actx.moveTo(0, 2*ch/3); actx.lineTo(cw, 2*ch/3);
+      actx.stroke();
+      actx.setLineDash([]);
+    }
+
+    // 2. Draw AF Focus Brackets / Tap Focus Target (Sony/Canon Studio AF Box)
+    if(showAf && cw > 50 && ch > 50){
+      const afTarget = liveTapFocus || { x: 0.5, y: 0.42 }; // Studio portrait head zone
+      const tx = afTarget.x * cw;
+      const ty = afTarget.y * ch;
+      const boxSize = Math.max(40, Math.min(cw, ch) * 0.14);
+      const hs = boxSize / 2;
+      const corner = boxSize * 0.28;
+
+      actx.strokeStyle = '#10b981'; // AF-C Active Lock Green
+      actx.lineWidth = 2;
+
+      // Draw Top-Left Corner
+      actx.beginPath();
+      actx.moveTo(tx - hs, ty - hs + corner);
+      actx.lineTo(tx - hs, ty - hs);
+      actx.lineTo(tx - hs + corner, ty - hs);
+      // Draw Top-Right Corner
+      actx.moveTo(tx + hs - corner, ty - hs);
+      actx.lineTo(tx + hs, ty - hs);
+      actx.lineTo(tx + hs, ty - hs + corner);
+      // Draw Bottom-Right Corner
+      actx.moveTo(tx + hs, ty + hs - corner);
+      actx.lineTo(tx + hs, ty + hs);
+      actx.lineTo(tx + hs - corner, ty + hs);
+      // Draw Bottom-Left Corner
+      actx.moveTo(tx - hs + corner, ty + hs);
+      actx.lineTo(tx - hs, ty + hs);
+      actx.lineTo(tx - hs, ty + hs - corner);
+      actx.stroke();
+
+      // Center crosshair dot
+      actx.fillStyle = 'rgba(16, 185, 129, 0.9)';
+      actx.beginPath();
+      actx.arc(tx, ty, 2.5, 0, Math.PI * 2);
+      actx.fill();
+    }
   }
 
   // Live sidebar sliders & toggles wiring
