@@ -599,6 +599,16 @@
   .empty-project{grid-column:1/-1;border:1px dashed #3a4047;border-radius:8px;padding:42px 20px;text-align:center;color:#858c94;background:#17191c;}
   .empty-project strong{display:block;color:#d6d9dc;font-size:14px;margin-bottom:7px;}
   
+  .library-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+  .library-card{background:#1a1d20;border:1px solid #30343a;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;}
+  .library-card img{width:100%;height:120px;object-fit:cover;display:block;background:#0e1012;flex-shrink:0;}
+  .library-card-body{padding:9px 11px 4px;}
+  .library-card-body .lc-name{font-size:12px;font-weight:600;color:#e6e8ea;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .library-card-body .lc-meta{font-size:10.5px;color:#7f8790;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .library-card-actions{display:flex;gap:6px;padding:6px 11px 11px;margin-top:auto;}
+  .library-card-actions button{flex:1;font-size:11px;padding:6px 4px;border:1px solid #3a4047;background:#24282d;color:#dfe1e3;border-radius:6px;cursor:pointer;}
+  .library-card-actions button.danger{color:#ef8f86;border-color:#5a3a36;}
+
   /* Project Modal */
   .project-modal{position:fixed;inset:0;background:rgba(0,0,0,.68);display:none;align-items:center;justify-content:center;padding:18px;z-index:80;}
   .project-modal.show{display:flex;}
@@ -744,6 +754,20 @@
     <div class="projects-body">
       <aside class="projects-sidebar"><div class="sidebar-label">Workspace</div><button class="side-link active"><span class="si">▦</span><span>Dự án</span></button><button class="side-link" id="btnLibrary"><span class="si">◫</span><span>Thư viện ảnh</span></button><button class="side-link" id="btnWorkspaceSettings"><span class="si">⚙</span><span>Cài đặt</span></button></aside>
       <main class="projects-main"><div class="projects-heading"><div><h2>Dự án chụp ảnh</h2><p>Tạo một phiên chụp tethering mới để chụp, AI tự động chỉnh và tải lên Google Drive.</p></div><button class="new-project-btn" id="btnNewProject">＋ Tạo dự án</button></div><div class="project-grid" id="projectGrid"><div class="empty-project" id="emptyProject"><strong>Chưa có dự án nào</strong><span>Tạo dự án đầu tiên để kết nối máy ảnh và bắt đầu buổi chụp.</span></div></div></main>
+    </div>
+  </section>
+
+  <!-- ============ LIBRARY ============ -->
+  <section class="screen projects-screen" id="screen-library">
+    <div class="projects-nav">
+      <div class="brand"><div class="dot"></div><span>Thư viện ảnh</span></div>
+      <div class="nav-right"><button class="account-logout" id="btnLibraryBack" style="font-size:12px;">← Dự án</button></div>
+    </div>
+    <div class="projects-body">
+      <main class="projects-main">
+        <div class="projects-heading"><div><h2>Thư viện ảnh</h2><p id="libraryCount">Đang tải…</p></div><button class="new-project-btn" id="btnLibraryClear">Xoá hết ảnh</button></div>
+        <div class="library-grid" id="libraryGrid"></div>
+      </main>
     </div>
   </section>
 
@@ -931,13 +955,7 @@
       </div>
       <div class="editor-toolbar-center"><span class="editor-state-dot"></span><span>Đang chỉnh sửa</span><span class="toolbar-divider"></span><span class="mono" id="activeZoomLevel">100%</span></div>
       <div class="editor-actions">
-        <button class="toolbar-btn" title="So sánh trước và sau" id="btnToolbarBefore">Trước / Sau</button>
-        <button class="toolbar-btn" title="Toàn màn hình" id="btnToolbarFullscreen">Toàn màn hình</button>
-        <button class="toolbar-export-btn" id="btnQuickExport">Export</button>
-      </div>
-    </div>
-      <div class="editor-toolbar-center"><span class="editor-state-dot"></span><span>Đang chỉnh sửa</span><span class="toolbar-divider"></span><span class="mono" id="activeZoomLevel">100%</span></div>
-      <div class="editor-actions">
+        <button class="toolbar-btn" title="Hoàn tác (Ctrl+Z)" id="btnUndo">↩ Hoàn tác</button>
         <button class="toolbar-btn" title="So sánh trước và sau" id="btnToolbarBefore">Trước / Sau</button>
         <button class="toolbar-btn" title="Toàn màn hình" id="btnToolbarFullscreen">Toàn màn hình</button>
         <button class="toolbar-export-btn" id="btnQuickExport">Export</button>
@@ -981,24 +999,6 @@
               <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Blemish Removal</span></div><button class="sec-reset" title="Reset">↺</button></div>
               <div class="evoto-section-body">
                 <div class="evoto-ctrl" data-key="freckleAcne"><div class="ctrl-top"><label>Freckle & Acne</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
-                <div class="evoto-ctrl" data-key="freckle"><div class="ctrl-top"><label>Freckle</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
-                <div class="evoto-ctrl" data-key="acne"><div class="ctrl-top"><label>Acne</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
-              </div>
-            </div>
-
-            <!-- Face Mole -->
-            <div class="evoto-section" data-section="facemole">
-              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Face Mole</span></div><button class="sec-reset" title="Reset">↺</button></div>
-              <div class="evoto-section-body">
-                <div class="evoto-toggle-row"><label>Tự động phát hiện & xóa nốt ruồi</label><label class="evoto-toggle"><input type="checkbox" data-key="faceMoleToggle"><i></i></label></div>
-              </div>
-            </div>
-
-            <!-- Body Blemish -->
-            <div class="evoto-section" data-section="bodyblemish">
-              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Body Blemish</span></div><button class="sec-reset" title="Reset">↺</button></div>
-              <div class="evoto-section-body">
-                <div class="evoto-ctrl" data-key="bodyBlemish"><div class="ctrl-top"><label>Body Blemish</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
               </div>
             </div>
 
@@ -1252,6 +1252,24 @@
   // Google OAuth Client ID mặc định gắn trực tiếp vào app
   const DEFAULT_GOOGLE_CLIENT_ID = '143172360902-2i46fvos8fr2i22l1mm9qot25lc19eht.apps.googleusercontent.com';
 
+  // ---------------- custom LUT persistence ----------------
+  function loadCustomLuts(){
+    try{
+      const raw = JSON.parse(localStorage.getItem('lenslab_custom_luts') || '[]');
+      return (Array.isArray(raw) ? raw : []).map(o => ({
+        name: o.name,
+        N: o.N || 33,
+        lut: Float32Array.from(o.lut || [])
+      })).filter(o => o.lut.length > 0);
+    }catch(e){ return []; }
+  }
+  function saveCustomLuts(){
+    try{
+      const data = state.customLuts.map(l => ({ name:l.name, N:l.N, lut: Array.from(l.lut) }));
+      localStorage.setItem('lenslab_custom_luts', JSON.stringify(data));
+    }catch(e){ toast('Không lưu được LUT (dung lượng quá lớn)'); }
+  }
+
   // ---------------- state ----------------
   const state = {
     stream: null,
@@ -1267,9 +1285,9 @@
     projects: JSON.parse(localStorage.getItem('lenslab_projects') || '[]'),
     faceLandmarker: null,
     mpLoading: null,
-    customLut: null,
-    customLutName: null,
+    customLuts: loadCustomLuts(),
     activeProject: null,
+    sessionFolderId: null,
     batchQueue: [],        // [{shotIndex, status: 'pending'|'processing'|'done'|'error'}]
     batchAutoMode: false,
     batchProcessing: false,
@@ -1283,8 +1301,7 @@
       exposure:0, contrast:0, highlights:0, shadows:0, clarity:0, vignette:0,
       saturation:0, warmth:0, tint:0, grain:0,
       skin:0, eye:0, teeth:0, redeye:0, undereye:0, blush:0, sharpen:0,
-      eyeenlarge:0, faceslim:0,
-      freckleAcne:0, freckle:0, acne:0, faceMoleToggle:0, bodyBlemish:0,
+      freckleAcne:0,
       faceShine:0, foreheadWrinkle:0, eyeWrinkle:0, glassesGlare:0,
       lut:'none', lutStrength:30,
       rotation:0, flipH:0, flipV:0, straighten:0,
@@ -1495,36 +1512,83 @@
     toast._t = setTimeout(()=> $('toast').classList.remove('show'), 2400);
   }
 
-  // ---------------- camera connect ----------------
+  // ---------------- camera connect (Optimized for iPad, iPhone & Android) ----------------
   const video = $('liveVideo');
   const noSignal = $('noSignal');
+  if(video){
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.muted = true;
+  }
+
+  async function getStreamWithFallback(deviceId){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      throw new Error('Trình duyệt không hỗ trợ truy cập Camera (yêu cầu https://)');
+    }
+
+    // Attempt 1: Specific deviceId (e.g. Capture Card)
+    if(deviceId){
+      try{
+        return await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: { deviceId: { ideal: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+        });
+      }catch(e){
+        console.warn('Attempt 1 (specific deviceId) failed, trying environment facingMode:', e);
+      }
+    }
+
+    // Attempt 2: Environment camera (Back camera / External USB Capture Card)
+    try{
+      return await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+      });
+    }catch(e){
+      console.warn('Attempt 2 (environment) failed, trying generic video:', e);
+    }
+
+    // Attempt 3: Any video source (Universal Fallback)
+    return await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: true
+    });
+  }
 
   async function connectCamera(deviceId){
     hideErr();
     try{
-      const constraints = {
-        audio:false,
-        video: deviceId ? {
-          deviceId:{exact:deviceId}, width:{ideal:3840}, height:{ideal:2160}
-        } : { width:{ideal:3840}, height:{ideal:2160} }
-      };
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      if(state.stream){ state.stream.getTracks().forEach(t=>t.stop()); }
+      toast('Đang kết nối camera…');
+      const stream = await getStreamWithFallback(deviceId);
+      
+      if(state.stream){
+        state.stream.getTracks().forEach(t=>t.stop());
+      }
       state.stream = stream;
       video.srcObject = stream;
-      await video.play().catch(()=>{});
+      video.muted = true;
+      video.playsInline = true;
+      await video.play().catch(e=> console.warn('Video play catch:', e));
+
       const track = stream.getVideoTracks()[0];
       const settings = track.getSettings ? track.getSettings() : {};
       state.activeDeviceId = settings.deviceId || deviceId || null;
       if(state.activeDeviceId){ localStorage.setItem('lenslab_device', state.activeDeviceId); }
-      $('deviceChip').textContent = track.label || 'Camera';
-      $('topStatus').textContent = 'đang phát trực tiếp';
-      $('topStatus').classList.add('live');
-      noSignal.classList.add('hide');
+      
+      if($('deviceChip')) $('deviceChip').textContent = track.label || 'Camera (Live)';
+      if($('topStatus')){
+        $('topStatus').textContent = 'đang phát trực tiếp';
+        $('topStatus').classList.add('live');
+      }
+      if(noSignal) noSignal.classList.add('hide');
+      
       await refreshDeviceList();
       showScreen('capture');
+      toast('Đã kết nối camera thành công ✓');
     }catch(err){
+      console.error('Camera connection error:', err);
       showErr(cameraErrorMessage(err));
+      toast('Lỗi camera: ' + (err.name || err.message || err));
     }
   }
 
@@ -2051,7 +2115,7 @@
     const fm = shot.faceMasks;
     const e = shot.edits;
     applyToneAndColor(out, w, h, e);
-    const skinAmt = Math.max(e.skin||0, e.freckleAcne||0, e.freckle||0, e.acne||0, e.bodyBlemish||0);
+    const skinAmt = Math.max(e.skin||0, e.freckleAcne||0);
     if(skinAmt > 0){ applySkinSmooth(out, w, h, skinAmt/100, fm); }
     if(e.eye > 0){ applyEyeBrighten(out, w, h, e.eye/100, fm); }
     if(e.teeth > 0){ applyTeethWhiten(out, w, h, e.teeth/100, fm); }
@@ -2288,7 +2352,7 @@
     const fm = currentMasks();
     const e = state.edits;
     applyToneAndColor(out, w, h, e);
-    const skinAmt = Math.max(e.skin||0, e.freckleAcne||0, e.freckle||0, e.acne||0, e.bodyBlemish||0);
+    const skinAmt = Math.max(e.skin||0, e.freckleAcne||0);
     if(skinAmt > 0){ applySkinSmooth(out, w, h, skinAmt/100, fm); }
     if(e.eye > 0){ applyEyeBrighten(out, w, h, e.eye/100, fm); }
     if(e.teeth > 0){ applyTeethWhiten(out, w, h, e.teeth/100, fm); }
@@ -3236,7 +3300,8 @@
     { id:'fuji-400h-clean', name:'04_Fuji_400H_Clean', group:'Ngoài trời', hint:'Xanh sạch, da sáng, cân bằng nắng.', look:{saturation:0.045, contrast:0.02, gain:[0.985,1.01,1.035], splitShadow:[-2,5,12], splitHighlight:[-4,6,10]} },
     { id:'fuji-400h-pastel', name:'05_Fuji_400H_Pastel', group:'Nắng gắt', hint:'Pastel nhẹ, giảm gắt khi nắng mạnh.', look:{saturation:-0.075, contrast:-0.12, exposure:2, lift:[13,12,15], gain:[0.99,1.01,1.02], splitShadow:[0,5,11], splitHighlight:[-5,7,12]} },
     { id:'event-natural', name:'06_Event_Natural', group:'Sự kiện', hint:'Trung tính, giữ màu trang phục ổn định.', look:{saturation:0.015, contrast:0.055, exposure:1, lift:[2,2,2], gain:[1.01,1.0,0.99], splitShadow:[2,3,4], splitHighlight:[3,3,3]} },
-    { id:'portrait-premium', name:'07_Portrait_Premium', group:'Khách hàng', hint:'Nổi khối vừa phải, da sạch sang trọng.', look:{saturation:0.075, contrast:0.095, exposure:1, lift:[2,1,2], gain:[1.03,1.0,0.98], splitShadow:[8,4,7], splitHighlight:[12,4,-4]} }
+    { id:'event-indoor', name:'07_Event_Indoor', group:'Hội trường', hint:'Ấm dưới đèn trong nhà, giảm xanh lá, sáng đều.', look:{saturation:0.02, contrast:0.02, exposure:2, gain:[1.05,0.99,0.94], splitShadow:[5,3,-2], splitHighlight:[6,3,-4]} },
+    { id:'portrait-premium', name:'08_Portrait_Premium', group:'Khách hàng', hint:'Nổi khối vừa phải, da sạch sang trọng.', look:{saturation:0.075, contrast:0.095, exposure:1, lift:[2,1,2], gain:[1.03,1.0,0.98], splitShadow:[8,4,7], splitHighlight:[12,4,-4]} }
   ];
 
   function makeLookFn(L){
@@ -3289,8 +3354,12 @@
   }
 
   function getLUT(id){
-    if(id === '__custom__') return state.customLut;
     if(!id || id === 'none') return null;
+    if(id.indexOf('custom:') === 0){
+      const name = id.slice(7);
+      const c = state.customLuts.find(l=>l.name===name);
+      return c ? {lut: c.lut, N: c.N} : null;
+    }
     if(lutCache[id]) return lutCache[id];
     const p = LUT_PRESETS.find(x=>x.id===id);
     if(!p || !p.look) return null;
@@ -3375,17 +3444,34 @@
       });
       grid.appendChild(b);
     });
-    if(state.customLut){
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'lut-chip' + (state.edits.lut === '__custom__' ? ' active' : '');
-      b.innerHTML = '<b>'+esc(state.customLutName || 'Custom LUT')+'</b><small>File .cube</small>';
-      b.addEventListener('click', ()=>{
-        state.edits.lut = '__custom__';
-        renderLutGrid();
-        renderPreview();
+    if(state.customLuts.length){
+      state.customLuts.forEach((c, i)=>{
+        const id = 'custom:' + c.name;
+        const w = document.createElement('div');
+        w.className = 'lut-chip' + (state.edits.lut === id ? ' active' : '');
+        w.style.cssText = 'position:relative;cursor:pointer;';
+        w.innerHTML = '<b>'+esc(c.name)+'</b><small>File .cube · ' + c.N + '³</small>';
+        w.addEventListener('click', ()=>{
+          state.edits.lut = id;
+          renderLutGrid();
+          renderPreview();
+        });
+        const del = document.createElement('span');
+        del.textContent = '×';
+        del.title = 'Xoá LUT này';
+        del.style.cssText = 'position:absolute;top:2px;right:6px;color:var(--danger);font-size:14px;line-height:1;';
+        del.addEventListener('click', (ev)=>{
+          ev.stopPropagation();
+          state.customLuts.splice(i, 1);
+          if(state.edits.lut === id) state.edits.lut = 'none';
+          saveCustomLuts();
+          renderLutGrid();
+          renderPreview();
+          toast('Đã xoá LUT ' + c.name);
+        });
+        w.appendChild(del);
+        grid.appendChild(w);
       });
-      grid.appendChild(b);
     }
   }
 
@@ -3398,12 +3484,15 @@
       try{
         const L = parseCube(String(reader.result));
         if(!L){ toast('File .cube không hợp lệ'); return; }
-        state.customLut = L;
-        state.customLutName = f.name.replace(/\.cube$/i, '');
-        state.edits.lut = '__custom__';
+        const name = f.name.replace(/\.cube$/i, '');
+        const exist = state.customLuts.findIndex(l=>l.name===name);
+        if(exist >= 0) state.customLuts.splice(exist, 1);
+        state.customLuts.push({ name, N: L.N, lut: L.lut });
+        saveCustomLuts();
+        state.edits.lut = 'custom:' + name;
         renderLutGrid();
         renderPreview();
-        toast('Đã nạp LUT: ' + state.customLutName);
+        toast('Đã nạp LUT: ' + name);
       }catch(err){ toast('Lỗi đọc LUT'); }
     };
     reader.onerror = ()=> toast('Không đọc được file LUT');
