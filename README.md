@@ -31,7 +31,7 @@ Trình duyệt chỉ cho phép truy cập camera khi trang được tải qua **
 2. Bật Live View hoặc quay phim trên D5500 để máy ảnh phát tín hiệu HDMI.
 3. Mở app → **Kết nối máy ảnh** → cho phép quyền camera → chọn đúng thiết bị (capture card) trong danh sách nếu có nhiều camera.
 4. Bấm nút chụp (nút tròn) để chụp khung hình hiện tại.
-5. App **tự động chỉnh ảnh bằng AI** ngay sau khi chụp: cân phơi sáng/tương phản/white balance, nhận diện khuôn mặt để làm mịn da + sáng mắt. Bạn vẫn chỉnh tay thêm được ở các tab Ánh sáng / Màu sắc / Làm mịn, thêm tone phim bằng tab **LUT** (11 bộ lọc + nhập file .cube), cắt/xoay/nắn thẳng ở tab **Cắt**, hoặc nhấn "Tự động" để chạy lại AI.
+5. App **tự động chỉnh ảnh bằng AI** ngay sau khi chụp: cân phơi sáng/tương phản/white balance, nhận diện khuôn mặt để retouch theo vùng. Bạn chỉnh tay thêm ở các tab: **Ánh sáng** (phơi sáng, tương phản, highlights/shadows, độ rõ, vignette), **Màu sắc** (bão hoà, ấm/lạnh, tint, hạt film), **Làm mịn** (da, sáng mắt, tẩy trắng răng, xoá mắt đỏ, giảm quầng thâm, má hồng, làm nét), **LUT** (11 bộ lọc + nhập file .cube), **Cắt** (crop/xoay/nắn thẳng). Hoặc nhấn "Tự động" để chạy lại AI.
 6. Xuất ảnh: **Lưu về iPad** (JPG vào Files/Photos) hoặc **⬆ Drive** (tải lên Google Drive — cần cài Client ID ở ⚙ Cài đặt, xem bên dưới). Làm bước này trước khi thoát app vì ảnh chỉ lưu tạm trong bộ nhớ.
 
 ## Mở ảnh RAW (NEF, ARW, CR2, DNG…)
