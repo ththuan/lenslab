@@ -259,6 +259,20 @@
   .crop-handle.ne{right:-11px; top:-11px; cursor:nesw-resize;}
   .crop-handle.sw{left:-11px; bottom:-11px; cursor:nesw-resize;}
   .crop-handle.se{right:-11px; bottom:-11px; cursor:nwse-resize;}
+  .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:80; padding:20px;}
+  .modal-backdrop.show{display:flex;}
+  .modal{background:var(--bg-panel); border:1px solid var(--border); border-radius:16px; width:100%; max-width:420px; max-height:82vh; display:flex; flex-direction:column; overflow:hidden;}
+  .modal-head{display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--border);}
+  .modal-title{font-weight:600; font-size:15px;}
+  .drive-crumbs{padding:10px 16px; font-size:12px; color:var(--text-dim); border-bottom:1px solid var(--border); white-space:nowrap; overflow-x:auto;}
+  .drive-crumbs b{color:var(--text); cursor:pointer;}
+  .drive-list{flex:1; overflow-y:auto; padding:8px; min-height:120px;}
+  .drive-item{display:flex; align-items:center; gap:10px; padding:12px; border-radius:10px; cursor:pointer; font-size:14px;}
+  .drive-item:active{background:var(--bg-elevated);}
+  .drive-item .fico{font-size:16px;}
+  .drive-empty{padding:20px; text-align:center; color:var(--text-faint); font-size:13px;}
+  .modal-actions{padding:12px 16px calc(12px + var(--safe-bottom)); border-top:1px solid var(--border); display:flex; gap:10px;}
+  .modal-actions .primary{flex:1;}
 
   /* mobile: stack panel below canvas */
   @media (max-width: 760px){
@@ -460,6 +474,20 @@
 </div>
 
 <div class="toast" id="toast"><div class="td"></div><span id="toastMsg"></span></div>
+
+<div class="modal-backdrop" id="driveModal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">Chọn thư mục lưu</span>
+      <button class="icon-btn" id="driveModalClose">✕</button>
+    </div>
+    <div class="drive-crumbs" id="driveCrumbs"></div>
+    <div class="drive-list" id="driveList"></div>
+    <div class="modal-actions">
+      <button class="primary" id="driveSaveHere">Lưu vào thư mục này</button>
+    </div>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -1331,9 +1359,12 @@
 
   function clampInt(v){ return v<-100?-100:(v>100?100:v); }
 
+  function clampAbs(v, m){ return v<-m?-m:(v>m?m:v); }
+
   function analyzeScene(data, w, h){
     const hist = new Float32Array(256);
-    let rSum=0, gSum=0, bSum=0, cnt=0;
+    let wr=0, wg=0, wb=0, wcnt=0;
+    let cnt = 0;
     const totalPix = w*h;
     const step = Math.max(1, (totalPix/300000)|0);
     for(let p=0; p<totalPix; p+=step){
@@ -1341,21 +1372,37 @@
       const r=data[i], g=data[i+1], b=data[i+2];
       const lum = 0.299*r+0.587*g+0.114*b;
       hist[Math.min(255, Math.round(lum))]++;
-      rSum+=r; gSum+=g; bSum+=b; cnt++;
+      const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+      if(mx > 40 && mx < 235 && (mx-mn) < 28){ wr+=r; wg+=g; wb+=b; wcnt++; }
+      cnt++;
     }
     if(cnt < 1000) return defaultEdits();
-    const avgR=rSum/cnt, avgG=gSum/cnt, avgB=bSum/cnt;
     function pct(q){ let acc=0, v=0; for(let k=0;k<256;k++){ acc+=hist[k]; if(acc/cnt>=q){ v=k; break; } } return v; }
-    const p1=pct(0.01), p50=pct(0.5), p99=pct(0.99);
+    const p1=pct(0.01), p99=pct(0.99);
     const e = defaultEdits();
-    e.exposure = clampInt(Math.round((118 - p50) / 1.3 * 0.85));
+
+    // Exposure: only correct clearly under-exposed (dim highlights) or hazy (lifted shadows)
+    let exposure = 0;
+    if(p99 < 178){ exposure = Math.round((178 - p99) * 0.5); }
+    else if(p1 > 68){ exposure = -Math.round((p1 - 68) * 0.4); }
+    e.exposure = clampAbs(exposure, 25);
+
     const spread = p99 - p1;
-    e.contrast = clampInt(Math.round((150 - spread) * 0.25));
-    e.highlights = clampInt(Math.round((235 - p99) * 0.5));
-    e.shadows = clampInt(Math.round((28 - p1) * 1.0));
-    e.warmth = clampInt(Math.round((avgB - avgR) * 0.6));
-    e.tint = clampInt(Math.round((avgR + avgB - 2*avgG) * 0.5));
-    e.saturation = 4;
+    e.contrast = clampAbs(Math.round((140 - spread) * 0.18), 16);
+    e.highlights = clampAbs(Math.round((232 - p99) * 0.35), 16);
+    e.shadows = clampAbs(Math.round((26 - p1) * 0.6), 20);
+
+    // White balance: only from near-neutral mid-tone pixels, gentle + capped
+    e.warmth = 0; e.tint = 0;
+    if(wcnt > 300){
+      const ar=wr/wcnt, ag=wg/wcnt, ab=wb/wcnt;
+      const dr = ab - ar;
+      const dg = ar + ab - 2*ag;
+      if(Math.abs(dr) > 6) e.warmth = clampAbs(Math.round(dr * 0.45), 12);
+      if(Math.abs(dg) > 6) e.tint = clampAbs(Math.round(dg * 0.35), 10);
+    }
+
+    e.saturation = 2;
     e.vignette = 0;
     return e;
   }
@@ -1707,7 +1754,7 @@
 
   // ---------------- Google Drive export ----------------
   const GSI_URL = 'https://accounts.google.com/gsi/client';
-  const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+  const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
 
   function loadGsi(){
     if(window.google && window.google.accounts && window.google.accounts.oauth2){
@@ -1739,42 +1786,132 @@
     }));
   }
 
-  async function uploadToDrive(blob, filename){
-    const token = await getAccessToken();
-    const form = new FormData();
-    form.append('metadata', new Blob([JSON.stringify({ name: filename, mimeType: 'image/jpeg' })], {type:'application/json'}));
-    form.append('file', blob, filename);
-    const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + token },
-      body: form
-    });
-    if(!resp.ok){
-      let msg = 'Lỗi ' + resp.status;
-      try{ const j = await resp.json(); if(j && j.error && j.error.message) msg = j.error.message; }catch(e){}
-      throw new Error(msg);
+  // ---- folder browser ----
+  let driveToken = null;
+  let driveCurrent = { id: 'root', name: 'My Drive' };
+  let drivePath = [];
+  const driveFolder = {
+    id: localStorage.getItem('lenslab_drive_folder') || 'root',
+    name: localStorage.getItem('lenslab_drive_folder_name') || 'My Drive'
+  };
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  async function openDriveModal(){
+    if(!state.settings.driveClientId){
+      toast('Chưa cài Client ID — vào ⚙ Cài đặt');
+      showScreen('settings');
+      return;
     }
-    return resp.json();
+    try{
+      driveToken = await getAccessToken();
+    }catch(err){
+      toast('Không đăng nhập được Google: ' + (err.message||err));
+      return;
+    }
+    drivePath = [];
+    driveCurrent = { id: 'root', name: 'My Drive' };
+    $('driveModal').classList.add('show');
+    refreshDriveList();
   }
 
-  $('btnDriveExport').addEventListener('click', async ()=>{
+  async function listDriveFolders(parentId){
+    const q = "mimeType='application/vnd.google-apps.folder' and trashed=false and '" + parentId + "' in parents";
+    const url = 'https://www.googleapis.com/drive/v3/files?spaces=drive&fields=files(id,name)&pageSize=200&orderBy=name&q=' + encodeURIComponent(q);
+    const resp = await fetch(url, { headers: { Authorization: 'Bearer ' + driveToken, Accept: 'application/json' } });
+    if(!resp.ok){ throw new Error('Lỗi tải thư mục (' + resp.status + ')'); }
+    const j = await resp.json();
+    return j.files || [];
+  }
+
+  async function refreshDriveList(){
     try{
-      if(!state.settings.driveClientId){
-        toast('Chưa cài Client ID — vào ⚙ Cài đặt');
-        showScreen('settings');
-        return;
-      }
-      toast('Đang tải lên Google Drive…');
+      const folders = await listDriveFolders(driveCurrent.id);
+      renderDriveList(folders);
+    }catch(err){
+      toast('Không tải được danh sách thư mục: ' + (err.message||err));
+    }
+  }
+
+  function renderDriveList(folders){
+    const list = $('driveList');
+    list.innerHTML = '';
+    if(!folders || folders.length === 0){
+      list.innerHTML = '<div class="drive-empty">Không có thư mục con. Nhấn "Lưu vào thư mục này" để lưu vào đây.</div>';
+    }
+    (folders||[]).forEach(f=>{
+      const d = document.createElement('div');
+      d.className = 'drive-item';
+      d.innerHTML = '<span class="fico">📁</span><span>' + esc(f.name) + '</span>';
+      d.addEventListener('click', ()=>{
+        drivePath.push({ id: driveCurrent.id, name: driveCurrent.name });
+        driveCurrent = { id: f.id, name: f.name };
+        refreshDriveList();
+      });
+      list.appendChild(d);
+    });
+    $('driveCrumbs').innerHTML = buildCrumbs();
+  }
+
+  function buildCrumbs(){
+    let html = '<b data-id="root">My Drive</b>';
+    drivePath.forEach(p=>{ html += ' / <b data-id="' + esc(p.id) + '">' + esc(p.name) + '</b>'; });
+    html += ' / <b data-id="' + esc(driveCurrent.id) + '" style="color:var(--accent);">' + esc(driveCurrent.name) + '</b>';
+    return html;
+  }
+
+  $('driveCrumbs').addEventListener('click', (e)=>{
+    const id = e.target.dataset.id;
+    if(!id) return;
+    if(id === 'root'){ driveCurrent = { id:'root', name:'My Drive' }; drivePath = []; }
+    else {
+      const idx = drivePath.findIndex(p=>p.id === id);
+      if(idx >= 0){ driveCurrent = drivePath[idx]; drivePath = drivePath.slice(0, idx); }
+    }
+    refreshDriveList();
+  });
+  $('driveModalClose').addEventListener('click', ()=> $('driveModal').classList.remove('show'));
+  $('driveModal').addEventListener('click', (e)=>{ if(e.target.id === 'driveModal') e.target.classList.remove('show'); });
+
+  $('driveSaveHere').addEventListener('click', ()=>{
+    driveFolder.id = driveCurrent.id;
+    driveFolder.name = driveCurrent.name;
+    localStorage.setItem('lenslab_drive_folder', driveFolder.id);
+    localStorage.setItem('lenslab_drive_folder_name', driveFolder.name);
+    $('driveModal').classList.remove('show');
+    toast('Đang tải lên Google Drive…');
+    doDriveUpload();
+  });
+
+  async function doDriveUpload(){
+    try{
       await new Promise((r)=> setTimeout(r, 30));
       const blob = await new Promise((res)=> renderOutputCanvas().toBlob(res, 'image/jpeg', 0.92));
-      await uploadToDrive(blob, 'lenslab-' + Date.now() + '.jpg');
-      toast('Đã tải lên Google Drive ✓');
+      const token = driveToken || await getAccessToken();
+      const meta = { name: 'lenslab-' + Date.now() + '.jpg', mimeType: 'image/jpeg' };
+      if(driveFolder.id && driveFolder.id !== 'root'){ meta.parents = [driveFolder.id]; }
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(meta)], {type:'application/json'}));
+      form.append('file', blob, meta.name);
+      const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token },
+        body: form
+      });
+      if(!resp.ok){
+        let msg = 'Lỗi ' + resp.status;
+        try{ const j = await resp.json(); if(j && j.error && j.error.message) msg = j.error.message; }catch(e){}
+        throw new Error(msg);
+      }
+      toast('Đã tải lên Google Drive ✓ (' + driveFolder.name + ')');
     }catch(err){
       console.error(err);
       const msg = (err && err.message) ? err.message : String(err);
-      toast(msg === 'NO_CLIENT_ID' ? 'Chưa cài Client ID' : ('Không tải lên Drive được: ' + msg));
+      toast('Không tải lên Drive được: ' + msg);
     }
-  });
+  }
+
+  $('btnDriveExport').addEventListener('click', openDriveModal);
 
   // ---------------- settings ----------------
   $('btnSettings').addEventListener('click', ()=>{

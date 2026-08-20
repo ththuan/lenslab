@@ -60,9 +60,9 @@ Nhấn **Chọn ảnh (JPG / RAW)** ở màn hình chính rồi chọn file RAW 
 7. Nhấn **Create** → sao chép chuỗi **Client ID** (dạng `xxxxx.apps.googleusercontent.com`).
 8. Trong app LensLab, nhấn biểu tượng **⚙** trên thanh trên cùng → dán Client ID → **Lưu Client ID**.
 
-Từ giờ, khi nhấn **⬆ Drive**, lần đầu Google sẽ hỏi bạn cho phép truy cập — chọn tài khoản của bạn và **Cho phép**. Ảnh được tải lên "My Drive" dưới dạng file JPG (`lenslab-....jpg`).
+Từ giờ, khi nhấn **⬆ Drive**, lần đầu Google sẽ hỏi bạn cho phép truy cập — chọn tài khoản của bạn và **Cho phép**. App sẽ hiện cửa sổ **chọn thư mục**: bạn duyệt vào thư mục muốn lưu (hoặc để mặc định My Drive) rồi nhấn **Lưu vào thư mục này**. Ảnh được tải lên dưới dạng file JPG (`lenslab-....jpg`); thư mục đã chọn sẽ được ghi nhớ cho lần sau.
 
-> Lưu ý: app dùng quyền `drive.file` (chỉ tạo file trong Drive của chính bạn, không đọc/danh sách file khác). Nếu lần đầu đăng nhập không mở được cửa sổ cho phép ở chế độ app đã cài (Add to Home Screen), hãy mở bằng tab Safari thường để cấp quyền lần đầu, sau đó dùng bình thường.
+> Lưu ý: để liệt kê thư mục và chọn nơi lưu, app dùng quyền `drive` (đọc/ghi trong Drive của chính bạn). Nếu lần đầu đăng nhập không mở được cửa sổ cho phép ở chế độ app đã cài (Add to Home Screen), hãy mở bằng tab Safari thường để cấp quyền lần đầu, sau đó dùng bình thường.
 
 ## Giới hạn hiện tại (và hướng nâng cấp)
 
