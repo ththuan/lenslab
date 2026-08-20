@@ -1,0 +1,1787 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>LensLab — Studio máy ảnh</title>
+<meta name="theme-color" content="#121310">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LensLab">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#121310;
+    --bg-panel:#1b1c18;
+    --bg-elevated:#232420;
+    --bg-elevated-2:#2b2c26;
+    --text:#f2f1ec;
+    --text-dim:#9a998f;
+    --text-faint:#65645c;
+    --accent:#5eead4;
+    --accent-dim:#2f6f66;
+    --accent-soft:rgba(94,234,212,0.12);
+    --warn:#e8a33d;
+    --border:#33342e;
+    --danger:#e2685a;
+    --radius:14px;
+    --safe-top:env(safe-area-inset-top);
+    --safe-bottom:env(safe-area-inset-bottom);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%; overflow:hidden;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    overscroll-behavior:none; user-select:none;
+    -webkit-user-select:none;
+  }
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  #app{height:100dvh; display:flex; flex-direction:column; padding-top:var(--safe-top); padding-bottom:var(--safe-bottom);}
+
+  /* ---------- top bar ---------- */
+  header.bar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px; border-bottom:1px solid var(--border);
+    flex-shrink:0;
+  }
+  header.bar .brand{display:flex; align-items:center; gap:10px;}
+  header.bar .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent); box-shadow:0 0 10px var(--accent);}
+  header.bar .brand span{font-weight:600; letter-spacing:0.02em; font-size:16px;}
+  header.bar .status{font-size:11px; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase;}
+  header.bar .status.live{color:var(--accent);}
+  header.bar button.icon-btn{
+    background:none;border:1px solid var(--border);color:var(--text-dim);
+    width:34px;height:34px;border-radius:10px;font-size:15px;display:flex;align-items:center;justify-content:center;
+  }
+
+  section.screen{flex:1; min-height:0; display:none; flex-direction:column;}
+  section.screen.active{display:flex;}
+
+  /* ---------- welcome ---------- */
+  #screen-welcome{align-items:center; justify-content:center; padding:32px 24px; text-align:center; gap:20px;}
+  #screen-welcome .glyph{
+    width:88px;height:88px;border-radius:24px;background:var(--bg-elevated);
+    display:flex;align-items:center;justify-content:center; margin-bottom:6px;
+    border:1px solid var(--border);
+  }
+  #screen-welcome .glyph svg{width:40px;height:40px;}
+  #screen-welcome h1{font-size:26px; margin:0; line-height:1.25;}
+  #screen-welcome p{color:var(--text-dim); font-size:14.5px; line-height:1.6; max-width:380px; margin:0;}
+  .steps{display:flex; flex-direction:column; gap:10px; width:100%; max-width:380px; margin-top:6px;}
+  .step{display:flex; gap:12px; align-items:flex-start; background:var(--bg-panel); border:1px solid var(--border); border-radius:12px; padding:12px 14px; text-align:left;}
+  .step .n{font-family:'JetBrains Mono',monospace; color:var(--accent); font-size:12px; padding-top:2px;}
+  .step .t{font-size:13.5px; color:var(--text); line-height:1.45;}
+  .step .t b{color:var(--text);}
+  .step .t small{color:var(--text-faint); display:block; margin-top:2px;}
+
+  button.primary{
+    background:var(--accent); color:#0a1210; border:none; font-weight:600;
+    padding:15px 22px; border-radius:12px; font-size:15px; width:100%; max-width:380px;
+    font-family:'Inter',sans-serif; letter-spacing:0.01em;
+  }
+  button.primary:active{transform:scale(0.98);}
+  button.secondary{
+    background:transparent; color:var(--text); border:1px solid var(--border);
+    padding:13px 20px; border-radius:12px; font-size:14px; width:100%; max-width:380px; font-weight:500;
+  }
+  .err-box{
+    background:rgba(226,104,90,0.1); border:1px solid rgba(226,104,90,0.35); color:#f0a89e;
+    border-radius:10px; padding:12px 14px; font-size:13px; max-width:380px; text-align:left; line-height:1.5; display:none;
+  }
+  .err-box.show{display:block;}
+
+  /* ---------- capture screen ---------- */
+  #screen-capture{background:#000;}
+  .viewport-wrap{flex:1; position:relative; min-height:0; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden;}
+  #liveVideo{width:100%; height:100%; object-fit:contain; background:#000;}
+  .viewport-wrap .no-signal{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; color:var(--text-faint); font-size:13px;}
+  .viewport-wrap .no-signal.hide{display:none;}
+  .rec-pill{
+    position:absolute; top:14px; left:14px; display:flex; align-items:center; gap:6px;
+    background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); padding:6px 10px 6px 8px; border-radius:20px;
+    font-size:11px; color:var(--text-dim); border:1px solid rgba(255,255,255,0.08);
+  }
+  .rec-pill .rdot{width:7px;height:7px;border-radius:50%;background:var(--accent); animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
+
+  .device-chip{
+    position:absolute; top:14px; right:14px; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px);
+    border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:7px 12px; font-size:11.5px; color:var(--text-dim);
+    max-width:55%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+
+  .capture-bar{
+    flex-shrink:0; background:var(--bg-panel); border-top:1px solid var(--border);
+    padding:14px 16px 18px; display:flex; flex-direction:column; gap:12px;
+  }
+  .filmstrip{display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch;}
+  .filmstrip::-webkit-scrollbar{display:none;}
+  .filmstrip .thumb{
+    flex-shrink:0; width:52px; height:52px; border-radius:8px; overflow:hidden; border:1.5px solid var(--border);
+    background:var(--bg-elevated); position:relative;
+  }
+  .filmstrip .thumb img{width:100%;height:100%;object-fit:cover; display:block;}
+  .filmstrip .thumb.empty{display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:10px; border-style:dashed;}
+
+  .capture-row{display:flex; align-items:center; justify-content:space-between; gap:14px;}
+  .capture-row .side-btn{
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
+    width:46px;height:46px;border-radius:12px; font-size:16px; display:flex;align-items:center;justify-content:center; flex-shrink:0;
+  }
+  .shutter{
+    width:72px;height:72px;border-radius:50%; background:var(--bg); border:3px solid var(--accent);
+    display:flex;align-items:center;justify-content:center; flex-shrink:0;
+  }
+  .shutter .inner{width:56px;height:56px;border-radius:50%;background:var(--accent);}
+  .shutter:active .inner{transform:scale(0.86);}
+  .device-select{flex:1; min-width:0;}
+  .device-select select{
+    width:100%; background:var(--bg-elevated); color:var(--text); border:1px solid var(--border);
+    border-radius:10px; padding:9px 10px; font-size:12.5px; font-family:'Inter',sans-serif;
+  }
+
+  /* ---------- edit screen ---------- */
+  #screen-edit{background:var(--bg);}
+  .edit-layout{flex:1; min-height:0; display:flex; flex-direction:row;}
+  .canvas-stage{flex:1; min-width:0; display:flex; align-items:center; justify-content:center; position:relative; background:#0a0a08; overflow:hidden;}
+  .canvas-stage canvas{max-width:100%; max-height:100%; touch-action:none; box-shadow:0 10px 40px rgba(0,0,0,0.5);}
+  .stage-topbar{
+    position:absolute; top:12px; left:12px; right:12px; display:flex; justify-content:space-between; align-items:center;
+    pointer-events:none;
+  }
+  .ba-btn{
+    pointer-events:auto; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.1);
+    color:var(--text); font-size:11.5px; padding:8px 13px; border-radius:20px; font-weight:500; letter-spacing:0.02em;
+  }
+  .ba-btn:active{background:var(--accent); color:#0a1210;}
+
+  .edit-panel{
+    width:300px; flex-shrink:0; background:var(--bg-panel); border-left:1px solid var(--border);
+    display:flex; flex-direction:column; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  }
+  .edit-panel-inner{padding:16px 16px 24px; display:flex; flex-direction:column; gap:4px;}
+  .panel-tabs{display:flex; gap:6px; padding:12px 16px 0;}
+  .panel-tabs button{
+    flex:1; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
+    padding:9px 6px; border-radius:9px; font-size:11.5px; font-weight:500; letter-spacing:0.02em;
+  }
+  .panel-tabs button.active{background:var(--accent-soft); border-color:var(--accent-dim); color:var(--accent);}
+
+  .ctrl-group{display:none; flex-direction:column; gap:2px;}
+  .ctrl-group.active{display:flex;}
+  .ctrl{padding:12px 2px; border-bottom:1px solid var(--border);}
+  .ctrl:last-child{border-bottom:none;}
+  .ctrl .row1{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
+  .ctrl .row1 label{font-size:12.5px; color:var(--text); font-weight:500;}
+  .ctrl .row1 .val{font-size:11.5px; color:var(--accent); font-family:'JetBrains Mono',monospace;}
+  .ctrl input[type=range]{
+    -webkit-appearance:none; width:100%; height:26px; background:transparent; margin:0;
+  }
+  .ctrl input[type=range]::-webkit-slider-runnable-track{
+    height:3px; background:var(--border); border-radius:2px;
+  }
+  .ctrl input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+    background:var(--accent); border:2px solid #0a1210; margin-top:-6.5px;
+    box-shadow:0 0 0 3px rgba(94,234,212,0.15);
+  }
+  .ctrl.zero input[type=range]::-webkit-slider-thumb{background:var(--text-faint); box-shadow:none;}
+
+  .reset-row{display:flex; gap:8px; padding:14px 2px 4px;}
+  .reset-row button{
+    flex:1; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
+    padding:10px; border-radius:9px; font-size:12px; font-weight:500;
+  }
+
+  .export-row{
+    padding:14px 16px calc(16px + var(--safe-bottom)); border-top:1px solid var(--border); background:var(--bg-panel);
+    display:flex; gap:10px; flex-shrink:0;
+  }
+  .export-row button.primary{padding:14px;}
+  .export-row .icon-btn-lg{
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
+    width:50px; border-radius:12px; font-size:16px; flex-shrink:0;
+  }
+  .drive-btn{
+    background:var(--accent-soft); border:1px solid var(--accent-dim); color:var(--accent);
+    padding:14px 14px; border-radius:12px; font-size:13px; font-weight:600; flex-shrink:0; white-space:nowrap;
+    font-family:'Inter',sans-serif;
+  }
+  .drive-btn:active{transform:scale(0.97);}
+  .head-right{display:flex; align-items:center; gap:10px;}
+  #screen-settings{overflow-y:auto; padding:24px 20px calc(24px + var(--safe-bottom));}
+  .settings-inner{max-width:420px; margin:0 auto; display:flex; flex-direction:column; gap:12px; width:100%;}
+  .settings-inner h2{margin:0; font-size:20px;}
+  .settings-desc{color:var(--text-dim); font-size:13.5px; line-height:1.55; margin:0;}
+  .settings-label{font-size:12px; color:var(--text-dim); letter-spacing:0.04em;}
+  .settings-input{
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text);
+    border-radius:10px; padding:12px 14px; font-size:13px; font-family:'JetBrains Mono',monospace; width:100%;
+  }
+  .settings-input:focus{outline:none; border-color:var(--accent-dim);}
+  .lut-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; padding:12px 2px 4px;}
+  .lut-chip{
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
+    padding:11px 8px; border-radius:9px; font-size:12px; font-weight:500; text-align:center;
+    font-family:'Inter',sans-serif; word-break:break-word;
+  }
+  .lut-chip.active{background:var(--accent-soft); border-color:var(--accent-dim); color:var(--accent);}
+  .tool-row{display:flex; gap:8px; padding:12px 2px 6px;}
+  .tool-btn{
+    flex:1; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
+    padding:11px 6px; border-radius:9px; font-size:12px; font-weight:500; font-family:'Inter',sans-serif;
+  }
+  .tool-btn:active{transform:scale(0.96);}
+  .aspect-row{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding:8px 2px 2px;}
+  .aspect-chip{
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
+    padding:8px 4px; border-radius:8px; font-size:11px; font-weight:500; text-align:center; font-family:'Inter',sans-serif;
+  }
+  .aspect-chip.active{background:var(--accent-soft); border-color:var(--accent-dim); color:var(--accent);}
+  .crop-overlay{position:absolute; display:none; touch-action:none; z-index:6;}
+  .crop-overlay.show{display:block;}
+  .crop-box{
+    position:absolute; box-sizing:border-box; border:1.5px solid #fff;
+    box-shadow:0 0 0 9999px rgba(0,0,0,0.55); cursor:move;
+    background:
+      linear-gradient(rgba(255,255,255,0.22) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.22) 1px, transparent 1px);
+    background-size:33.33% 33.33%;
+  }
+  .crop-handle{position:absolute; width:22px; height:22px; background:#fff; border-radius:50%; box-shadow:0 1px 4px rgba(0,0,0,0.5);}
+  .crop-handle.nw{left:-11px; top:-11px; cursor:nwse-resize;}
+  .crop-handle.ne{right:-11px; top:-11px; cursor:nesw-resize;}
+  .crop-handle.sw{left:-11px; bottom:-11px; cursor:nesw-resize;}
+  .crop-handle.se{right:-11px; bottom:-11px; cursor:nwse-resize;}
+
+  /* mobile: stack panel below canvas */
+  @media (max-width: 760px){
+    .edit-layout{flex-direction:column;}
+    .canvas-stage{flex:1 1 45%; min-height:180px;}
+    .edit-panel{width:100%; flex:1 1 55%; border-left:none; border-top:1px solid var(--border);}
+  }
+
+  .hint{font-size:11px; color:var(--text-faint); line-height:1.5; padding:10px 2px 2px;}
+  .toast{
+    position:fixed; bottom:calc(24px + var(--safe-bottom)); left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text); padding:12px 20px;
+    border-radius:30px; font-size:13px; opacity:0; pointer-events:none; transition:all 0.25s ease; z-index:50;
+    display:flex; align-items:center; gap:8px;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast .td{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+  #fileInput{display:none;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="bar">
+    <div class="brand"><div class="dot" id="brandDot"></div><span>LensLab</span></div>
+    <div class="head-right">
+      <div class="status" id="topStatus">chưa kết nối</div>
+      <button class="icon-btn" id="btnSettings" title="Cài đặt">⚙</button>
+    </div>
+  </header>
+
+  <!-- ============ WELCOME ============ -->
+  <section class="screen active" id="screen-welcome">
+    <div class="glyph">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M4 8.5C4 7.12 5.12 6 6.5 6h2.2c.4 0 .77-.2 1-.53l.8-1.14A1.5 1.5 0 0 1 11.72 3.7h.56a1.5 1.5 0 0 1 1.22.63l.8 1.14c.23.33.6.53 1 .53h2.2C18.88 6 20 7.12 20 8.5v8c0 1.38-1.12 2.5-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-8Z" stroke="#5eead4" stroke-width="1.4"/><circle cx="12" cy="13" r="3.6" stroke="#5eead4" stroke-width="1.4"/></svg>
+    </div>
+    <h1>Kết nối máy ảnh với iPad</h1>
+    <p>Dùng capture card HDMI → USB‑C để đưa hình ảnh trực tiếp từ Nikon D5500 lên iPad, chụp lại và chỉnh sửa ngay tại chỗ.</p>
+
+    <div class="steps">
+      <div class="step"><div class="n">01</div><div class="t"><b>Cắm dây</b><small>Mini‑HDMI trên máy ảnh → HDMI → capture card → cổng USB‑C của iPad.</small></div></div>
+      <div class="step"><div class="n">02</div><div class="t"><b>Bật chế độ Live View / quay phim</b> trên D5500<small>Máy ảnh cần đang phát tín hiệu HDMI (thường là chế độ Live View hoặc quay video).</small></div></div>
+      <div class="step"><div class="n">03</div><div class="t"><b>Cho phép truy cập Camera</b><small>Safari sẽ hỏi quyền — chọn Cho phép để nhận tín hiệu từ capture card.</small></div></div>
+    </div>
+
+    <button class="primary" id="btnConnect">Kết nối máy ảnh</button>
+    <button class="secondary" id="btnUpload">Chọn ảnh (JPG / RAW) để thử chỉnh</button>
+    <div class="err-box" id="connectErr"></div>
+    <input type="file" id="fileInput" accept="image/*,.nef,.cr2,.arw,.dng,.raf,.orf,.rw2,.pef,.srw,.x3f">
+  </section>
+
+  <!-- ============ CAPTURE / LIVE ============ -->
+  <section class="screen" id="screen-capture">
+    <div class="viewport-wrap">
+      <video id="liveVideo" autoplay playsinline muted></video>
+      <div class="no-signal" id="noSignal">
+        <span class="mono" style="font-size:11px;letter-spacing:0.1em;">ĐANG CHỜ TÍN HIỆU…</span>
+        <span style="max-width:260px;text-align:center;">Kiểm tra máy ảnh đã bật Live View / quay phim và dây HDMI đã cắm chắc chưa.</span>
+      </div>
+      <div class="rec-pill"><div class="rdot"></div><span class="mono">LIVE</span></div>
+      <div class="device-chip" id="deviceChip">—</div>
+    </div>
+    <div class="capture-bar">
+      <div class="filmstrip" id="filmstrip">
+        <div class="thumb empty">Ảnh chụp</div>
+      </div>
+      <div class="capture-row">
+        <div class="device-select">
+          <select id="deviceSelect"></select>
+        </div>
+        <div class="shutter" id="btnShutter"><div class="inner"></div></div>
+        <button class="side-btn" id="btnBack" title="Quay lại">✕</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ EDIT ============ -->
+  <section class="screen" id="screen-edit">
+    <div class="edit-layout">
+      <div class="canvas-stage">
+        <div class="stage-topbar">
+          <button class="ba-btn" id="btnBackToCapture">← Chụp tiếp</button>
+          <button class="ba-btn" id="btnBeforeAfter">So sánh gốc</button>
+        </div>
+        <canvas id="editCanvas"></canvas>
+        <div class="crop-overlay" id="cropOverlay">
+          <div class="crop-box" id="cropBox">
+            <div class="crop-handle nw" data-dir="nw"></div>
+            <div class="crop-handle ne" data-dir="ne"></div>
+            <div class="crop-handle sw" data-dir="sw"></div>
+            <div class="crop-handle se" data-dir="se"></div>
+          </div>
+        </div>
+      </div>
+      <div class="edit-panel">
+        <div class="panel-tabs">
+          <button class="tab-btn active" data-tab="light">Ánh sáng</button>
+          <button class="tab-btn" data-tab="color">Màu sắc</button>
+          <button class="tab-btn" data-tab="retouch">Làm mịn</button>
+          <button class="tab-btn" data-tab="lut">LUT</button>
+          <button class="tab-btn" data-tab="crop">Cắt</button>
+        </div>
+        <div class="edit-panel-inner">
+
+          <div class="ctrl-group active" data-group="light">
+            <div class="ctrl" data-key="exposure"><div class="row1"><label>Phơi sáng (Exposure)</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+            <div class="ctrl" data-key="contrast"><div class="row1"><label>Tương phản</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+            <div class="ctrl" data-key="highlights"><div class="row1"><label>Highlights</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+            <div class="ctrl" data-key="shadows"><div class="row1"><label>Shadows</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+            <div class="ctrl" data-key="vignette"><div class="row1"><label>Vignette</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
+          </div>
+
+          <div class="ctrl-group" data-group="color">
+            <div class="ctrl" data-key="saturation"><div class="row1"><label>Bão hoà (Saturation)</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+            <div class="ctrl" data-key="warmth"><div class="row1"><label>Ấm / Lạnh</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+            <div class="ctrl" data-key="tint"><div class="row1"><label>Tint (Xanh lá / Hồng)</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+          </div>
+
+          <div class="ctrl-group" data-group="retouch">
+            <div class="ctrl" data-key="skin"><div class="row1"><label>Làm mịn da</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
+            <div class="ctrl" data-key="eye"><div class="row1"><label>Sáng mắt</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
+            <div class="ctrl" data-key="sharpen"><div class="row1"><label>Làm nét</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
+            <div class="hint">AI nhận diện khuôn mặt (MediaPipe) để làm mịn da + sáng mắt theo từng vùng mặt. Nếu không phát hiện mặt thì giữ nguyên da. Lần đầu cần mạng để tải model.</div>
+          </div>
+
+          <div class="ctrl-group" data-group="lut">
+            <div class="lut-grid" id="lutGrid"></div>
+            <div class="ctrl" data-key="lutStrength"><div class="row1"><label>Cường độ LUT</label><span class="val mono">100</span></div><input type="range" min="0" max="100" value="100"></div>
+            <button class="secondary" id="btnImportLut" style="margin-top:10px;">Nhập LUT (.cube)</button>
+            <input type="file" id="lutFileInput" accept=".cube" style="display:none;">
+            <div class="hint">Bộ lọc màu (LUT 3D) tạo tone phim / điện ảnh. Có thể nhập file .cube của riêng bạn.</div>
+          </div>
+
+          <div class="ctrl-group" data-group="crop">
+            <div class="tool-row">
+              <button class="tool-btn" id="btnRotate90">↻ Xoay 90°</button>
+              <button class="tool-btn" id="btnFlipH">⇋ Lật ngang</button>
+              <button class="tool-btn" id="btnFlipV">⇵ Lật dọc</button>
+            </div>
+            <div class="ctrl" data-key="straighten"><div class="row1"><label>Nắn thẳng (xoay nhỏ)</label><span class="val mono">0</span></div><input type="range" min="-45" max="45" value="0"></div>
+            <div class="ctrl"><div class="row1"><label>Tỉ lệ khung</label></div>
+              <div class="aspect-row" id="aspectRow">
+                <button class="aspect-chip active" data-aspect="">Tự do</button>
+                <button class="aspect-chip" data-aspect="1:1">1:1</button>
+                <button class="aspect-chip" data-aspect="4:3">4:3</button>
+                <button class="aspect-chip" data-aspect="3:2">3:2</button>
+                <button class="aspect-chip" data-aspect="16:9">16:9</button>
+                <button class="aspect-chip" data-aspect="9:16">9:16</button>
+                <button class="aspect-chip" data-aspect="3:4">3:4</button>
+                <button class="aspect-chip" data-aspect="2:3">2:3</button>
+              </div>
+            </div>
+            <button class="secondary" id="btnCropReset" style="margin-top:10px;">Đặt lại khung</button>
+            <button class="primary" id="btnCropApply" style="margin-top:8px;">Xong</button>
+            <div class="hint">Vào tab này để cắt ảnh. Kéo 4 góc để chỉnh khung, kéo giữa để di chuyển. Chọn tỉ lệ để khoá khung hình.</div>
+          </div>
+
+          <div class="reset-row">
+            <button id="btnReset">Đặt lại</button>
+            <button id="btnAuto">Tự động</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="export-row">
+      <button class="icon-btn-lg" id="btnDeleteShot" title="Xoá ảnh này">🗑</button>
+      <button class="primary" id="btnExport" style="flex:1;">Lưu về iPad</button>
+      <button class="drive-btn" id="btnDriveExport">⬆ Drive</button>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS ============ -->
+  <section class="screen" id="screen-settings">
+    <div class="settings-inner">
+      <h2>⚙ Cài đặt</h2>
+      <p class="settings-desc">Nhập Google OAuth Client ID để bật nút xuất ảnh lên Google Drive. Cách tạo: xem mục "Xuất lên Google Drive" trong README.md.</p>
+      <label class="settings-label" for="driveClientIdInput">Google OAuth Client ID</label>
+      <input type="text" id="driveClientIdInput" class="settings-input" placeholder="xxxxxxxx.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
+      <button class="primary" id="btnDriveSave">Lưu Client ID</button>
+      <button class="secondary" id="btnSettingsBack">← Quay lại</button>
+      <div class="hint">Client ID chỉ được lưu trên iPad của bạn (localStorage), không gửi đi đâu. Khi xuất, app chỉ xin quyền tạo file trong chính Google Drive của bạn.</div>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"><div class="td"></div><span id="toastMsg"></span></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------- state ----------------
+  const state = {
+    stream: null,
+    devices: [],
+    activeDeviceId: localStorage.getItem('lenslab_device') || null,
+    shots: [],           // {id, canvas, thumb, edits, faceMasks, hasFace, autoDone}
+    activeShotIndex: -1,
+    edits: defaultEdits(),
+    beforeAfter: false,
+    settings: { driveClientId: localStorage.getItem('lenslab_drive_client_id') || '' },
+    faceLandmarker: null,
+    mpLoading: null,
+    customLut: null,
+    customLutName: null,
+  };
+
+  function defaultEdits(){
+    return {exposure:0, contrast:0, highlights:0, shadows:0, vignette:0,
+             saturation:0, warmth:0, tint:0, skin:0, eye:0, sharpen:0,
+             lut:'none', lutStrength:100,
+             rotation:0, flipH:0, flipV:0, straighten:0,
+             cropX:0, cropY:0, cropW:1, cropH:1, cropAspect:''};
+  }
+
+  // ---------------- elements ----------------
+  const $ = (id) => document.getElementById(id);
+  const screens = {
+    welcome: $('screen-welcome'), capture: $('screen-capture'), edit: $('screen-edit'), settings: $('screen-settings')
+  };
+  let prevScreen = 'welcome';
+  function showScreen(name){
+    if(name !== 'settings') prevScreen = name;
+    Object.values(screens).forEach(s=>s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  function toast(msg){
+    $('toastMsg').textContent = msg;
+    $('toast').classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=> $('toast').classList.remove('show'), 2200);
+  }
+
+  // ---------------- camera connect ----------------
+  const video = $('liveVideo');
+  const noSignal = $('noSignal');
+
+  async function connectCamera(deviceId){
+    hideErr();
+    try{
+      const constraints = {
+        audio:false,
+        video: deviceId ? {
+          deviceId:{exact:deviceId}, width:{ideal:3840}, height:{ideal:2160}
+        } : { width:{ideal:3840}, height:{ideal:2160} }
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      if(state.stream){ state.stream.getTracks().forEach(t=>t.stop()); }
+      state.stream = stream;
+      video.srcObject = stream;
+      await video.play().catch(()=>{});
+      const track = stream.getVideoTracks()[0];
+      const settings = track.getSettings ? track.getSettings() : {};
+      state.activeDeviceId = settings.deviceId || deviceId || null;
+      if(state.activeDeviceId){ localStorage.setItem('lenslab_device', state.activeDeviceId); }
+      $('deviceChip').textContent = track.label || 'Camera';
+      $('topStatus').textContent = 'đang phát trực tiếp';
+      $('topStatus').classList.add('live');
+      noSignal.classList.add('hide');
+      await refreshDeviceList();
+      showScreen('capture');
+    }catch(err){
+      showErr(cameraErrorMessage(err));
+    }
+  }
+
+  function cameraErrorMessage(err){
+    const n = err && err.name;
+    if(n === 'NotAllowedError' || n === 'PermissionDeniedError'){
+      return 'iPad đã từ chối quyền camera. Vào Cài đặt → Safari → Camera (hoặc nhấn biểu tượng "aA" trên thanh địa chỉ → Cài đặt trang web) và cho phép truy cập, sau đó thử lại.';
+    }
+    if(n === 'NotFoundError' || n === 'OverconstrainedError'){
+      return 'Không tìm thấy thiết bị camera nào. Kiểm tra capture card đã cắm chắc vào cổng USB‑C, và máy ảnh đang phát tín hiệu HDMI.';
+    }
+    if(n === 'NotReadableError'){
+      return 'Không đọc được tín hiệu từ capture card. Rút ra cắm lại dây USB‑C, hoặc thử đóng các app khác đang dùng camera.';
+    }
+    return 'Không kết nối được camera (' + (n||'lỗi không rõ') + '). Hãy chắc chắn bạn đang mở trang này qua Safari với địa chỉ https://, không phải mở file cục bộ.';
+  }
+  function showErr(msg){ const e=$('connectErr'); e.textContent = msg; e.classList.add('show'); }
+  function hideErr(){ $('connectErr').classList.remove('show'); }
+
+  async function refreshDeviceList(){
+    try{
+      const list = await navigator.mediaDevices.enumerateDevices();
+      state.devices = list.filter(d=>d.kind==='videoinput');
+      const sel = $('deviceSelect');
+      sel.innerHTML = '';
+      state.devices.forEach((d,i)=>{
+        const opt = document.createElement('option');
+        opt.value = d.deviceId;
+        opt.textContent = d.label || ('Camera ' + (i+1));
+        if(d.deviceId === state.activeDeviceId) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }catch(e){ /* ignore */ }
+  }
+
+  $('btnConnect').addEventListener('click', ()=> connectCamera(state.activeDeviceId));
+  $('deviceSelect').addEventListener('change', (e)=> connectCamera(e.target.value));
+  $('btnBack').addEventListener('click', ()=>{
+    if(state.stream){ state.stream.getTracks().forEach(t=>t.stop()); state.stream=null; }
+    $('topStatus').textContent = 'chưa kết nối';
+    $('topStatus').classList.remove('live');
+    showScreen('welcome');
+  });
+
+  // upload fallback (no camera / testing)
+  $('btnUpload').addEventListener('click', ()=> $('fileInput').click());
+  $('fileInput').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if(RAW_EXTS.indexOf(ext) >= 0){
+      await handleRawFile(file);
+    } else {
+      const img = new Image();
+      img.onload = ()=>{ addShotFromImage(img); openEditor(state.shots.length-1, {auto:true}); };
+      img.src = URL.createObjectURL(file);
+    }
+    e.target.value = '';
+  });
+
+  // ---------------- capture still frame ----------------
+  function addShotFromImage(imgOrCanvasSrc){
+    const w = imgOrCanvasSrc.videoWidth || imgOrCanvasSrc.naturalWidth || imgOrCanvasSrc.width;
+    const h = imgOrCanvasSrc.videoHeight || imgOrCanvasSrc.naturalHeight || imgOrCanvasSrc.height;
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    c.getContext('2d').drawImage(imgOrCanvasSrc, 0, 0, w, h);
+
+    const thumbC = document.createElement('canvas');
+    const tw = 120, th = Math.round(120 * h / w);
+    thumbC.width = tw; thumbC.height = th;
+    thumbC.getContext('2d').drawImage(c, 0, 0, tw, th);
+
+    state.shots.push({
+      id: Date.now()+Math.random(),
+      canvas: c,
+      thumb: thumbC.toDataURL('image/jpeg', 0.7),
+      edits: defaultEdits(),
+      faceMasks: null,
+      hasFace: false,
+      autoDone: false
+    });
+    renderFilmstrip();
+  }
+
+  $('btnShutter').addEventListener('click', ()=>{
+    if(!video.videoWidth){ toast('Chưa có tín hiệu để chụp'); return; }
+    addShotFromImage(video);
+    flashScreen();
+    openEditor(state.shots.length-1, {auto:true});
+  });
+
+  function flashScreen(){
+    const f = document.createElement('div');
+    f.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:99;opacity:0.85;pointer-events:none;transition:opacity 0.25s;';
+    document.body.appendChild(f);
+    requestAnimationFrame(()=>{ f.style.opacity='0'; setTimeout(()=>f.remove(),260); });
+  }
+
+  function renderFilmstrip(){
+    const fs = $('filmstrip');
+    fs.innerHTML = '';
+    if(state.shots.length === 0){
+      fs.innerHTML = '<div class="thumb empty">Ảnh chụp</div>';
+      return;
+    }
+    state.shots.forEach((s, i)=>{
+      const t = document.createElement('div');
+      t.className = 'thumb';
+      t.innerHTML = '<img src="'+s.thumb+'">';
+      t.addEventListener('click', ()=> openEditor(i));
+      fs.appendChild(t);
+    });
+  }
+
+  // ---------------- editor ----------------
+  const editCanvas = $('editCanvas');
+  const ectx = editCanvas.getContext('2d', {willReadFrequently:true});
+  const PREVIEW_MAX = 1440;
+  const EXPORT_MAX = 4096;
+  let previewImageData = null; // transformed+cropped original at preview res (unedited)
+  let previewRAF = null;
+  let geomRAF = null;
+  let cropMode = false;
+  let cropDragging = null;
+  let faceRefreshTimer = null;
+
+  function openEditor(index, opts){
+    opts = opts || {};
+    cropMode = false;
+    $('cropOverlay').classList.remove('show');
+    state.activeShotIndex = index;
+    const shot = state.shots[index];
+    state.edits = shot.edits;
+    syncSlidersFromEdits();
+    renderLutGrid();
+    syncAspectChips();
+    preparePreview(false);
+    renderPreview();
+    showScreen('edit');
+    if(opts.auto && !shot.autoDone){ runAuto(); }
+  }
+
+  $('btnBackToCapture').addEventListener('click', ()=>{
+    if(state.activeShotIndex >= 0){ state.shots[state.activeShotIndex].edits = state.edits; }
+    cropMode = false;
+    $('cropOverlay').classList.remove('show');
+    showScreen('capture');
+  });
+
+  // tabs
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const tab = btn.dataset.tab;
+      if(tab === 'crop'){ enterCropMode(); }
+      else if(cropMode){ exitCropMode(); }
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.ctrl-group').forEach(g=>g.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelector('.ctrl-group[data-group="'+tab+'"]').classList.add('active');
+    });
+  });
+
+  // sliders
+  const ctrlEls = {};
+  document.querySelectorAll('.ctrl').forEach(el=>{
+    const key = el.dataset.key;
+    const input = el.querySelector('input[type=range]');
+    const val = el.querySelector('.val');
+    ctrlEls[key] = {el, input, val};
+    input.addEventListener('input', ()=>{
+      const v = parseInt(input.value,10);
+      state.edits[key] = v;
+      val.textContent = v;
+      el.classList.toggle('zero', v===0);
+      if(key === 'straighten'){ scheduleGeometry(); }
+      else { schedulePreview(); }
+    });
+  });
+
+  function syncSlidersFromEdits(){
+    Object.keys(state.edits).forEach(key=>{
+      const c = ctrlEls[key];
+      if(!c) return;
+      c.input.value = state.edits[key];
+      c.val.textContent = state.edits[key];
+      c.el.classList.toggle('zero', state.edits[key]===0);
+    });
+  }
+
+  $('btnReset').addEventListener('click', ()=>{
+    state.edits = defaultEdits();
+    syncSlidersFromEdits();
+    renderLutGrid();
+    syncAspectChips();
+    exitCropMode();
+    preparePreview(false);
+    renderPreview();
+  });
+
+  $('btnAuto').addEventListener('click', runAuto);
+
+  let showingOriginal = false;
+  $('btnBeforeAfter').addEventListener('mousedown', showOriginal);
+  $('btnBeforeAfter').addEventListener('touchstart', (e)=>{e.preventDefault(); showOriginal();}, {passive:false});
+  $('btnBeforeAfter').addEventListener('mouseup', hideOriginal);
+  $('btnBeforeAfter').addEventListener('mouseleave', hideOriginal);
+  $('btnBeforeAfter').addEventListener('touchend', hideOriginal);
+  function showOriginal(){ if(previewImageData){ ectx.putImageData(previewImageData,0,0); } }
+  function hideOriginal(){ renderPreview(true); }
+
+  function schedulePreview(){
+    if(previewRAF) cancelAnimationFrame(previewRAF);
+    previewRAF = requestAnimationFrame(()=> renderPreview());
+  }
+
+  // ---------------- image processing core ----------------
+  function clamp(v){ return v<0?0:(v>255?255:v); }
+
+  function renderPreview(force){
+    if(!previewImageData) return;
+    const w = editCanvas.width, h = editCanvas.height;
+    const out = new Uint8ClampedArray(previewImageData.data); // copy
+    const fm = currentMasks();
+    applyToneAndColor(out, w, h, state.edits);
+    if(state.edits.skin > 0){ applySkinSmooth(out, w, h, state.edits.skin/100, fm); }
+    if(state.edits.eye > 0){ applyEyeBrighten(out, w, h, state.edits.eye/100, fm); }
+    if(state.edits.sharpen > 0){ applySharpen(out, w, h, state.edits.sharpen/100); }
+    const L = getLUT(state.edits.lut);
+    if(L){ applyLUT(out, w, h, L.lut, L.N, (state.edits.lutStrength||100)/100); }
+    if(state.edits.vignette > 0){ applyVignette(out, w, h, state.edits.vignette/100); }
+    ectx.putImageData(new ImageData(out, w, h), 0, 0);
+  }
+
+  function currentMasks(){
+    const shot = state.shots[state.activeShotIndex];
+    return shot && shot.faceMasks ? shot.faceMasks : null;
+  }
+
+  // ---------------- geometry (crop / rotate / flip / straighten) ----------------
+  function geomTransform(srcW, srcH, e){
+    const angle = (e.rotation||0) + (e.straighten||0);
+    const rad = angle * Math.PI/180;
+    const c = Math.abs(Math.cos(rad)), s = Math.abs(Math.sin(rad));
+    const tw = srcW*c + srcH*s;
+    const th = srcW*s + srcH*c;
+    const cw = (e.cropW==null?1:e.cropW);
+    const ch = (e.cropH==null?1:e.cropH);
+    return {
+      rad, tw, th,
+      flipH: !!e.flipH, flipV: !!e.flipV,
+      cx: (e.cropX||0)*tw, cy: (e.cropY||0)*th,
+      cw: cw*tw, ch: ch*th
+    };
+  }
+
+  function renderGeometry(sourceCanvas, e, maxDim, showFull){
+    const srcW = sourceCanvas.width, srcH = sourceCanvas.height;
+    const g = geomTransform(srcW, srcH, e);
+    const ss = Math.min(1, maxDim / Math.max(g.tw, g.th));
+    const stW = Math.max(1, Math.round(g.tw*ss));
+    const stH = Math.max(1, Math.round(g.th*ss));
+    const stage = document.createElement('canvas');
+    stage.width = stW; stage.height = stH;
+    const sctx = stage.getContext('2d');
+    sctx.translate(stW/2, stH/2);
+    sctx.scale(ss, ss);
+    if(g.flipH) sctx.scale(-1,1);
+    if(g.flipV) sctx.scale(1,-1);
+    sctx.rotate(g.rad);
+    sctx.drawImage(sourceCanvas, -srcW/2, -srcH/2, srcW, srcH);
+
+    const cwPx = (showFull ? g.tw : g.cw) * ss;
+    const chPx = (showFull ? g.th : g.ch) * ss;
+    const cxPx = (showFull ? 0 : g.cx) * ss;
+    const cyPx = (showFull ? 0 : g.cy) * ss;
+    const scale = Math.min(1, maxDim / Math.max(cwPx, chPx));
+    const outW = Math.max(1, Math.round(cwPx*scale));
+    const outH = Math.max(1, Math.round(chPx*scale));
+
+    const out = document.createElement('canvas');
+    out.width = outW; out.height = outH;
+    const octx = out.getContext('2d');
+    octx.drawImage(stage, cxPx, cyPx, cwPx, chPx, 0, 0, outW, outH);
+    return out;
+  }
+
+  function preparePreview(showFull){
+    const shot = state.shots[state.activeShotIndex];
+    if(!shot) return;
+    const c = renderGeometry(shot.canvas, state.edits, PREVIEW_MAX, showFull);
+    editCanvas.width = c.width;
+    editCanvas.height = c.height;
+    ectx.drawImage(c, 0, 0);
+    previewImageData = ectx.getImageData(0,0,c.width,c.height);
+  }
+
+  function renderOutputCanvas(){
+    const shot = state.shots[state.activeShotIndex];
+    const c = renderGeometry(shot.canvas, state.edits, EXPORT_MAX, false);
+    const ctx = c.getContext('2d', {willReadFrequently:true});
+    const id = ctx.getImageData(0,0,c.width,c.height);
+    const w = c.width, h = c.height;
+    const out = new Uint8ClampedArray(id.data);
+    const fm = shot.faceMasks;
+    applyToneAndColor(out, w, h, state.edits);
+    if(state.edits.skin > 0){ applySkinSmooth(out, w, h, state.edits.skin/100, fm); }
+    if(state.edits.eye > 0){ applyEyeBrighten(out, w, h, state.edits.eye/100, fm); }
+    if(state.edits.sharpen > 0){ applySharpen(out, w, h, state.edits.sharpen/100); }
+    const L = getLUT(state.edits.lut);
+    if(L){ applyLUT(out, w, h, L.lut, L.N, (state.edits.lutStrength||100)/100); }
+    if(state.edits.vignette > 0){ applyVignette(out, w, h, state.edits.vignette/100); }
+    ctx.putImageData(new ImageData(out, w, h), 0, 0);
+    return c;
+  }
+
+  function onGeometryChanged(){
+    const shot = state.shots[state.activeShotIndex];
+    if(shot) shot.faceMasks = null;
+    preparePreview(cropMode);
+    if(cropMode){ syncCropOverlay(); }
+    else { renderPreview(); }
+    refreshFacesDebounced();
+  }
+  function scheduleGeometry(){
+    if(geomRAF) cancelAnimationFrame(geomRAF);
+    geomRAF = requestAnimationFrame(onGeometryChanged);
+  }
+
+  function refreshFacesDebounced(){
+    clearTimeout(faceRefreshTimer);
+    faceRefreshTimer = setTimeout(async ()=>{
+      if(state.activeShotIndex < 0) return;
+      const shot = state.shots[state.activeShotIndex];
+      try{
+        const faces = await detectFaces(editCanvas);
+        if(faces && faces.length){
+          shot.faceMasks = buildFaceMasks(faces, editCanvas.width, editCanvas.height);
+          shot.hasFace = true;
+        } else {
+          shot.faceMasks = null; shot.hasFace = false;
+        }
+        if(!cropMode) renderPreview();
+      }catch(e){ /* model chưa tải — bỏ qua */ }
+    }, 400);
+  }
+
+  // ---- crop model (normalized 0..1) ----
+  function getCrop(){
+    const e = state.edits;
+    return {x: e.cropX||0, y: e.cropY||0, w: (e.cropW==null?1:e.cropW), h: (e.cropH==null?1:e.cropH)};
+  }
+  function setCrop(x,y,w,h){
+    const e = state.edits;
+    e.cropX = x; e.cropY = y; e.cropW = w; e.cropH = h;
+  }
+  function ratioValue(aspect){
+    if(!aspect) return null;
+    const p = aspect.split(':');
+    const a = parseFloat(p[0]), b = parseFloat(p[1]);
+    return (a && b) ? a/b : null;
+  }
+  function syncAspectChips(){
+    document.querySelectorAll('.aspect-chip').forEach(ch=>{
+      ch.classList.toggle('active', (ch.dataset.aspect||'') === (state.edits.cropAspect||''));
+    });
+  }
+  function applyAspect(aspect){
+    state.edits.cropAspect = aspect;
+    const r = ratioValue(aspect);
+    if(r){
+      let w = 1, h = 1;
+      if(r >= 1){ w = 1; h = 1/r; } else { h = 1; w = r; }
+      setCrop((1-w)/2, (1-h)/2, w, h);
+    }
+    syncAspectChips();
+    onGeometryChanged();
+  }
+
+  function enterCropMode(){
+    cropMode = true;
+    preparePreview(true);
+    syncCropOverlay();
+    $('cropOverlay').classList.add('show');
+  }
+  function exitCropMode(){
+    if(!cropMode) return;
+    cropMode = false;
+    $('cropOverlay').classList.remove('show');
+    preparePreview(false);
+    renderPreview();
+    refreshFacesDebounced();
+  }
+
+  function syncCropOverlay(){
+    const overlay = $('cropOverlay');
+    const stage = editCanvas.parentElement;
+    const sr = stage.getBoundingClientRect();
+    const cr = editCanvas.getBoundingClientRect();
+    overlay.style.left = (cr.left - sr.left) + 'px';
+    overlay.style.top = (cr.top - sr.top) + 'px';
+    overlay.style.width = cr.width + 'px';
+    overlay.style.height = cr.height + 'px';
+    updateCropOverlay();
+  }
+  function updateCropOverlay(){
+    const box = $('cropBox');
+    const c = getCrop();
+    box.style.left = (c.x*100) + '%';
+    box.style.top = (c.y*100) + '%';
+    box.style.width = (c.w*100) + '%';
+    box.style.height = (c.h*100) + '%';
+  }
+
+  // ---- crop drag ----
+  const cropOverlay = $('cropOverlay');
+  const cropBox = $('cropBox');
+  cropBox.addEventListener('pointerdown', (e)=>{
+    e.preventDefault();
+    startCropDrag(e.target.dataset.dir || 'move', e);
+  });
+  function startCropDrag(dir, e){
+    cropDragging = {dir, startX: e.clientX, startY: e.clientY, crop: getCrop()};
+    if(cropBox.setPointerCapture) cropBox.setPointerCapture(e.pointerId);
+  }
+  cropOverlay.addEventListener('pointermove', (e)=>{
+    if(cropDragging) moveCropDrag(e);
+  });
+  cropOverlay.addEventListener('pointerup', ()=>{
+    if(!cropDragging) return;
+    cropDragging = null;
+    const shot = state.shots[state.activeShotIndex];
+    if(shot) shot.faceMasks = null;
+    preparePreview(false);
+    renderPreview();
+    refreshFacesDebounced();
+  });
+  cropOverlay.addEventListener('pointercancel', ()=>{ cropDragging = null; });
+
+  function moveCropDrag(e){
+    const rect = editCanvas.getBoundingClientRect();
+    if(!rect.width) return;
+    const dx = (e.clientX - cropDragging.startX)/rect.width;
+    const dy = (e.clientY - cropDragging.startY)/rect.height;
+    const c = cropDragging.crop;
+    const dir = cropDragging.dir;
+    const r = ratioValue(state.edits.cropAspect);
+    let x = c.x, y = c.y, w = c.w, h = c.h;
+    if(dir === 'move'){
+      x = c.x + dx; y = c.y + dy;
+      x = Math.max(0, Math.min(x, 1-c.w));
+      y = Math.max(0, Math.min(y, 1-c.h));
+    } else {
+      const fx = dir.includes('e') ? c.x : c.x + c.w;
+      const fy = dir.includes('s') ? c.y : c.y + c.h;
+      const px = dir.includes('e') ? c.x + c.w + dx : c.x + dx;
+      const py = dir.includes('s') ? c.y + c.h + dy : c.y + dy;
+      let nw = Math.abs(px - fx);
+      let nh = Math.abs(py - fy);
+      if(r){ nw = Math.max(nw, nh*r); nh = nw/r; }
+      nw = Math.min(nw, 1); nh = Math.min(nh, 1);
+      let nx = dir.includes('e') ? fx : fx - nw;
+      let ny = dir.includes('s') ? fy : fy - nh;
+      if(nx < 0){ nw += nx; nx = 0; if(r) nh = nw/r; }
+      if(ny < 0){ nh += ny; ny = 0; if(r) nw = nh*r; }
+      if(nx + nw > 1){ nw = 1 - nx; if(r) nh = nw/r; }
+      if(ny + nh > 1){ nh = 1 - ny; if(r) nw = nh*r; }
+      const min = 0.04;
+      if(nw < min) nw = min;
+      if(nh < min) nh = min;
+      x = nx; y = ny; w = nw; h = nh;
+    }
+    setCrop(x, y, w, h);
+    updateCropOverlay();
+  }
+
+  // ---- crop / rotate controls ----
+  $('btnRotate90').addEventListener('click', ()=>{
+    state.edits.rotation = ((state.edits.rotation||0) + 90) % 360;
+    onGeometryChanged();
+  });
+  $('btnFlipH').addEventListener('click', ()=>{
+    state.edits.flipH = state.edits.flipH ? 0 : 1;
+    onGeometryChanged();
+  });
+  $('btnFlipV').addEventListener('click', ()=>{
+    state.edits.flipV = state.edits.flipV ? 0 : 1;
+    onGeometryChanged();
+  });
+  $('btnCropApply').addEventListener('click', exitCropMode);
+  $('btnCropReset').addEventListener('click', ()=>{
+    state.edits.cropAspect = '';
+    setCrop(0,0,1,1);
+    syncAspectChips();
+    onGeometryChanged();
+  });
+  document.querySelectorAll('.aspect-chip').forEach(ch=>{
+    ch.addEventListener('click', ()=> applyAspect(ch.dataset.aspect));
+  });
+  window.addEventListener('resize', ()=>{ if(cropMode) syncCropOverlay(); });
+
+  function applyToneAndColor(data, w, h, e){
+    const exposure = e.exposure * 1.3;      // -130..130 additive-ish
+    const contrastF = (259*(e.contrast+255))/(255*(259-e.contrast)); // classic contrast formula scaled below
+    const satF = 1 + e.saturation/100;
+    const warm = e.warmth * 0.6;   // shift R/B
+    const tintG = e.tint * 0.5;    // shift G vs magenta
+    const hi = e.highlights/100;   // -1..1
+    const sh = e.shadows/100;      // -1..1
+
+    for(let i=0;i<data.length;i+=4){
+      let r=data[i], g=data[i+1], b=data[i+2];
+
+      // exposure (linear add)
+      r += exposure; g += exposure; b += exposure;
+
+      // luminance for highlight/shadow masks
+      const lum = (0.299*r + 0.587*g + 0.114*b)/255;
+      if(sh !== 0){
+        const shMask = Math.pow(1-lum, 2);
+        const amt = sh * 60 * shMask;
+        r += amt; g += amt; b += amt;
+      }
+      if(hi !== 0){
+        const hiMask = Math.pow(lum, 2);
+        const amt = hi * 55 * hiMask; // positive hi = brighten highlights, negative = recover(darken)
+        r += amt; g += amt; b += amt;
+      }
+
+      // contrast (around midpoint 128)
+      r = contrastF*(r-128)+128;
+      g = contrastF*(g-128)+128;
+      b = contrastF*(b-128)+128;
+
+      // warmth (R up / B down) & tint (G vs magenta)
+      r += warm; b -= warm;
+      g += tintG; r -= tintG*0.5; b -= tintG*0.5;
+
+      // saturation
+      const l2 = 0.299*r + 0.587*g + 0.114*b;
+      r = l2 + (r-l2)*satF;
+      g = l2 + (g-l2)*satF;
+      b = l2 + (b-l2)*satF;
+
+      data[i]=clamp(r); data[i+1]=clamp(g); data[i+2]=clamp(b);
+    }
+  }
+
+  // separable box blur (single pass, radius r) on RGBA buffer -> returns new buffer
+  function boxBlurRGBA(src, w, h, r){
+    if(r<1) return new Uint8ClampedArray(src);
+    const tmp = new Float32Array(src.length);
+    const out = new Uint8ClampedArray(src.length);
+    const size = r*2+1;
+    // horizontal
+    for(let y=0;y<h;y++){
+      let ro=0,go=0,bo=0;
+      const rowStart = y*w*4;
+      for(let x=-r;x<=r;x++){
+        const xi = Math.min(w-1, Math.max(0,x));
+        const idx = rowStart+xi*4;
+        ro+=src[idx]; go+=src[idx+1]; bo+=src[idx+2];
+      }
+      for(let x=0;x<w;x++){
+        const idx = rowStart+x*4;
+        tmp[idx]=ro/size; tmp[idx+1]=go/size; tmp[idx+2]=bo/size; tmp[idx+3]=src[idx+3];
+        const addXi = Math.min(w-1, x+r+1);
+        const subXi = Math.max(0, x-r);
+        const addIdx = rowStart+addXi*4, subIdx = rowStart+subXi*4;
+        ro += src[addIdx]-src[subIdx];
+        go += src[addIdx+1]-src[subIdx+1];
+        bo += src[addIdx+2]-src[subIdx+2];
+      }
+    }
+    // vertical
+    for(let x=0;x<w;x++){
+      let ro=0,go=0,bo=0;
+      for(let y=-r;y<=r;y++){
+        const yi = Math.min(h-1, Math.max(0,y));
+        const idx = (yi*w+x)*4;
+        ro+=tmp[idx]; go+=tmp[idx+1]; bo+=tmp[idx+2];
+      }
+      for(let y=0;y<h;y++){
+        const idx=(y*w+x)*4;
+        out[idx]=ro/size; out[idx+1]=go/size; out[idx+2]=bo/size; out[idx+3]=tmp[idx+3];
+        const addYi = Math.min(h-1, y+r+1);
+        const subYi = Math.max(0, y-r);
+        const addIdx=(addYi*w+x)*4, subIdx=(subYi*w+x)*4;
+        ro += tmp[addIdx]-tmp[subIdx];
+        go += tmp[addIdx+1]-tmp[subIdx+1];
+        bo += tmp[addIdx+2]-tmp[subIdx+2];
+      }
+    }
+    return out;
+  }
+
+  function boxBlur1ch(src, w, h, r){
+    if(r<1) return new Float32Array(src);
+    const tmp = new Float32Array(src.length);
+    const out = new Float32Array(src.length);
+    const size = r*2+1;
+    for(let y=0;y<h;y++){
+      let acc=0;
+      const rowStart=y*w;
+      for(let x=-r;x<=r;x++){ const xi=Math.min(w-1,Math.max(0,x)); acc+=src[rowStart+xi]; }
+      for(let x=0;x<w;x++){
+        tmp[rowStart+x]=acc/size;
+        const addXi=Math.min(w-1,x+r+1), subXi=Math.max(0,x-r);
+        acc += src[rowStart+addXi]-src[rowStart+subXi];
+      }
+    }
+    for(let x=0;x<w;x++){
+      let acc=0;
+      for(let y=-r;y<=r;y++){ const yi=Math.min(h-1,Math.max(0,y)); acc+=tmp[yi*w+x]; }
+      for(let y=0;y<h;y++){
+        out[y*w+x]=acc/size;
+        const addYi=Math.min(h-1,y+r+1), subYi=Math.max(0,y-r);
+        acc += tmp[addYi*w+x]-tmp[subYi*w+x];
+      }
+    }
+    return out;
+  }
+
+  function skinScore(r,g,b){
+    // soft heuristic skin-tone score in [0,1]
+    const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+    const diff = mx-mn;
+    let score = 0;
+    if(r>60 && g>25 && b>10 && diff>10 && r>g && r>=b){
+      const cond1 = Math.min(1, Math.max(0, (r-95)/60));         // r brightness
+      const cond2 = Math.min(1, Math.max(0, (diff-10)/40));      // channel spread
+      const cond3 = Math.min(1, Math.max(0, (r-g)/50));          // r dominance over g
+      const cond4 = Math.min(1, Math.max(0, 1-((r-b<10)?1:0)));  // r somewhat > b handled by diff
+      score = cond1*0.35 + cond2*0.3 + cond3*0.35;
+    }
+    return Math.min(1, Math.max(0, score));
+  }
+
+  function applySkinSmooth(data, w, h, amount, fm){
+    const n = w*h;
+    const mask = new Float32Array(n);
+    for(let p=0, i=0; p<n; p++, i+=4){
+      let m = skinScore(data[i], data[i+1], data[i+2]);
+      if(fm){
+        const mx = Math.min(fm.MW-1, ((p%w)*fm.MW/w)|0);
+        const my = Math.min(fm.MH-1, (((p/w)|0)*fm.MH/h)|0);
+        m *= fm.skin[my*fm.MW+mx];
+      }
+      mask[p] = m;
+    }
+    const softMask = boxBlur1ch(mask, w, h, 6);
+    const radius = Math.max(2, Math.round(2 + amount*9));
+    const blurred = boxBlurRGBA(data, w, h, radius);
+    for(let p=0, i=0; p<n; p++, i+=4){
+      const m = softMask[p] * amount;
+      if(m<=0.003) continue;
+      data[i]   = data[i]   * (1-m) + blurred[i]   * m;
+      data[i+1] = data[i+1] * (1-m) + blurred[i+1] * m;
+      data[i+2] = data[i+2] * (1-m) + blurred[i+2] * m;
+    }
+  }
+
+  function applySharpen(data, w, h, amount){
+    const blurred = boxBlurRGBA(data, w, h, 2);
+    const k = amount * 1.1;
+    for(let i=0;i<data.length;i+=4){
+      data[i]   = clamp(data[i]   + (data[i]  -blurred[i])  *k);
+      data[i+1] = clamp(data[i+1] + (data[i+1]-blurred[i+1])*k);
+      data[i+2] = clamp(data[i+2] + (data[i+2]-blurred[i+2])*k);
+    }
+  }
+
+  function applyVignette(data, w, h, amount){
+    const cx=w/2, cy=h/2;
+    const maxDist = Math.sqrt(cx*cx+cy*cy);
+    for(let y=0;y<h;y++){
+      for(let x=0;x<w;x++){
+        const dx=x-cx, dy=y-cy;
+        const d = Math.sqrt(dx*dx+dy*dy)/maxDist;
+        const f = Math.max(0, d-0.35)/0.65;
+        const dark = 1 - Math.min(1, f*f*amount*1.1);
+        const idx=(y*w+x)*4;
+        data[idx]*=dark; data[idx+1]*=dark; data[idx+2]*=dark;
+      }
+    }
+  }
+
+  // ---------------- export ----------------
+  $('btnExport').addEventListener('click', ()=>{
+    toast('Đang xuất ảnh…');
+    setTimeout(()=>{
+      const c = renderOutputCanvas();
+      c.toBlob((blob)=>{
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'lenslab-' + Date.now() + '.jpg';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url), 4000);
+        toast('Đã lưu — kiểm tra Ảnh / Tệp tải xuống');
+      }, 'image/jpeg', 0.92);
+    }, 30);
+  });
+
+  $('btnDeleteShot').addEventListener('click', ()=>{
+    if(state.activeShotIndex<0) return;
+    state.shots.splice(state.activeShotIndex,1);
+    renderFilmstrip();
+    showScreen('capture');
+  });
+
+  // ---------------- AI: MediaPipe face landmarker + auto enhance ----------------
+  const MP_VERSION = '0.10.14';
+  const FACE_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+  const FACE_OVAL = [10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];
+  const LEFT_EYE = [263,249,390,373,374,380,381,382,362,398,384,385,386,387,388,466];
+  const RIGHT_EYE = [33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246];
+  const LIPS = [61,146,91,181,84,17,314,405,321,375,291,409,270,269,267,0,37,39,40,185];
+
+  async function loadFaceLandmarker(){
+    if(state.faceLandmarker) return state.faceLandmarker;
+    if(state.mpLoading) return state.mpLoading;
+    state.mpLoading = (async ()=>{
+      const vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+MP_VERSION+'/+esm');
+      const FaceLandmarker = vision.FaceLandmarker || (vision.default && vision.default.FaceLandmarker);
+      const FilesetResolver = vision.FilesetResolver || (vision.default && vision.default.FilesetResolver);
+      const fileset = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+MP_VERSION+'/wasm');
+      const lm = await FaceLandmarker.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: FACE_MODEL_URL, delegate: 'CPU' },
+        runningMode: 'IMAGE',
+        numFaces: 3,
+        outputFaceBlendshapes: false
+      });
+      state.faceLandmarker = lm;
+      return lm;
+    })().catch((err)=>{ state.mpLoading = null; throw err; });
+    return state.mpLoading;
+  }
+
+  async function detectFaces(canvas){
+    const lm = await loadFaceLandmarker();
+    const res = lm.detect(canvas);
+    return (res && res.faceLandmarks) ? res.faceLandmarks : [];
+  }
+
+  function polyPath(ctx, face, idx, MW, MH){
+    ctx.beginPath();
+    let started = false;
+    for(const k of idx){
+      const p = face[k];
+      if(!p) continue;
+      const x = p.x*MW, y = p.y*MH;
+      if(!started){ ctx.moveTo(x,y); started = true; } else { ctx.lineTo(x,y); }
+    }
+    ctx.closePath();
+  }
+
+  function buildFaceMasks(faces, w, h){
+    const MW = 160;
+    const MH = Math.max(2, Math.round(MW*h/w));
+    const c = document.createElement('canvas');
+    c.width = MW; c.height = MH;
+    const ctx = c.getContext('2d', {willReadFrequently:true});
+    const skin = new Float32Array(MW*MH);
+    const eye = new Float32Array(MW*MH);
+    for(const face of faces){
+      if(!face || face.length < 468) continue;
+      ctx.clearRect(0,0,MW,MH);
+      ctx.fillStyle = '#fff';
+      polyPath(ctx, face, FACE_OVAL, MW, MH); ctx.fill();
+      ctx.globalCompositeOperation = 'destination-out';
+      polyPath(ctx, face, LEFT_EYE, MW, MH); ctx.fill();
+      polyPath(ctx, face, RIGHT_EYE, MW, MH); ctx.fill();
+      polyPath(ctx, face, LIPS, MW, MH); ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      const sd = ctx.getImageData(0,0,MW,MH).data;
+      for(let i=0;i<MW*MH;i++){ const a=sd[i*4+3]; if(a>skin[i]) skin[i]=a; }
+      ctx.clearRect(0,0,MW,MH);
+      ctx.fillStyle = '#fff';
+      polyPath(ctx, face, LEFT_EYE, MW, MH); ctx.fill();
+      polyPath(ctx, face, RIGHT_EYE, MW, MH); ctx.fill();
+      const ed = ctx.getImageData(0,0,MW,MH).data;
+      for(let i=0;i<MW*MH;i++){ const a=ed[i*4+3]; if(a>eye[i]) eye[i]=a; }
+    }
+    for(let i=0;i<MW*MH;i++){ skin[i]/=255; eye[i]/=255; }
+    return {skin, eye, MW, MH};
+  }
+
+  function clampInt(v){ return v<-100?-100:(v>100?100:v); }
+
+  function analyzeScene(data, w, h){
+    const hist = new Float32Array(256);
+    let rSum=0, gSum=0, bSum=0, cnt=0;
+    const totalPix = w*h;
+    const step = Math.max(1, (totalPix/300000)|0);
+    for(let p=0; p<totalPix; p+=step){
+      const i = p*4;
+      const r=data[i], g=data[i+1], b=data[i+2];
+      const lum = 0.299*r+0.587*g+0.114*b;
+      hist[Math.min(255, Math.round(lum))]++;
+      rSum+=r; gSum+=g; bSum+=b; cnt++;
+    }
+    if(cnt < 1000) return defaultEdits();
+    const avgR=rSum/cnt, avgG=gSum/cnt, avgB=bSum/cnt;
+    function pct(q){ let acc=0, v=0; for(let k=0;k<256;k++){ acc+=hist[k]; if(acc/cnt>=q){ v=k; break; } } return v; }
+    const p1=pct(0.01), p50=pct(0.5), p99=pct(0.99);
+    const e = defaultEdits();
+    e.exposure = clampInt(Math.round((118 - p50) / 1.3 * 0.85));
+    const spread = p99 - p1;
+    e.contrast = clampInt(Math.round((150 - spread) * 0.25));
+    e.highlights = clampInt(Math.round((235 - p99) * 0.5));
+    e.shadows = clampInt(Math.round((28 - p1) * 1.0));
+    e.warmth = clampInt(Math.round((avgB - avgR) * 0.6));
+    e.tint = clampInt(Math.round((avgR + avgB - 2*avgG) * 0.5));
+    e.saturation = 4;
+    e.vignette = 0;
+    return e;
+  }
+
+  function applyEyeBrighten(data, w, h, amount, fm){
+    if(!fm) return;
+    const MW=fm.MW, MH=fm.MH;
+    for(let y=0;y<h;y++){
+      const my = Math.min(MH-1, (y*MH/h)|0);
+      for(let x=0;x<w;x++){
+        const mx = Math.min(MW-1, (x*MW/w)|0);
+        const em = fm.eye[my*MW+mx];
+        if(em < 0.2) continue;
+        const i = (y*w+x)*4;
+        const r=data[i], g=data[i+1], b=data[i+2];
+        const lum = 0.299*r+0.587*g+0.114*b;
+        const white = Math.max(0, Math.min(1, (lum-100)/80));
+        const boost = em * white * amount * 26;
+        data[i]   = clamp(r+boost);
+        data[i+1] = clamp(g+boost);
+        data[i+2] = clamp(b+boost);
+      }
+    }
+  }
+
+  async function runAuto(){
+    if(!previewImageData || state.activeShotIndex < 0) return;
+    const shot = state.shots[state.activeShotIndex];
+    const w = editCanvas.width, h = editCanvas.height;
+    const auto = analyzeScene(previewImageData.data, w, h);
+    state.edits = Object.assign(auto, {
+      rotation: state.edits.rotation, flipH: state.edits.flipH, flipV: state.edits.flipV,
+      straighten: state.edits.straighten, cropX: state.edits.cropX, cropY: state.edits.cropY,
+      cropW: state.edits.cropW, cropH: state.edits.cropH, cropAspect: state.edits.cropAspect,
+      lut: state.edits.lut, lutStrength: state.edits.lutStrength
+    });
+    syncSlidersFromEdits();
+    renderLutGrid();
+    renderPreview();
+    toast('AI đang phân tích ảnh…');
+    try{
+      const faces = await detectFaces(editCanvas);
+      if(faces && faces.length){
+        shot.faceMasks = buildFaceMasks(faces, w, h);
+        shot.hasFace = true;
+        state.edits.skin = 40;
+        state.edits.eye = 28;
+        toast('Đã nhận diện ' + faces.length + ' khuôn mặt');
+      } else {
+        shot.faceMasks = null;
+        shot.hasFace = false;
+        state.edits.skin = 0;
+        state.edits.eye = 0;
+      }
+    }catch(err){
+      console.error(err);
+      shot.faceMasks = null;
+      shot.hasFace = false;
+      state.edits.skin = 0;
+      state.edits.eye = 0;
+      toast('Không tải được model AI (cần mạng). Đã áp dụng auto cân sáng.');
+    }
+    syncSlidersFromEdits();
+    renderPreview();
+    shot.autoDone = true;
+  }
+
+  // ---------------- LUT / color grade presets ----------------
+  const LUT_SIZE = 33;
+  const lutCache = {};
+  const LUT_PRESETS = [
+    { id:'none', name:'Không LUT' },
+    { id:'natural', name:'Tự nhiên', look:{saturation:0.08, contrast:0.06} },
+    { id:'portrait', name:'Chân dung', look:{saturation:0.04, contrast:-0.04, lift:[10,5,5], gain:[1.02,0.99,0.97]} },
+    { id:'teal', name:'Teal & Orange', look:{saturation:0.1, contrast:0.12, splitShadow:[-20,0,20], splitHighlight:[16,4,-12]} },
+    { id:'kodak', name:'Film ấm', look:{saturation:0.05, contrast:0.1, exposure:-4, lift:[6,3,-6], gain:[1.05,0.98,0.9], splitShadow:[12,4,-8], splitHighlight:[14,6,-6]} },
+    { id:'fuji', name:'Mát lạnh', look:{saturation:0.02, contrast:0.08, exposure:-2, gain:[0.96,1.0,1.06], splitShadow:[6,-2,14], splitHighlight:[-8,2,10]} },
+    { id:'moody', name:'Moody', look:{saturation:-0.35, contrast:0.18, exposure:-12, gain:[0.92,0.9,0.94], splitShadow:[12,6,18], splitHighlight:[8,2,10]} },
+    { id:'fade', name:'Vintage Fade', look:{saturation:-0.2, contrast:-0.18, exposure:8, lift:[16,12,10], splitShadow:[14,8,-4]} },
+    { id:'vivid', name:'Rực rỡ', look:{saturation:0.3, contrast:0.16, exposure:2} },
+    { id:'bw', name:'Đen trắng', look:{bw:true, contrast:0.22} },
+    { id:'bwsoft', name:'B&W mềm', look:{bw:true, contrast:-0.1, exposure:4} }
+  ];
+
+  function makeLookFn(L){
+    const sat = 1 + (L.saturation||0);
+    const cf = 1 + (L.contrast||0);
+    const exp = L.exposure||0;
+    const lift = L.lift||[0,0,0];
+    const gain = L.gain||[1,1,1];
+    const ss = L.splitShadow||null;
+    const sh = L.splitHighlight||null;
+    const bw = !!L.bw;
+    return function(r,g,b){
+      let R = r + exp, G = g + exp, B = b + exp;
+      R = R*gain[0] + lift[0];
+      G = G*gain[1] + lift[1];
+      B = B*gain[2] + lift[2];
+      R = (R-128)*cf + 128;
+      G = (G-128)*cf + 128;
+      B = (B-128)*cf + 128;
+      const lum = 0.299*R + 0.587*G + 0.114*B;
+      R = lum + (R-lum)*sat;
+      G = lum + (G-lum)*sat;
+      B = lum + (B-lum)*sat;
+      if(ss || sh){
+        const t = clamp(lum)/255;
+        if(ss){ const k=(1-t)*(1-t); R+=ss[0]*k; G+=ss[1]*k; B+=ss[2]*k; }
+        if(sh){ const k=t*t; R+=sh[0]*k; G+=sh[1]*k; B+=sh[2]*k; }
+      }
+      if(bw){ const l=0.299*R+0.587*G+0.114*B; R=l; G=l; B=l; }
+      return [clamp(R), clamp(G), clamp(B)];
+    };
+  }
+
+  function generateLUT(lookFn, N){
+    const lut = new Float32Array(N*N*N*3);
+    let i = 0;
+    for(let b=0;b<N;b++){
+      const ib = Math.round(b*255/(N-1));
+      for(let g=0;g<N;g++){
+        const ig = Math.round(g*255/(N-1));
+        for(let r=0;r<N;r++){
+          const ir = Math.round(r*255/(N-1));
+          const o = lookFn(ir, ig, ib);
+          lut[i*3]=o[0]; lut[i*3+1]=o[1]; lut[i*3+2]=o[2];
+          i++;
+        }
+      }
+    }
+    return lut;
+  }
+
+  function getLUT(id){
+    if(id === '__custom__') return state.customLut;
+    if(!id || id === 'none') return null;
+    if(lutCache[id]) return lutCache[id];
+    const p = LUT_PRESETS.find(x=>x.id===id);
+    if(!p || !p.look) return null;
+    const lut = generateLUT(makeLookFn(p.look), LUT_SIZE);
+    lutCache[id] = {lut, N:LUT_SIZE};
+    return lutCache[id];
+  }
+
+  function applyLUT(data, w, h, lut, N, strength){
+    if(!lut || strength<=0) return;
+    const N1 = N-1, NN = N*N, scale = N1/255, inv = 1-strength;
+    for(let i=0;i<data.length;i+=4){
+      const r=data[i], g=data[i+1], b=data[i+2];
+      const fr=r*scale, fg=g*scale, fb=b*scale;
+      const r0=fr|0, g0=fg|0, b0=fb|0;
+      const r1=r0>=N1?r0:r0+1, g1=g0>=N1?g0:g0+1, b1=b0>=N1?b0:b0+1;
+      const dr=fr-r0, dg=fg-g0, db=fb-b0;
+      const a000=(r0 + g0*N + b0*NN)*3;
+      const a100=(r1 + g0*N + b0*NN)*3;
+      const a010=(r0 + g1*N + b0*NN)*3;
+      const a110=(r1 + g1*N + b0*NN)*3;
+      const a001=(r0 + g0*N + b1*NN)*3;
+      const a101=(r1 + g0*N + b1*NN)*3;
+      const a011=(r0 + g1*N + b1*NN)*3;
+      const a111=(r1 + g1*N + b1*NN)*3;
+      for(let c=0;c<3;c++){
+        const c00 = lut[a000+c]*(1-dr) + lut[a100+c]*dr;
+        const c10 = lut[a010+c]*(1-dr) + lut[a110+c]*dr;
+        const c01 = lut[a001+c]*(1-dr) + lut[a101+c]*dr;
+        const c11 = lut[a011+c]*(1-dr) + lut[a111+c]*dr;
+        const c0 = c00*(1-dg) + c10*dg;
+        const c1 = c01*(1-dg) + c11*dg;
+        const cv = c0*(1-db) + c1*db;
+        data[i+c] = data[i+c]*inv + cv*strength;
+      }
+    }
+  }
+
+  function parseCube(text){
+    const lines = text.split(/\r?\n/);
+    let N = 0;
+    let dMin = [0,0,0], dMax = [1,1,1];
+    const raw = [];
+    for(let line of lines){
+      line = line.trim();
+      if(!line || line[0] === '#') continue;
+      const p = line.split(/\s+/);
+      if(p[0] === 'TITLE' || p[0] === 'LUT_1D_SIZE' || p[0] === 'LUT_3D_INPUT_RANGE') continue;
+      if(p[0] === 'LUT_3D_SIZE'){ N = parseInt(p[1],10); continue; }
+      if(p[0] === 'DOMAIN_MIN'){ dMin = p.slice(1,4).map(Number); continue; }
+      if(p[0] === 'DOMAIN_MAX'){ dMax = p.slice(1,4).map(Number); continue; }
+      if(p.length >= 3){
+        const a = parseFloat(p[0]), b = parseFloat(p[1]), c = parseFloat(p[2]);
+        if(!isNaN(a) && !isNaN(b) && !isNaN(c)) raw.push([a,b,c]);
+      }
+    }
+    if(!N || raw.length < N*N*N) return null;
+    const lut = new Float32Array(raw.length*3);
+    for(let i=0;i<raw.length && i<N*N*N;i++){
+      lut[i*3]   = (raw[i][0]-dMin[0])/(dMax[0]-dMin[0])*255;
+      lut[i*3+1] = (raw[i][1]-dMin[1])/(dMax[1]-dMin[1])*255;
+      lut[i*3+2] = (raw[i][2]-dMin[2])/(dMax[2]-dMin[2])*255;
+    }
+    return {lut, N};
+  }
+
+  function renderLutGrid(){
+    const grid = $('lutGrid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    LUT_PRESETS.forEach(p=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lut-chip' + (state.edits.lut === p.id ? ' active' : '');
+      b.textContent = p.name;
+      b.addEventListener('click', ()=>{
+        state.edits.lut = p.id;
+        renderLutGrid();
+        renderPreview();
+      });
+      grid.appendChild(b);
+    });
+    if(state.customLut){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lut-chip' + (state.edits.lut === '__custom__' ? ' active' : '');
+      b.textContent = state.customLutName || 'Custom LUT';
+      b.addEventListener('click', ()=>{
+        state.edits.lut = '__custom__';
+        renderLutGrid();
+        renderPreview();
+      });
+      grid.appendChild(b);
+    }
+  }
+
+  $('btnImportLut').addEventListener('click', ()=> $('lutFileInput').click());
+  $('lutFileInput').addEventListener('change', (e)=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        const L = parseCube(String(reader.result));
+        if(!L){ toast('File .cube không hợp lệ'); return; }
+        state.customLut = L;
+        state.customLutName = f.name.replace(/\.cube$/i, '');
+        state.edits.lut = '__custom__';
+        renderLutGrid();
+        renderPreview();
+        toast('Đã nạp LUT: ' + state.customLutName);
+      }catch(err){ toast('Lỗi đọc LUT'); }
+    };
+    reader.onerror = ()=> toast('Không đọc được file LUT');
+    reader.readAsText(f);
+    e.target.value = '';
+  });
+
+  // ---------------- RAW import (dcraw.js) ----------------
+  const RAW_EXTS = ['nef','cr2','arw','dng','raf','orf','rw2','pef','srw','x3f','iiq','3fr','rwl'];
+
+  function loadDcraw(){
+    return new Promise((resolve, reject)=>{
+      if(window.dcraw) return resolve();
+      if(window.Module && window.Module.dcraw){ window.dcraw = window.Module.dcraw; return resolve(); }
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/dcraw';
+      s.async = true;
+      s.onload = ()=>{
+        const fn = window.dcraw || (window.Module && window.Module.dcraw);
+        if(fn){ window.dcraw = fn; resolve(); }
+        else reject(new Error('không tải được thư viện RAW'));
+      };
+      s.onerror = ()=> reject(new Error('không tải được thư viện RAW'));
+      document.head.appendChild(s);
+    });
+  }
+
+  function ppmToImageData(out){
+    let data;
+    if(typeof out === 'string'){
+      data = new Uint8Array(out.length);
+      for(let k=0;k<out.length;k++) data[k] = out.charCodeAt(k) & 255;
+    } else if(out instanceof Uint8Array){
+      data = out;
+    } else if(out && out.buffer && ArrayBuffer.isView(out)){
+      data = new Uint8Array(out.buffer, out.byteOffset, out.byteLength);
+    } else {
+      return null;
+    }
+    if(data.length < 10 || data[0] !== 0x50 || data[1] !== 0x36) return null; // not P6
+    let pos = 2;
+    function skip(){
+      while(pos < data.length){
+        const c = data[pos];
+        if(c === 0x23){ while(pos < data.length && data[pos] !== 0x0a) pos++; }
+        else if(c === 0x20 || c === 0x09 || c === 0x0a || c === 0x0d) pos++;
+        else break;
+      }
+    }
+    function readInt(){
+      skip();
+      let v = 0;
+      while(pos < data.length && data[pos] >= 0x30 && data[pos] <= 0x39){ v = v*10 + (data[pos]-0x30); pos++; }
+      return v;
+    }
+    const w = readInt(), h = readInt(), maxv = readInt();
+    skip();
+    if(!w || !h || w*h*3 > data.length - pos) return null;
+    const px = data.subarray(pos);
+    const img = new ImageData(w, h);
+    const is16 = maxv > 255;
+    for(let k=0;k<w*h;k++){
+      if(is16){
+        img.data[k*4]   = px[k*6];
+        img.data[k*4+1] = px[k*6+2];
+        img.data[k*4+2] = px[k*6+4];
+      } else {
+        img.data[k*4]   = px[k*3];
+        img.data[k*4+1] = px[k*3+1];
+        img.data[k*4+2] = px[k*3+2];
+      }
+      img.data[k*4+3] = 255;
+    }
+    return {imageData: img, width: w, height: h};
+  }
+
+  async function handleRawFile(file){
+    toast('Đang giải mã RAW… (lần đầu tải thư viện)');
+    try{
+      await loadDcraw();
+      const buf = new Uint8Array(await file.arrayBuffer());
+      const out = window.dcraw(buf, {
+        setHalfSizeMode: true,
+        setInterpolationQuality: 3,
+        setColorSpace: 1,
+        setHighlightMode: 2,
+        useCameraWhiteBalance: true
+      });
+      const parsed = ppmToImageData(out);
+      if(!parsed){ throw new Error('không giải mã được'); }
+      const c = document.createElement('canvas');
+      c.width = parsed.width; c.height = parsed.height;
+      c.getContext('2d').putImageData(parsed.imageData, 0, 0);
+      addShotFromImage(c);
+      openEditor(state.shots.length-1, {auto:true});
+      toast('Đã mở RAW ' + parsed.width + '×' + parsed.height);
+    }catch(err){
+      console.error(err);
+      toast('Không mở được RAW: ' + (err && err.message ? err.message : err));
+    }
+  }
+
+  // ---------------- Google Drive export ----------------
+  const GSI_URL = 'https://accounts.google.com/gsi/client';
+  const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+
+  function loadGsi(){
+    if(window.google && window.google.accounts && window.google.accounts.oauth2){
+      return Promise.resolve();
+    }
+    return new Promise((resolve, reject)=>{
+      const s = document.createElement('script');
+      s.src = GSI_URL;
+      s.async = true;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error('Không tải được thư viện Google. Kiểm tra mạng.'));
+      document.head.appendChild(s);
+    });
+  }
+
+  function getAccessToken(){
+    const cid = state.settings.driveClientId;
+    if(!cid) return Promise.reject(new Error('NO_CLIENT_ID'));
+    return loadGsi().then(()=> new Promise((resolve, reject)=>{
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: cid,
+        scope: DRIVE_SCOPE,
+        callback: (resp)=>{
+          if(resp.error) reject(new Error(resp.error));
+          else resolve(resp.access_token);
+        }
+      });
+      client.requestAccessToken();
+    }));
+  }
+
+  async function uploadToDrive(blob, filename){
+    const token = await getAccessToken();
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify({ name: filename, mimeType: 'image/jpeg' })], {type:'application/json'}));
+    form.append('file', blob, filename);
+    const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token },
+      body: form
+    });
+    if(!resp.ok){
+      let msg = 'Lỗi ' + resp.status;
+      try{ const j = await resp.json(); if(j && j.error && j.error.message) msg = j.error.message; }catch(e){}
+      throw new Error(msg);
+    }
+    return resp.json();
+  }
+
+  $('btnDriveExport').addEventListener('click', async ()=>{
+    try{
+      if(!state.settings.driveClientId){
+        toast('Chưa cài Client ID — vào ⚙ Cài đặt');
+        showScreen('settings');
+        return;
+      }
+      toast('Đang tải lên Google Drive…');
+      await new Promise((r)=> setTimeout(r, 30));
+      const blob = await new Promise((res)=> renderOutputCanvas().toBlob(res, 'image/jpeg', 0.92));
+      await uploadToDrive(blob, 'lenslab-' + Date.now() + '.jpg');
+      toast('Đã tải lên Google Drive ✓');
+    }catch(err){
+      console.error(err);
+      const msg = (err && err.message) ? err.message : String(err);
+      toast(msg === 'NO_CLIENT_ID' ? 'Chưa cài Client ID' : ('Không tải lên Drive được: ' + msg));
+    }
+  });
+
+  // ---------------- settings ----------------
+  $('btnSettings').addEventListener('click', ()=>{
+    $('driveClientIdInput').value = state.settings.driveClientId;
+    showScreen('settings');
+  });
+  $('btnSettingsBack').addEventListener('click', ()=> showScreen(prevScreen));
+  $('btnDriveSave').addEventListener('click', ()=>{
+    const v = $('driveClientIdInput').value.trim();
+    state.settings.driveClientId = v;
+    localStorage.setItem('lenslab_drive_client_id', v);
+    toast(v ? 'Đã lưu Client ID ✓' : 'Đã xoá Client ID');
+  });
+
+  // ---------------- pwa install (service worker) ----------------
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{
+      navigator.serviceWorker.register('sw.js').catch(()=>{});
+    });
+  }
+
+})();
+</script>
+</body>
+</html>
