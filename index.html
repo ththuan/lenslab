@@ -1015,18 +1015,18 @@
           </div>
           
           <div class="live-ctrl-row">
-            <div class="lc-top"><label>Làm mịn da (Skin Smooth)</label><span id="liveSkinVal">22</span></div>
-            <input type="range" id="liveSkinSlider" min="0" max="80" value="22">
+            <div class="lc-top"><label>Làm mịn da (Skin Smooth)</label><span id="liveSkinVal">12</span></div>
+            <input type="range" id="liveSkinSlider" min="0" max="80" value="12">
           </div>
 
           <div class="live-ctrl-row">
-            <div class="lc-top"><label>Khử khuyết điểm / Mụn</label><span id="liveBlemishVal">18</span></div>
-            <input type="range" id="liveBlemishSlider" min="0" max="80" value="18">
+            <div class="lc-top"><label>Khử khuyết điểm / Mụn</label><span id="liveBlemishVal">10</span></div>
+            <input type="range" id="liveBlemishSlider" min="0" max="80" value="10">
           </div>
 
           <div class="live-ctrl-row">
-            <div class="lc-top"><label>Làm sáng mắt & Khử quầng</label><span id="liveEyeVal">16</span></div>
-            <input type="range" id="liveEyeSlider" min="0" max="60" value="16">
+            <div class="lc-top"><label>Làm sáng mắt & Khử quầng</label><span id="liveEyeVal">14</span></div>
+            <input type="range" id="liveEyeSlider" min="0" max="60" value="14">
           </div>
 
           <div class="live-ctrl-row">
@@ -2324,9 +2324,9 @@
 
   // Live sidebar sliders & toggles wiring
   const liveControls = {
-    skin: 22,
-    blemish: 18,
-    eye: 16,
+    skin: 12,
+    blemish: 10,
+    eye: 14,
     exp: 0
   };
 
@@ -2515,7 +2515,7 @@
               shot.edits.freckleAcne = liveControls.blemish;
               shot.edits.eye = liveControls.eye;
               shot.edits.faceShine = 8;
-              shot.edits.sharpen = 18;
+              shot.edits.sharpen = 24;
             }
           }catch(e){ /* face detector fallback */ }
 
@@ -2844,7 +2844,7 @@
       if(state.activeShotIndex >= 0 && state.shots[state.activeShotIndex].hasFace){
         const presets = {
           male:   {skin:14, freckleAcne:12, eye:10, teeth:0, blush:0, faceShine:10, sharpen:15},
-          female: {skin:22, freckleAcne:18, eye:16, teeth:8, blush:8, faceShine:8, sharpen:18},
+          female: {skin:14, freckleAcne:12, eye:14, teeth:8, blush:8, faceShine:8, sharpen:24},
           child:  {skin:10, freckleAcne:5, eye:8, teeth:0, blush:4, faceShine:5, sharpen:12},
           elderly:{skin:12, freckleAcne:10, eye:8, teeth:4, blush:0, faceShine:10, sharpen:14}
         };
@@ -3263,7 +3263,7 @@
   window.addEventListener('resize', ()=>{ if(cropMode) syncCropOverlay(); });
 
   function applyToneAndColor(data, w, h, e){
-    const exposure = e.exposure * 1.3;
+    const exposure = e.exposure * 1.0;
     const contrastF = (259*(e.contrast+255))/(255*(259-e.contrast));
     const satF = 1 + e.saturation/100;
     const warm = e.warmth * 0.6;
@@ -3429,11 +3429,11 @@
     // 3. Create a SMALL radius blur for subtle frequency separation
     // Key insight: use a VERY small radius (2-4px) instead of large blur
     // This smooths micro-texture (pores) without killing macro detail (facial features)
-    const radius = Math.max(1, Math.round(1 + amount*3)); // max ~4px at 100%
+    const radius = Math.max(1, Math.round(1 + amount*2)); // gentler, max ~3px at 100%
     const blurred = boxBlurRGBA(data, w, h, radius);
 
     // 4. Apply with edge protection: strong edges → no smoothing
-    const strength = amount * 0.55; // much gentler overall
+    const strength = amount * 0.35;
     for(let p=0, i=0; p<n; p++, i+=4){
       const skinM = softMask[p];
       if(skinM <= 0.01) continue;
@@ -3460,7 +3460,7 @@
   function applySharpen(data, w, h, amount){
     if(amount <= 0) return;
     const blurred = boxBlurRGBA(data, w, h, 1); // radius=1 for tight unsharp mask
-    const k = amount * 0.8;
+    const k = amount * 0.9;
     for(let i=0;i<data.length;i+=4){
       data[i]   = clamp(data[i]   + (data[i]  -blurred[i])  *k);
       data[i+1] = clamp(data[i+1] + (data[i+1]-blurred[i+1])*k);
@@ -3740,9 +3740,9 @@
     const p1=pct(0.01), p99=pct(0.99);
     const e = defaultEdits();
     let exposure = 0;
-    if(p99 < 178){ exposure = Math.round((178 - p99) * 0.5); }
-    else if(p1 > 68){ exposure = -Math.round((p1 - 68) * 0.4); }
-    e.exposure = clampAbs(exposure, 25);
+    if(p99 < 178){ exposure = Math.round((178 - p99) * 0.35); }
+    else if(p1 > 68){ exposure = -Math.round((p1 - 68) * 0.3); }
+    e.exposure = clampAbs(exposure, 18);
     const spread = p99 - p1;
     e.contrast = clampAbs(Math.round((140 - spread) * 0.18), 16);
     e.highlights = clampAbs(Math.round((232 - p99) * 0.35), 16);
@@ -4256,11 +4256,11 @@
         shot.faceMasks = buildFaceMasks(faces, w, h);
         shot.faceLandmarks = faces.map(f => f.map(p => ({x:p.x, y:p.y})));
         shot.hasFace = true;
-        state.edits.skin = 22;
-        state.edits.freckleAcne = 18;
-        state.edits.eye = 16;
+        state.edits.skin = 12;
+        state.edits.freckleAcne = 10;
+        state.edits.eye = 14;
         state.edits.faceShine = 8;
-        state.edits.sharpen = 18;
+        state.edits.sharpen = 24;
         toast('Đã nhận diện ' + faces.length + ' khuôn mặt (Retouch tự nhiên & siêu nét) ✓');
       } else {
         shot.faceMasks = null;
