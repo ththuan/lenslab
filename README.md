@@ -31,8 +31,8 @@ Trình duyệt chỉ cho phép truy cập camera khi trang được tải qua **
 2. Bật Live View hoặc quay phim trên D5500 để máy ảnh phát tín hiệu HDMI.
 3. Mở app → **Kết nối máy ảnh** → cho phép quyền camera → chọn đúng thiết bị (capture card) trong danh sách nếu có nhiều camera.
 4. Bấm nút chụp (nút tròn) để chụp khung hình hiện tại.
-5. App **tự động chỉnh ảnh bằng AI** ngay sau khi chụp: cân phơi sáng/tương phản/white balance, nhận diện khuôn mặt để retouch theo vùng. Bạn chỉnh tay thêm ở các tab: **Ánh sáng** (phơi sáng, tương phản, highlights/shadows, độ rõ, vignette), **Màu sắc** (bão hoà, ấm/lạnh, tint, hạt film), **Làm mịn** (da, sáng mắt, tẩy trắng răng, xoá mắt đỏ, giảm quầng thâm, má hồng, làm nét), **LUT** (11 bộ lọc + nhập file .cube), **Cắt** (crop/xoay/nắn thẳng). Hoặc nhấn "Tự động" để chạy lại AI.
-6. Xuất ảnh: **Lưu về iPad** (JPG vào Files/Photos) hoặc **⬆ Drive** (tải lên Google Drive — cần cài Client ID ở ⚙ Cài đặt, xem bên dưới). Làm bước này trước khi thoát app vì ảnh chỉ lưu tạm trong bộ nhớ.
+5. App **tự động chỉnh ảnh bằng AI** ngay sau khi chụp: cân phơi sáng/tương phản/white balance, nhận diện khuôn mặt để retouch theo vùng. Bạn chỉnh tay thêm ở các tab: **Ánh sáng** (phơi sáng, tương phản, highlights/shadows, độ rõ, vignette), **Màu sắc** (bão hoà, ấm/lạnh, tint, hạt film, **Curves**, **Color Grading**), **Làm mịn** (da, sáng mắt, tẩy trắng răng, xoá mắt đỏ, giảm quầng thâm, má hồng, làm nét, **thon gọn mặt/cơ thể**, **mở to mắt**), **LUT** (8 bộ lọc có sẵn + nhập nhiều file .cube), **Background AI** (xoá nền / làm mờ nền), **Cắt** (crop/xoay/nắn thẳng). Panel trái có **Presets** và **History**. Hoặc nhấn "Tự động" để chạy lại AI.
+6. Xuất ảnh: **Lưu về iPad** (JPG hoặc PNG nếu xoá nền) hoặc **⬆ Drive** (tải lên Google Drive — cần cài Client ID ở ⚙ Cài đặt, xem bên dưới). Ảnh được tự động lưu vào **Thư viện ảnh** (IndexedDB) trên thiết bị.
 
 ## Mở ảnh RAW (NEF, ARW, CR2, DNG…)
 
@@ -68,9 +68,9 @@ Từ giờ, khi nhấn **⬆ Drive**, lần đầu Google sẽ hỏi bạn cho p
 
 - **Mượt (không giật):** khi chỉnh sửa, app xử lý ảnh ở bản xem trước (≤1440px) nên cắt/xoay/thanh trượt chạy mượt; khi xuất, ảnh được render lại ở độ phân giải đầy đủ (đến 4096px). Do đó thao tác không bị trễ, chỉ lúc xuất mới mất vài giây.
 - **AI nhận diện khuôn mặt** chạy ngay trong trình duyệt bằng MediaPipe Face Landmarker (478 điểm landmark). Nó làm mịn da + sáng mắt theo từng vùng mặt. Model tải từ CDN (~vài MB) ở **lần đầu tiên** và cần mạng; sau đó dùng offline được. Khi ảnh không có mặt, app tự chuyển về chế độ cân sáng/white balance.
-- **LUT** gồm 11 bộ lọc có sẵn (được tạo ngay trong app, dùng offline) + nhập file **.cube** bên ngoài. Cường độ điều chỉnh bằng thanh trượt.
+- **LUT** gồm 8 bộ lọc có sẵn (được tạo ngay trong app, dùng offline) + nhập **nhiều file `.cube`** bên ngoài (mỗi file được lưu riêng, có thể xoá). Cường độ điều chỉnh bằng thanh trượt.
 - **RAW** giải mã bằng dcraw.js (WASM/asm.js) ở nửa độ phân giải để mượt; hỗ trợ NEF/ARW/CR2/DNG… nhưng chưa hỗ trợ CR3. Có thể nâng cấp lên thư viện mới hơn (libraw wasm) để full-res + CR3.
-- Ảnh chụp chỉ lưu tạm trong phiên (RAM), chưa lưu vĩnh viễn trong app — có thể nâng cấp bằng IndexedDB để giữ ảnh qua các lần mở app.
+- Ảnh chụp được **tự động lưu vào thư viện** (IndexedDB) trên thiết bị, giữ qua các lần mở app. Mở màn **Thư viện ảnh** ở thanh bên để xem, mở lại chỉnh sửa hoặc xoá. Ảnh trong một buổi chụp (session) vẫn nằm tạm trong RAM khi đang thao tác.
 - Độ phân giải phụ thuộc capture card (thường 1080p); D5500 xuất HDMI tối đa 1080p nên không mất gì so với tín hiệu gốc.
 - Đôi khi Safari có bug nhỏ về getUserMedia khi chạy ở chế độ "đã cài đặt" (standalone) sau các bản cập nhật iPadOS — nếu camera không lên sau khi cài vào màn hình chính, thử mở lại bằng tab Safari thường để xác nhận, và cập nhật iPadOS lên bản mới nhất.
 - Xuất Google Drive cần mạng và Client ID (xem mục trên); chưa hỗ trợ tạo thư mục theo buổi chụp — có thể nâng cấp sau.

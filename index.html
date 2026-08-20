@@ -507,41 +507,59 @@
   #fileInput{display:none;}
 
   /* Auth Screen & Projects Screen */
-  .screen.auth-screen,.screen.projects-screen{background:#0e1012;color:#f4f4f2;}
+  .screen.auth-screen,.screen.projects-screen{background:#0b0c0e;color:#f4f4f2;}
   body.auth-mode header.bar,body.projects-mode header.bar{display:none;}
-  .auth-screen{align-items:center;justify-content:center;padding:32px 20px;position:relative;overflow-y:auto;}
+  .auth-screen{align-items:center;justify-content:center;padding:32px 20px;position:relative;overflow:hidden;}
   .auth-screen::before{
     content:"";position:absolute;inset:0;
     background:
-      radial-gradient(circle at 50% 10%, rgba(59,130,246,0.15), transparent 45%),
-      radial-gradient(circle at 80% 80%, rgba(101,217,202,0.08), transparent 50%),
-      linear-gradient(145deg, #0b0c0e, #14171a 50%, #0d0f11);
+      radial-gradient(circle at 20% 15%, rgba(59,130,246,0.22), transparent 45%),
+      radial-gradient(circle at 85% 20%, rgba(101,217,202,0.16), transparent 45%),
+      radial-gradient(circle at 50% 90%, rgba(243,216,75,0.12), transparent 45%),
+      linear-gradient(145deg, #0a0b0d, #12151a 50%, #0b0e12);
+    background-size:200% 200%;
+    animation:gradientShift 14s ease infinite;
   }
-  .auth-container{position:relative;width:min(480px,100%);display:flex;flex-direction:column;align-items:center;gap:24px;text-align:center;z-index:2;}
-  
+  @keyframes gradientShift{0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+  .auth-blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.5;z-index:1;pointer-events:none;}
+  .auth-blob.b1{width:320px;height:320px;background:#3b82f6;top:-60px;left:-80px;animation:floatBlob 16s ease-in-out infinite;}
+  .auth-blob.b2{width:260px;height:260px;background:#65d9ca;bottom:-40px;right:-60px;animation:floatBlob 20s ease-in-out infinite reverse;}
+  .auth-blob.b3{width:200px;height:200px;background:#f3d84b;top:40%;left:72%;animation:floatBlob 24s ease-in-out infinite;}
+  @keyframes floatBlob{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(24px,-34px) scale(1.12);}}
+  .auth-container{position:relative;width:min(480px,100%);max-height:100%;overflow-y:auto;padding:8px 0;display:flex;flex-direction:column;align-items:center;gap:22px;text-align:center;z-index:2;}
+
   .auth-brand-badge{
-    display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.08);padding:8px 16px;border-radius:30px;
-    font-size:12px;font-weight:500;color:#cbd5e1;backdrop-filter:blur(10px);
+    display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.1);padding:8px 18px;border-radius:30px;
+    font-size:12px;font-weight:600;color:#cbd5e1;backdrop-filter:blur(12px);letter-spacing:0.02em;
   }
-  .auth-brand-badge .dot-live{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px rgba(101,217,202,0.8);}
-  
+  .auth-brand-badge .dot-live{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 10px rgba(101,217,202,0.9);animation:pulseDot 1.6s ease-in-out infinite;}
+  @keyframes pulseDot{0%,100%{box-shadow:0 0 6px rgba(101,217,202,0.7);}50%{box-shadow:0 0 16px rgba(101,217,202,1);}}
+
   .auth-card{
-    width:100%;background:#16191d;border:1px solid rgba(255,255,255,0.09);border-radius:18px;
-    padding:32px 28px;box-shadow:0 24px 60px rgba(0,0,0,0.55);display:flex;flex-direction:column;gap:20px;
-    text-align:center;position:relative;overflow:hidden;
+    width:100%;background:rgba(22,25,29,0.72);border:1px solid rgba(255,255,255,0.1);border-radius:20px;
+    padding:34px 28px;box-shadow:0 30px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03) inset;
+    display:flex;flex-direction:column;gap:20px;text-align:center;position:relative;overflow:hidden;
+    backdrop-filter:blur(18px);
+  }
+  .auth-card::before{
+    content:"";position:absolute;inset:0;border-radius:20px;padding:1px;
+    background:linear-gradient(135deg, rgba(101,217,202,0.5), rgba(59,130,246,0.5), rgba(243,216,75,0.4));
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none; opacity:0.6;
   }
   .auth-card::after{
     content:"";position:absolute;top:0;left:0;right:0;height:2px;
     background:linear-gradient(90deg, transparent, var(--teal), var(--evoto-blue), transparent);
   }
   .auth-logo-wrap{
-    width:70px;height:70px;border-radius:18px;background:#20242a;border:1px solid #363c45;
-    margin:0 auto;display:grid;place-items:center;box-shadow:0 12px 30px rgba(0,0,0,0.3);
+    width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#20242a,#12151a);
+    border:1px solid #363c45;margin:0 auto;display:grid;place-items:center;
+    box-shadow:0 14px 34px rgba(0,0,0,0.45), 0 0 0 1px rgba(101,217,202,0.15) inset;
   }
   .auth-card h1{font-size:26px;margin:0;letter-spacing:-0.02em;color:#f8fafc;}
   .auth-card p{margin:0;color:#94a3b8;font-size:13.5px;line-height:1.6;}
-  
+
   /* Google Authentic Button */
   .google-login-btn{
     width:100%;background:#ffffff;color:#1e293b;border:none;border-radius:12px;
@@ -549,19 +567,29 @@
     font:600 14.5px 'Inter',sans-serif;box-shadow:0 6px 20px rgba(0,0,0,0.25);cursor:pointer;
     transition:transform 0.15s, box-shadow 0.15s, background-color 0.15s;
   }
-  .google-login-btn:hover{background:#f1f5f9;box-shadow:0 8px 24px rgba(0,0,0,0.35);}
+  .google-login-btn:hover{background:#f1f5f9;box-shadow:0 8px 26px rgba(0,0,0,0.35);transform:translateY(-1px);}
   .google-login-btn:active{transform:scale(0.985);}
   .google-g-svg{width:20px;height:20px;flex-shrink:0;}
-  
+
+  .auth-divider{display:flex;align-items:center;gap:12px;color:#64748b;font-size:11.5px;margin:2px 0;}
+  .auth-divider::before,.auth-divider::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,#3a4047,transparent);}
+
+  .guest-login-btn{
+    width:100%;background:rgba(255,255,255,0.05);color:#d6dbe0;border:1px solid rgba(255,255,255,0.12);
+    border-radius:12px;padding:13px 20px;display:flex;align-items:center;justify-content:center;gap:10px;
+    font:600 14px 'Inter',sans-serif;cursor:pointer;transition:all 0.15s;
+  }
+  .guest-login-btn:hover{background:rgba(255,255,255,0.1);border-color:rgba(101,217,202,0.4);color:#fff;}
+
   /* Features List */
   .auth-features{
     display:grid;grid-template-columns:1fr;gap:10px;text-align:left;
-    background:#121417;border:1px solid #282d34;border-radius:12px;padding:14px 16px;
+    background:rgba(18,20,23,0.6);border:1px solid #282d34;border-radius:12px;padding:14px 16px;
   }
   .auth-feature-item{display:flex;align-items:center;gap:10px;font-size:12.5px;color:#cbd5e1;}
   .auth-feature-item .f-icon{
-    width:24px;height:24px;border-radius:6px;background:#1e2228;
-    display:grid;place-items:center;font-size:12px;color:var(--teal);flex-shrink:0;
+    width:26px;height:26px;border-radius:7px;background:#1e2228;
+    display:grid;place-items:center;font-size:13px;color:var(--teal);flex-shrink:0;
   }
   .auth-trust-note{font-size:11.5px;color:#64748b;margin:0;display:flex;align-items:center;justify-content:center;gap:6px;}
 
@@ -608,6 +636,48 @@
   .library-card-actions{display:flex;gap:6px;padding:6px 11px 11px;margin-top:auto;}
   .library-card-actions button{flex:1;font-size:11px;padding:6px 4px;border:1px solid #3a4047;background:#24282d;color:#dfe1e3;border-radius:6px;cursor:pointer;}
   .library-card-actions button.danger{color:#ef8f86;border-color:#5a3a36;}
+  .library-filter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center;}
+  .lc-stars{display:flex;gap:1px;margin-top:6px;}
+  .lc-stars button{background:none;border:none;color:#4a525d;font-size:14px;cursor:pointer;padding:0;line-height:1;}
+  .lc-stars button.on{color:var(--accent);}
+  .lc-tags{display:flex;align-items:center;gap:5px;margin-top:7px;}
+  .lc-tags .lbl-dot{width:13px;height:13px;border-radius:50%;border:1.5px solid #3a4047;cursor:pointer;background:transparent;}
+  .lc-tags .lbl-dot.on{box-shadow:0 0 0 2px rgba(255,255,255,0.25);}
+  .lc-flag{background:none;border:1px solid #3a4047;border-radius:6px;color:#7f8790;font-size:13px;cursor:pointer;padding:2px 7px;margin-left:auto;}
+  .lc-flag.on{color:var(--danger);border-color:var(--danger);}
+  .library-card.culled{opacity:0.45;outline:2px solid var(--danger);}
+  .cull-badge{font-size:9px;background:var(--danger);color:#fff;border-radius:4px;padding:1px 5px;position:absolute;top:6px;left:6px;}
+  .library-card{position:relative;}
+
+  /* Left quick panel (Presets / History) */
+  .evoto-left-panel{width:220px;flex-shrink:0;background:#151719;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width 0.18s;}
+  .evoto-left-panel.collapsed{width:0;border-right:none;}
+  .lp-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--border);font-size:12px;color:#d6dbe0;font-weight:600;white-space:nowrap;}
+  .lp-collapse{background:none;border:1px solid var(--border);color:#9ba1a8;border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:12px;flex-shrink:0;}
+  .lp-tabs{display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border);}
+  .lp-tab{flex:1;background:transparent;border:1px solid var(--border);color:#9ba1a8;border-radius:6px;padding:6px 0;font-size:11px;cursor:pointer;white-space:nowrap;}
+  .lp-tab.active{background:#2a2d32;color:#f0f1ee;border-color:#3a4047;}
+  .lp-body{flex:1;overflow-y:auto;padding:10px 12px;}
+  .lp-save-row{display:flex;gap:6px;margin-bottom:10px;}
+  .lp-save-row input{flex:1;background:#121416;border:1px solid #383e45;border-radius:6px;color:#eef0ef;padding:8px 10px;font-size:12px;outline:none;min-width:0;}
+  .lp-save-row button{background:var(--accent);border:none;color:#171717;font-weight:700;border-radius:6px;padding:0 12px;font-size:12px;cursor:pointer;}
+  .lp-list{display:flex;flex-direction:column;gap:6px;}
+  .lp-item{display:flex;align-items:center;justify-content:space-between;gap:6px;background:#1a1d20;border:1px solid #2a2f34;border-radius:8px;padding:8px 10px;font-size:12px;color:#d6dbe0;cursor:pointer;}
+  .lp-item:hover{background:#222529;}
+  .lp-item .lp-del{background:none;border:none;color:#7f8790;font-size:14px;cursor:pointer;flex-shrink:0;}
+  .lp-item .lp-del:hover{color:var(--danger);}
+  .lp-empty{color:#7f8790;font-size:11.5px;text-align:center;padding:14px 0;}
+  .sec-eye{width:26px;height:26px;display:flex;align-items:center;justify-content:center;}
+
+  /* Curves + Color wheels */
+  .curve-tabs{display:flex;gap:4px;margin-bottom:8px;}
+  .curve-tab{flex:1;background:#222529;border:1px solid #363b42;color:#9ba1a8;border-radius:6px;padding:5px 0;font-size:11px;cursor:pointer;}
+  .curve-tab.active{background:#2f353d;color:#fff;border-color:#5a626d;}
+  .wheel-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
+  .wheel-canvas{border-radius:50%;cursor:crosshair;flex-shrink:0;}
+  .wheel-info{flex:1;display:flex;flex-direction:column;gap:4px;}
+  .wheel-info label{font-size:11px;color:#c8cbd0;}
+  .wheel-info input[type=range]{width:100%;}
 
   /* Project Modal */
   .project-modal{position:fixed;inset:0;background:rgba(0,0,0,.68);display:none;align-items:center;justify-content:center;padding:18px;z-index:80;}
@@ -649,6 +719,7 @@
     .edit-layout{flex-direction:column;}
     .canvas-stage{flex:1 1 40%; min-height:160px;}
     .evoto-panel{flex:1 1 50%;}
+    .evoto-left-panel{display:none;}
   }
 
   @media (max-width:720px){
@@ -681,6 +752,9 @@
 
   <!-- ============ AUTH ============ -->
   <section class="screen auth-screen active" id="screen-auth">
+    <div class="auth-blob b1"></div>
+    <div class="auth-blob b2"></div>
+    <div class="auth-blob b3"></div>
     <div class="auth-container">
       <div class="auth-brand-badge">
         <div class="dot-live"></div>
@@ -711,6 +785,9 @@
           </svg>
           <span>Đăng nhập với Google</span>
         </button>
+
+        <div class="auth-divider">hoặc dùng thử ngay</div>
+        <button class="guest-login-btn" id="btnGuestLogin" type="button">🚀 Vào thử không cần đăng nhập</button>
 
         <div class="auth-features">
           <div class="auth-feature-item">
@@ -753,7 +830,7 @@
     </div>
     <div class="projects-body">
       <aside class="projects-sidebar"><div class="sidebar-label">Workspace</div><button class="side-link active"><span class="si">▦</span><span>Dự án</span></button><button class="side-link" id="btnLibrary"><span class="si">◫</span><span>Thư viện ảnh</span></button><button class="side-link" id="btnWorkspaceSettings"><span class="si">⚙</span><span>Cài đặt</span></button></aside>
-      <main class="projects-main"><div class="projects-heading"><div><h2>Dự án chụp ảnh</h2><p>Tạo một phiên chụp tethering mới để chụp, AI tự động chỉnh và tải lên Google Drive.</p></div><button class="new-project-btn" id="btnNewProject">＋ Tạo dự án</button></div><div class="project-grid" id="projectGrid"><div class="empty-project" id="emptyProject"><strong>Chưa có dự án nào</strong><span>Tạo dự án đầu tiên để kết nối máy ảnh và bắt đầu buổi chụp.</span></div></div></main>
+      <main class="projects-main"><div class="projects-heading"><div><h2>Dự án chụp ảnh</h2><p>Tạo một phiên chụp tethering mới để chụp, AI tự động chỉnh và tải lên Google Drive.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="new-project-btn" id="btnQuickCapture" style="background:#2a2d32;color:#e7e8e6;">📷 Chụp thử</button><button class="new-project-btn" id="btnQuickOpen" style="background:#2a2d32;color:#e7e8e6;">🖼 Mở ảnh</button><button class="new-project-btn" id="btnNewProject">＋ Tạo dự án</button></div></div><div class="project-grid" id="projectGrid"><div class="empty-project" id="emptyProject"><strong>Chưa có dự án nào</strong><span>Tạo dự án đầu tiên để kết nối máy ảnh và bắt đầu buổi chụp.</span></div></div></main>
     </div>
   </section>
 
@@ -765,7 +842,37 @@
     </div>
     <div class="projects-body">
       <main class="projects-main">
-        <div class="projects-heading"><div><h2>Thư viện ảnh</h2><p id="libraryCount">Đang tải…</p></div><button class="new-project-btn" id="btnLibraryClear">Xoá hết ảnh</button></div>
+        <div class="projects-heading"><div><h2>Thư viện ảnh</h2><p id="libraryCount">Đang tải…</p></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="new-project-btn" id="btnCulling" title="Tự lọc ảnh mờ/trùng/nhắm mắt/quá sáng">⚡ Smart Culling</button>
+            <button class="new-project-btn" id="btnLibraryClear" style="background:#2a2d32;color:#e7e8e6;">Xoá hết</button>
+          </div>
+        </div>
+        <div class="library-filter">
+          <input type="search" id="libSearch" class="settings-input" style="flex:1;min-width:140px;padding:9px 12px;font-family:Inter,sans-serif;" placeholder="Tìm tên dự án…">
+          <select id="libSort" class="settings-input" style="width:auto;padding:9px 12px;font-family:Inter,sans-serif;">
+            <option value="date">Mới nhất</option>
+            <option value="rating">Rating cao</option>
+            <option value="name">Tên A-Z</option>
+          </select>
+          <select id="libLabel" class="settings-input" style="width:auto;padding:9px 12px;font-family:Inter,sans-serif;">
+            <option value="">Tất cả nhãn</option>
+            <option value="red">Đỏ</option>
+            <option value="orange">Cam</option>
+            <option value="yellow">Vàng</option>
+            <option value="green">Xanh lá</option>
+            <option value="blue">Xanh dương</option>
+            <option value="purple">Tím</option>
+          </select>
+          <select id="libRating" class="settings-input" style="width:auto;padding:9px 12px;font-family:Inter,sans-serif;">
+            <option value="0">Mọi rating</option>
+            <option value="1">★ trở lên</option>
+            <option value="2">★★ trở lên</option>
+            <option value="3">★★★ trở lên</option>
+            <option value="4">★★★★ trở lên</option>
+            <option value="5">★★★★★</option>
+          </select>
+        </div>
         <div class="library-grid" id="libraryGrid"></div>
       </main>
     </div>
@@ -955,6 +1062,7 @@
       </div>
       <div class="editor-toolbar-center"><span class="editor-state-dot"></span><span>Đang chỉnh sửa</span><span class="toolbar-divider"></span><span class="mono" id="activeZoomLevel">100%</span></div>
       <div class="editor-actions">
+        <button class="toolbar-btn" title="Hiện/ẩn panel trái" id="btnLeftPanel">☰</button>
         <button class="toolbar-btn" title="Hoàn tác (Ctrl+Z)" id="btnUndo">↩ Hoàn tác</button>
         <button class="toolbar-btn" title="So sánh trước và sau" id="btnToolbarBefore">Trước / Sau</button>
         <button class="toolbar-btn" title="Toàn màn hình" id="btnToolbarFullscreen">Toàn màn hình</button>
@@ -962,6 +1070,23 @@
       </div>
     </div>
     <div class="edit-layout">
+      <!-- Left Quick Panel: Presets + History -->
+      <aside class="evoto-left-panel" id="leftPanel">
+        <div class="lp-head"><span>Điều khiển nhanh</span><button class="lp-collapse" id="btnLpCollapse" title="Thu gọn">«</button></div>
+        <div class="lp-tabs">
+          <button class="lp-tab active" data-tab="presets">Presets</button>
+          <button class="lp-tab" data-tab="history">History</button>
+        </div>
+        <div class="lp-body">
+          <div class="lp-content" data-tab="presets">
+            <div class="lp-save-row"><input id="presetNameInput" placeholder="Tên preset mới…"><button id="btnPresetSave">Lưu</button></div>
+            <div class="lp-list" id="presetList"></div>
+          </div>
+          <div class="lp-content" data-tab="history" style="display:none;">
+            <div class="lp-list" id="historyList"></div>
+          </div>
+        </div>
+      </aside>
       <!-- Canvas Stage -->
       <div class="canvas-stage">
         <div class="stage-topbar">
@@ -1052,6 +1177,16 @@
                 <div class="evoto-ctrl" data-key="redeye"><div class="ctrl-top"><label>Xoá mắt đỏ</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
               </div>
             </div>
+
+            <!-- Face & Body Reshape -->
+            <div class="evoto-section" data-section="reshape">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Face & Body Reshape</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="faceSlim"><div class="ctrl-top"><label>Thon gọn khuôn mặt</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="eyeEnlarge"><div class="ctrl-top"><label>Mở to mắt</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="bodySlim"><div class="ctrl-top"><label>Thon gọn cơ thể</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+              </div>
+            </div>
           </div>
 
           <!-- ===== Panel: Light ===== -->
@@ -1093,6 +1228,41 @@
                 <div class="evoto-ctrl" data-key="lutStrength"><div class="ctrl-top"><label>Cường độ LUT</label><span class="ctrl-val">30%</span></div><input type="range" min="0" max="100" value="30"></div>
                 <button class="secondary" id="btnImportLut" style="margin-top:6px;max-width:none;padding:10px;">Nhập LUT (.cube)</button>
                 <input type="file" id="lutFileInput" accept=".cube" style="display:none;">
+              </div>
+            </div>
+
+            <!-- Background (AI segmentation) -->
+            <div class="evoto-section" data-section="background">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Background (AI)</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="bgRemove"><div class="ctrl-top"><label>Xoá nền (trong suốt)</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="bgBlur"><div class="ctrl-top"><label>Làm mờ nền</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+                <button class="secondary" id="btnSegmentNow" style="margin-top:6px;max-width:none;padding:10px;">⚡ Phân tích chủ thể (AI)</button>
+              </div>
+            </div>
+
+            <!-- Curves -->
+            <div class="evoto-section" data-section="curves">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Curves</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="curve-tabs">
+                  <button class="curve-tab active" data-ch="master">RGB</button>
+                  <button class="curve-tab" data-ch="r">R</button>
+                  <button class="curve-tab" data-ch="g">G</button>
+                  <button class="curve-tab" data-ch="b">B</button>
+                </div>
+                <canvas id="curveCanvas" width="256" height="256" style="width:100%;height:auto;background:#0e1013;border:1px solid #1f2329;border-radius:6px;touch-action:none;display:block;"></canvas>
+                <button class="secondary" id="btnCurveReset" style="margin-top:6px;max-width:none;padding:8px;">Đặt lại curve</button>
+              </div>
+            </div>
+
+            <!-- Color Grading Wheels -->
+            <div class="evoto-section" data-section="colorwheels">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Color Grading</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="wheel-row" data-band="shadows"><canvas class="wheel-canvas" width="110" height="110"></canvas><div class="wheel-info"><label>Shadows</label><input type="range" class="wheel-amt" min="0" max="100" value="0"></div></div>
+                <div class="wheel-row" data-band="midtones"><canvas class="wheel-canvas" width="110" height="110"></canvas><div class="wheel-info"><label>Midtones</label><input type="range" class="wheel-amt" min="0" max="100" value="0"></div></div>
+                <div class="wheel-row" data-band="highlights"><canvas class="wheel-canvas" width="110" height="110"></canvas><div class="wheel-info"><label>Highlights</label><input type="range" class="wheel-amt" min="0" max="100" value="0"></div></div>
               </div>
             </div>
           </div>
@@ -1285,6 +1455,7 @@
     projects: JSON.parse(localStorage.getItem('lenslab_projects') || '[]'),
     faceLandmarker: null,
     mpLoading: null,
+    segmenter: null,
     customLuts: loadCustomLuts(),
     activeProject: null,
     sessionFolderId: null,
@@ -1303,6 +1474,8 @@
       skin:0, eye:0, teeth:0, redeye:0, undereye:0, blush:0, sharpen:0,
       freckleAcne:0,
       faceShine:0, foreheadWrinkle:0, eyeWrinkle:0, glassesGlare:0,
+      faceSlim:0, eyeEnlarge:0, bodySlim:0,
+      bgRemove:0, bgBlur:0,
       lut:'none', lutStrength:30,
       rotation:0, flipH:0, flipV:0, straighten:0,
       cropX:0, cropY:0, cropW:1, cropH:1, cropAspect:''
@@ -1312,7 +1485,7 @@
   // ---------------- elements ----------------
   const $ = (id) => document.getElementById(id);
   const screens = {
-    auth: $('screen-auth'), projects: $('screen-projects'), welcome: $('screen-welcome'), capture: $('screen-capture'), edit: $('screen-edit'), settings: $('screen-settings')
+    auth: $('screen-auth'), projects: $('screen-projects'), library: $('screen-library'), welcome: $('screen-welcome'), capture: $('screen-capture'), edit: $('screen-edit'), settings: $('screen-settings')
   };
   let prevScreen = 'projects';
   function showScreen(name){
@@ -1320,7 +1493,7 @@
     Object.values(screens).forEach(s=>s.classList.remove('active'));
     screens[name].classList.add('active');
     document.body.classList.toggle('auth-mode', name === 'auth');
-    document.body.classList.toggle('projects-mode', name === 'projects');
+    document.body.classList.toggle('projects-mode', name === 'projects' || name === 'library');
     if(name === 'capture'){
       startLiveHistogram();
       renderFilmstrip();
@@ -1351,6 +1524,7 @@
     state.batchAutoMode = !!(project.autoUpload && project.aiRealtime);
     state.batchQueue = [];
     state.shots = [];
+    state.sessionFolderId = null;
     const badge = $('activeProjectBadge');
     if(badge){
       badge.textContent = project.name;
@@ -1443,7 +1617,14 @@
     toast('Đã đăng xuất tài khoản');
   }
 
+  function loginAsGuest(){
+    const auth = { provider:'guest', verifiedAt: Date.now(), name:'Khách (Dùng thử)', email:'', initial:'K', picture:'' };
+    applyAuthSession(auth);
+    toast('Đã vào chế độ dùng thử ✓');
+  }
+
   $('btnGoogleLogin').addEventListener('click', loginWithGoogle);
+  $('btnGuestLogin').addEventListener('click', loginAsGuest);
   $('btnLogout').addEventListener('click', logoutSession);
 
   // Google Setup Modal Events
@@ -1464,6 +1645,8 @@
   });
 
   $('btnNewProject').addEventListener('click', ()=>{ $('projectModal').classList.add('show'); $('projectNameInput').focus(); });
+  $('btnQuickCapture').addEventListener('click', ()=> connectCamera(state.activeDeviceId));
+  $('btnQuickOpen').addEventListener('click', ()=>{ const fi = $('fileInput'); if(fi) fi.click(); });
   $('projectModalClose').addEventListener('click', ()=> $('projectModal').classList.remove('show'));
   $('projectModalCancel').addEventListener('click', ()=> $('projectModal').classList.remove('show'));
   $('projectModal').addEventListener('click', e=>{ if(e.target.id==='projectModal') $('projectModal').classList.remove('show'); });
@@ -1494,10 +1677,23 @@
     $('projectModal').classList.remove('show');
     renderProjects(); startProject(project);
   });
-  $('btnLibrary').addEventListener('click', ()=> toast('Thư viện ảnh sẽ hiển thị sau khi có ảnh chụp'));
+  $('btnLibrary').addEventListener('click', ()=>{ showScreen('library'); renderLibrary(); });
+  $('btnLibraryBack').addEventListener('click', ()=> showScreen('projects'));
+  $('btnLibraryClear').addEventListener('click', ()=>{
+    if(!confirm('Xoá toàn bộ ảnh đã lưu trong thư viện?')) return;
+    dbClearShots();
+    cullResults = {};
+    renderLibrary();
+    toast('Đã xoá toàn bộ ảnh trong thư viện');
+  });
+  $('libSearch').addEventListener('input', (e)=>{ libFilter.q = e.target.value; renderLibrary(); });
+  $('libSort').addEventListener('change', (e)=>{ libFilter.sort = e.target.value; renderLibrary(); });
+  $('libLabel').addEventListener('change', (e)=>{ libFilter.label = e.target.value; renderLibrary(); });
+  $('libRating').addEventListener('change', (e)=>{ libFilter.rating = +e.target.value; renderLibrary(); });
+  $('btnCulling').addEventListener('click', runSmartCulling);
   $('btnWorkspaceSettings').addEventListener('click', ()=> showScreen('settings'));
 
-  if(state.auth && state.auth.provider === 'google'){
+  if(state.auth && state.auth.provider){
     applyAuthSession(state.auth);
   } else {
     state.auth = null;
@@ -1510,6 +1706,232 @@
     $('toast').classList.add('show');
     clearTimeout(toast._t);
     toast._t = setTimeout(()=> $('toast').classList.remove('show'), 2400);
+  }
+
+  // ---------------- IndexedDB persistence (library) ----------------
+  const DB_NAME = 'lenslab';
+  const DB_VER = 1;
+  let db = null;
+  function openDB(){
+    return new Promise((resolve, reject)=>{
+      if(db) return resolve(db);
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = (e)=>{
+        const d = e.target.result;
+        if(!d.objectStoreNames.contains('shots')) d.createObjectStore('shots', {keyPath:'id'});
+      };
+      req.onsuccess = (e)=>{ db = e.target.result; resolve(db); };
+      req.onerror = (e)=> reject(e.target.error);
+    });
+  }
+  async function dbPutShot(shot){
+    if(!shot || !shot.canvas) return;
+    try{
+      const blob = await new Promise(res => shot.canvas.toBlob(res, 'image/jpeg', 0.92));
+      const d = await openDB();
+      const rec = { id: shot.id, project: shot.project || (state.activeProject ? state.activeProject.name : ''), thumb: shot.thumb, edits: shot.edits, hasFace: !!shot.hasFace, createdAt: shot.createdAt || Date.now(), blob, rating: shot.rating || 0, label: shot.label || '', flag: !!shot.flag };
+      const tx = d.transaction('shots','readwrite');
+      tx.objectStore('shots').put(rec);
+    }catch(e){}
+  }
+  function dbDeleteShot(id){
+    openDB().then(d=>{ const tx = d.transaction('shots','readwrite'); tx.objectStore('shots').delete(id); }).catch(()=>{});
+  }
+  function dbAllShots(){
+    return openDB().then(d=> new Promise((resolve, reject)=>{
+      const tx = d.transaction('shots','readonly');
+      const req = tx.objectStore('shots').getAll();
+      req.onsuccess = ()=> resolve(req.result || []);
+      req.onerror = ()=> reject(req.error);
+    }));
+  }
+  function dbClearShots(){
+    openDB().then(d=>{ const tx = d.transaction('shots','readwrite'); tx.objectStore('shots').clear(); }).catch(()=>{});
+  }
+  function dbSetShotMeta(id, patch){
+    openDB().then(d=>{
+      const tx = d.transaction('shots','readwrite');
+      const req = tx.objectStore('shots').get(id);
+      req.onsuccess = ()=>{ const rec = req.result; if(rec){ Object.assign(rec, patch); tx.objectStore('shots').put(rec); } };
+    }).catch(()=>{});
+  }
+  function loadImageFromBlob(blob){
+    return new Promise((resolve, reject)=>{
+      const u = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = ()=>{ URL.revokeObjectURL(u); resolve(img); };
+      img.onerror = (e)=>{ URL.revokeObjectURL(u); reject(e); };
+      img.src = u;
+    });
+  }
+  function persistActiveShot(){
+    const shot = state.shots[state.activeShotIndex];
+    if(shot){ shot.edits = state.edits; dbPutShot(shot); }
+  }
+  let persistTimer = null;
+  function schedulePersist(){
+    if(persistTimer) clearTimeout(persistTimer);
+    persistTimer = setTimeout(persistActiveShot, 1200);
+  }
+
+  const LABELS = ['red','orange','yellow','green','blue','purple'];
+  const LABEL_HEX = {red:'#e2685a', orange:'#e6a94b', yellow:'#f3d84b', green:'#10b981', blue:'#3b82f6', purple:'#a855f7'};
+  const libFilter = { q:'', sort:'date', label:'', rating:0 };
+  let cullResults = {};
+
+  function renderLibrary(){
+    const grid = $('libraryGrid');
+    if(!grid) return;
+    dbAllShots().then(rows=>{
+      const q = libFilter.q.toLowerCase();
+      let list = rows.filter(r=>{
+        if(libFilter.label && (r.label||'') !== libFilter.label) return false;
+        if(libFilter.rating && (r.rating||0) < libFilter.rating) return false;
+        if(q && (r.project||'').toLowerCase().indexOf(q) < 0) return false;
+        return true;
+      });
+      if(libFilter.sort === 'rating') list.sort((a,b)=>(b.rating||0)-(a.rating||0));
+      else if(libFilter.sort === 'name') list.sort((a,b)=>(a.project||'').localeCompare(b.project||''));
+      else list.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+      if($('libraryCount')) $('libraryCount').textContent = list.length + ' / ' + rows.length + ' ảnh';
+      grid.innerHTML = '';
+      if(!list.length){
+        grid.innerHTML = '<div class="empty-project"><strong>Không có ảnh</strong><span>Ảnh chụp sẽ tự động lưu vào thư viện này.</span></div>';
+        return;
+      }
+      list.forEach(r=>{
+        const card = document.createElement('div');
+        card.className = 'library-card' + (cullResults[r.id] ? ' culled' : '');
+        const dt = r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : '';
+        const stars = [1,2,3,4,5].map(n=> '<button data-star="'+n+'" class="'+(n <= (r.rating||0) ? 'on':'')+'">★</button>').join('');
+        const dots = LABELS.map(l=> '<span class="lbl-dot'+(r.label===l?' on':'')+'" data-label="'+l+'" title="'+l+'" style="background:'+((r.label===l)?LABEL_HEX[l]:'transparent')+';"></span>').join('');
+        const cullBadge = cullResults[r.id] ? '<span class="cull-badge">' + esc(cullResults[r.id]) + '</span>' : '';
+        card.innerHTML = cullBadge + '<img src="'+r.thumb+'"><div class="library-card-body"><div class="lc-name">'+esc(r.project||'Không dự án')+'</div><div class="lc-meta">'+esc(dt)+'</div><div class="lc-stars">'+stars+'</div><div class="lc-tags">'+dots+'<button class="lc-flag'+(r.flag?' on':'')+'" data-flag="1" title="Đánh cờ">🚩</button></div></div><div class="library-card-actions"><button data-act="open">Mở chỉnh sửa</button><button data-act="del" class="danger">Xoá</button></div>';
+        card.querySelectorAll('[data-star]').forEach(b=> b.addEventListener('click', ()=>{ const n=+b.dataset.star; r.rating = (r.rating===n)?0:n; dbSetShotMeta(r.id,{rating:r.rating}); renderLibrary(); }));
+        card.querySelectorAll('[data-label]').forEach(d=> d.addEventListener('click', ()=>{ const l=d.dataset.label; r.label = (r.label===l)?'':l; dbSetShotMeta(r.id,{label:r.label}); renderLibrary(); }));
+        card.querySelector('[data-flag]').addEventListener('click', ()=>{ r.flag=!r.flag; dbSetShotMeta(r.id,{flag:r.flag}); renderLibrary(); });
+        card.querySelector('[data-act="open"]').addEventListener('click', async ()=>{
+          try{
+            if(!r.blob){ toast('Ảnh không còn dữ liệu gốc'); return; }
+            const img = await loadImageFromBlob(r.blob);
+            const c = document.createElement('canvas');
+            c.width = img.naturalWidth || img.width;
+            c.height = img.naturalHeight || img.height;
+            c.getContext('2d').drawImage(img, 0, 0);
+            const idx = addShotFromImage(c, false);
+            state.shots[idx].edits = r.edits || defaultEdits();
+            state.shots[idx].hasFace = !!r.hasFace;
+            state.shots[idx].createdAt = r.createdAt;
+            state.shots[idx].project = r.project;
+            state.shots[idx].rating = r.rating || 0;
+            state.shots[idx].label = r.label || '';
+            state.shots[idx].flag = !!r.flag;
+            openEditor(idx);
+            if(r.hasFace){ refreshFacesDebounced(); }
+          }catch(e){ toast('Không mở được ảnh'); }
+        });
+        card.querySelector('[data-act="del"]').addEventListener('click', ()=>{
+          dbDeleteShot(r.id);
+          delete cullResults[r.id];
+          renderLibrary();
+          toast('Đã xoá ảnh');
+        });
+        grid.appendChild(card);
+      });
+    }).catch(()=>{ if($('libraryCount')) $('libraryCount').textContent = 'Không truy cập được bộ nhớ'; });
+  }
+
+  // ---------------- Smart Culling ----------------
+  function thumbToImage(dataUrl){
+    return new Promise((resolve,reject)=>{
+      const img = new Image();
+      img.onload = ()=> resolve(img);
+      img.onerror = ()=> reject(new Error('img'));
+      img.src = dataUrl;
+    });
+  }
+  function imageStats(img){
+    const w = 64, h = 64;
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const ctx = c.getContext('2d', {willReadFrequently:true});
+    ctx.drawImage(img, 0, 0, w, h);
+    const d = ctx.getImageData(0,0,w,h).data;
+    const gray = new Float32Array(w*h);
+    for(let i=0;i<w*h;i++){ gray[i] = 0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2]; }
+    let sum=0, sumsq=0, n=0;
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){
+      const i=y*w+x;
+      const lap = 4*gray[i] - gray[i-1]-gray[i+1]-gray[i-w]-gray[i+w];
+      sum += lap; sumsq += lap*lap; n++;
+    }
+    const mean = sum/n;
+    const variance = n ? (sumsq/n - mean*mean) : 0;
+    let bsum=0; for(let i=0;i<gray.length;i++) bsum += gray[i];
+    const brightness = bsum/gray.length;
+    const dh = new Uint8Array(64);
+    for(let y=0;y<8;y++) for(let x=0;x<8;x++){
+      const gx = Math.min(w-1, Math.round(x*8)); const gx1 = Math.min(w-1, Math.round(x*8)+1);
+      const gy = Math.round(y*8);
+      dh[y*8+x] = gray[gy*w+gx] > gray[gy*w+gx1] ? 1 : 0;
+    }
+    return { variance, brightness, dhash: dh };
+  }
+  function ear(face, idx){
+    const p = idx.map(k=>face[k]);
+    for(let i=0;i<p.length;i++) if(!p[i]) return 1;
+    const dist = (a,b)=> Math.hypot(a.x-b.x, a.y-b.y);
+    const v = dist(p[1],p[5]) + dist(p[2],p[4]);
+    const h = 2*dist(p[0],p[3]);
+    return h===0 ? 1 : v/h;
+  }
+  async function runSmartCulling(){
+    let rows;
+    try{ rows = await dbAllShots(); }catch(e){ toast('Không truy cập được thư viện'); return; }
+    if(!rows.length){ toast('Không có ảnh để lọc'); return; }
+    toast('Đang phân tích ' + rows.length + ' ảnh…');
+    cullResults = {};
+    const dupKeys = new Map();
+    let lm = null;
+    try{ lm = await loadFaceLandmarker(); }catch(e){ lm = null; }
+    for(let i=0;i<rows.length;i++){
+      const r = rows[i];
+      const reasons = [];
+      try{
+        const img = await thumbToImage(r.thumb);
+        const s = imageStats(img);
+        if(s.variance < 18) reasons.push('Mờ');
+        if(s.brightness < 42) reasons.push('Tối');
+        else if(s.brightness > 210) reasons.push('Sáng');
+        const key = Array.prototype.join.call(s.dhash, '');
+        if(dupKeys.has(key)) reasons.push('Trùng');
+        else dupKeys.set(key, r.id);
+        if(lm && reasons.length === 0){
+          try{
+            const ec = await thumbToImage(r.thumb);
+            const scale = Math.min(1, 320/Math.max(ec.width, ec.height));
+            const cc = document.createElement('canvas');
+            cc.width = Math.max(1, Math.round(ec.width*scale));
+            cc.height = Math.max(1, Math.round(ec.height*scale));
+            cc.getContext('2d').drawImage(ec, 0, 0, cc.width, cc.height);
+            const faces = await detectFaces(cc);
+            if(faces.length){
+              let closed = 0;
+              for(const f of faces){
+                const eR = ear(f, [33,160,158,133,153,144]);
+                const eL = ear(f, [263,387,385,362,373,380]);
+                if(eR < 0.20 && eL < 0.20) closed++;
+              }
+              if(closed >= faces.length) reasons.push('Nhắm mắt');
+            }
+          }catch(e){}
+        }
+      }catch(e){}
+      if(reasons.length) cullResults[r.id] = reasons.join('/');
+      if(i % 4 === 3) await new Promise(res=>setTimeout(res, 0));
+    }
+    const culled = Object.keys(cullResults).length;
+    renderLibrary();
+    toast('Lọc xong: ' + culled + ' / ' + rows.length + ' ảnh bị đánh dấu');
   }
 
   // ---------------- camera connect (Optimized for iPad, iPhone & Android) ----------------
@@ -1625,6 +2047,7 @@
   }
 
   function goToProjects(){
+    persistActiveShot();
     if(state.stream){
       state.stream.getTracks().forEach(t=>t.stop());
       state.stream = null;
@@ -1677,7 +2100,7 @@
   });
 
   // ---------------- capture still frame ----------------
-  function addShotFromImage(imgOrCanvasSrc){
+  function addShotFromImage(imgOrCanvasSrc, persist){
     const w = imgOrCanvasSrc.videoWidth || imgOrCanvasSrc.naturalWidth || imgOrCanvasSrc.width;
     const h = imgOrCanvasSrc.videoHeight || imgOrCanvasSrc.naturalHeight || imgOrCanvasSrc.height;
     const c = document.createElement('canvas');
@@ -1689,16 +2112,25 @@
     thumbC.width = tw; thumbC.height = th;
     thumbC.getContext('2d').drawImage(c, 0, 0, tw, th);
 
-    state.shots.push({
+    const shot = {
       id: Date.now()+Math.random(),
       canvas: c,
       thumb: thumbC.toDataURL('image/jpeg', 0.7),
       edits: defaultEdits(),
       faceMasks: null,
+      faceLandmarks: null,
       hasFace: false,
-      autoDone: false
-    });
+      autoDone: false,
+      createdAt: Date.now(),
+      history: [],
+      canvasBlob: null,
+      rating: 0,
+      label: '',
+      flag: false
+    };
+    state.shots.push(shot);
     renderFilmstrip();
+    if(persist !== false) dbPutShot(shot);
     return state.shots.length - 1;
   }
 
@@ -2069,6 +2501,7 @@
             const faces = await detectFaces(previewCanvas);
             if(faces && faces.length){
               shot.faceMasks = buildFaceMasks(faces, previewCanvas.width, previewCanvas.height);
+              shot.faceLandmarks = faces.map(f => f.map(p => ({x:p.x, y:p.y})));
               shot.hasFace = true;
               shot.edits.skin = liveControls.skin;
               shot.edits.freckleAcne = liveControls.blemish;
@@ -2099,6 +2532,7 @@
           item.status = 'error';
         }
         updateBatchUI();
+        await new Promise(r=>setTimeout(r, 0));
       }
     }finally{
       state.batchProcessing = false;
@@ -2115,6 +2549,8 @@
     const fm = shot.faceMasks;
     const e = shot.edits;
     applyToneAndColor(out, w, h, e);
+    applyCurves(out, w, h);
+    applyColorGrade(out, w, h);
     const skinAmt = Math.max(e.skin||0, e.freckleAcne||0);
     if(skinAmt > 0){ applySkinSmooth(out, w, h, skinAmt/100, fm); }
     if(e.eye > 0){ applyEyeBrighten(out, w, h, e.eye/100, fm); }
@@ -2131,14 +2567,51 @@
     if(L){ applyLUT(out, w, h, L.lut, L.N, (e.lutStrength||100)/100); }
     if(e.grain > 0){ applyGrain(out, w, h, e.grain/100); }
     if(e.vignette > 0){ applyVignette(out, w, h, e.vignette/100); }
+    applyBackground(out, w, h, shot, e);
+    applyWarp(out, w, h, shot.faceLandmarks, e);
     ctx.putImageData(new ImageData(out, w, h), 0, 0);
     return c;
   }
 
-  async function uploadBlobToDrive(blob, folderId){
+  function exportMime(){ return (state.edits.bgRemove > 0) ? 'image/png' : 'image/jpeg'; }
+  function exportExt(){ return (state.edits.bgRemove > 0) ? 'png' : 'jpg'; }
+
+  function exportName(){
+    const base = (state.activeProject && state.activeProject.name) ? state.activeProject.name : 'lenslab';
+    const slug = base.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const d = new Date();
+    const p2 = n => ('0'+n).slice(-2);
+    const ts = d.getFullYear() + p2(d.getMonth()+1) + p2(d.getDate()) + '-' + p2(d.getHours()) + p2(d.getMinutes()) + p2(d.getSeconds());
+    return (slug || 'lenslab') + '-' + ts + '.' + exportExt();
+  }
+
+  async function ensureSessionFolder(){
+    if(state.sessionFolderId) return state.sessionFolderId;
+    const parentId = state.activeProject && state.activeProject.driveFolder ? state.activeProject.driveFolder.id : 'root';
+    if(parentId === 'root' || !parentId){ state.sessionFolderId = 'root'; return 'root'; }
     const token = state.googleAccessToken || await getAccessToken();
-    const meta = { name: 'lenslab-' + Date.now() + '.jpg', mimeType: 'image/jpeg' };
-    if(folderId && folderId !== 'root'){ meta.parents = [folderId]; }
+    const d = new Date();
+    const p2 = n => ('0'+n).slice(-2);
+    const dateStr = d.getFullYear() + '-' + p2(d.getMonth()+1) + '-' + p2(d.getDate());
+    const name = ((state.activeProject && state.activeProject.name) || 'Buổi chụp') + ' - ' + dateStr;
+    const resp = await fetch('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] })
+    });
+    if(resp.status === 401){ clearGoogleToken(); throw new Error('Phiên Google đã hết hạn'); }
+    if(!resp.ok){ state.sessionFolderId = parentId; return parentId; }
+    const j = await resp.json();
+    state.sessionFolderId = j.id || parentId;
+    return state.sessionFolderId;
+  }
+
+  async function uploadBlobToDrive(blob, folderId, _retried){
+    let token = state.googleAccessToken || await getAccessToken();
+    let target = folderId;
+    if(folderId && folderId !== 'root'){ target = await ensureSessionFolder(); }
+    const meta = { name: exportName(), mimeType: 'image/jpeg' };
+    if(target && target !== 'root'){ meta.parents = [target]; }
     const form = new FormData();
     form.append('metadata', new Blob([JSON.stringify(meta)], {type:'application/json'}));
     form.append('file', blob, meta.name);
@@ -2147,7 +2620,11 @@
       headers: { Authorization: 'Bearer ' + token },
       body: form
     });
-    if(resp.status === 401){ clearGoogleToken(); throw new Error('Phiên Google đã hết hạn'); }
+    if(resp.status === 401){
+      if(_retried){ clearGoogleToken(); throw new Error('Phiên Google đã hết hạn'); }
+      clearGoogleToken();
+      return uploadBlobToDrive(blob, folderId, true);
+    }
     if(!resp.ok){
       let msg = 'Lỗi ' + resp.status;
       try{ const j = await resp.json(); if(j && j.error && j.error.message) msg = j.error.message; }catch(e){}
@@ -2170,6 +2647,7 @@
   function openEditor(index, opts){
     opts = opts || {};
     cropMode = false;
+    lastSliderEdit = 0;
     $('cropOverlay').classList.remove('show');
     state.activeShotIndex = index;
     const shot = state.shots[index];
@@ -2178,6 +2656,8 @@
     syncSlidersFromEdits();
     renderLutGrid();
     syncAspectChips();
+    renderPresetList();
+    renderHistoryList();
     preparePreview(false);
     renderPreview();
     renderFilmstrip();
@@ -2187,6 +2667,7 @@
 
   $('btnBackToCapture').addEventListener('click', ()=>{
     if(state.activeShotIndex >= 0){ state.shots[state.activeShotIndex].edits = state.edits; }
+    persistActiveShot();
     cropMode = false;
     $('cropOverlay').classList.remove('show');
     showScreen('capture');
@@ -2241,6 +2722,111 @@
     });
   });
 
+  // Before/after per section (press-hold eye icon)
+  function sectionKeys(sec){
+    const keys = [];
+    sec.querySelectorAll('.evoto-ctrl[data-key]').forEach(c=> keys.push(c.dataset.key));
+    sec.querySelectorAll('.evoto-toggle input[data-key]').forEach(c=> keys.push(c.dataset.key));
+    return keys;
+  }
+  document.querySelectorAll('.evoto-section').forEach(sec=>{
+    const hdr = sec.querySelector('.evoto-section-header');
+    if(!hdr) return;
+    const reset = hdr.querySelector('.sec-reset');
+    const eye = document.createElement('button');
+    eye.className = 'sec-reset sec-eye';
+    eye.textContent = '👁';
+    eye.title = 'Giữ để xem ảnh khi tắt nhóm này';
+    hdr.insertBefore(eye, reset);
+    let saved = null;
+    const start = (ev)=>{ ev.preventDefault(); saved = {}; sectionKeys(sec).forEach(k=>{ saved[k]=state.edits[k]; if(typeof state.edits[k]==='number') state.edits[k]=0; }); schedulePreview(); };
+    const end = ()=>{ if(saved){ Object.assign(state.edits, saved); saved=null; schedulePreview(); } };
+    eye.addEventListener('mousedown', start);
+    eye.addEventListener('mouseup', end);
+    eye.addEventListener('mouseleave', end);
+    eye.addEventListener('touchstart', start, {passive:false});
+    eye.addEventListener('touchend', end);
+  });
+
+  // ---------------- Left quick panel: Presets + History ----------------
+  let userPresets = [];
+  try{ userPresets = JSON.parse(localStorage.getItem('lenslab_presets') || '[]'); }catch(e){ userPresets = []; }
+
+  function renderPresetList(){
+    const el = $('presetList');
+    if(!el) return;
+    el.innerHTML = '';
+    if(!userPresets.length){ el.innerHTML = '<div class="lp-empty">Chưa có preset. Chỉnh ảnh rồi lưu lại.</div>'; return; }
+    userPresets.forEach((p, i)=>{
+      const d = document.createElement('div');
+      d.className = 'lp-item';
+      d.innerHTML = '<span>'+esc(p.name)+'</span><button class="lp-del" title="Xoá">×</button>';
+      d.querySelector('span').addEventListener('click', ()=>{
+        pushHistory(state.shots[state.activeShotIndex], state.edits);
+        state.edits = Object.assign(defaultEdits(), JSON.parse(JSON.stringify(p.edits)));
+        syncSlidersFromEdits();
+        renderLutGrid();
+        syncAspectChips();
+        preparePreview(false);
+        renderPreview();
+        toast('Đã áp dụng preset: ' + p.name);
+      });
+      d.querySelector('.lp-del').addEventListener('click', (ev)=>{ ev.stopPropagation(); userPresets.splice(i,1); localStorage.setItem('lenslab_presets', JSON.stringify(userPresets)); renderPresetList(); });
+      el.appendChild(d);
+    });
+  }
+
+  function renderHistoryList(){
+    const el = $('historyList');
+    if(!el) return;
+    el.innerHTML = '';
+    const shot = state.shots[state.activeShotIndex];
+    if(!shot || !shot.history || !shot.history.length){ el.innerHTML = '<div class="lp-empty">Chưa có thao tác nào.</div>'; return; }
+    for(let i=shot.history.length-1;i>=0;i--){
+      (function(target){
+        const d = document.createElement('div');
+        d.className = 'lp-item';
+        d.innerHTML = '<span>Bước ' + (target+1) + '</span>';
+        d.addEventListener('click', ()=>{
+          state.edits = shot.history[target];
+          shot.history = shot.history.slice(0, target);
+          syncSlidersFromEdits();
+          renderLutGrid();
+          syncAspectChips();
+          preparePreview(false);
+          renderPreview();
+          renderHistoryList();
+          toast('Đã quay về bước ' + (target+1));
+        });
+        el.appendChild(d);
+      })(i);
+    }
+  }
+
+  $('btnPresetSave').addEventListener('click', ()=>{
+    const name = ($('presetNameInput').value || '').trim();
+    if(!name){ toast('Nhập tên preset'); return; }
+    const entry = { name, edits: JSON.parse(JSON.stringify(state.edits)) };
+    const exist = userPresets.findIndex(p=>p.name===name);
+    if(exist >= 0) userPresets[exist] = entry; else userPresets.push(entry);
+    localStorage.setItem('lenslab_presets', JSON.stringify(userPresets));
+    $('presetNameInput').value = '';
+    renderPresetList();
+    toast('Đã lưu preset: ' + name);
+  });
+  $('btnLeftPanel').addEventListener('click', ()=> $('leftPanel').classList.toggle('collapsed'));
+  $('btnLpCollapse').addEventListener('click', ()=> $('leftPanel').classList.toggle('collapsed'));
+  document.querySelectorAll('.lp-tab').forEach(t=>{
+    t.addEventListener('click', ()=>{
+      document.querySelectorAll('.lp-tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      const tab = t.dataset.tab;
+      document.querySelectorAll('.lp-content').forEach(c=> c.style.display = (c.dataset.tab===tab)?'':'none');
+      if(tab==='presets') renderPresetList();
+      if(tab==='history') renderHistoryList();
+    });
+  });
+
   // Gender selector
   document.querySelectorAll('.gender-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -2255,6 +2841,7 @@
           elderly:{skin:12, freckleAcne:10, eye:8, teeth:4, blush:0, faceShine:10, sharpen:14}
         };
         const p = presets[state.activeGender] || presets.female;
+        pushHistory(state.shots[state.activeShotIndex], state.edits);
         Object.assign(state.edits, p);
         syncSlidersFromEdits();
         renderPreview();
@@ -2264,6 +2851,35 @@
   });
 
   // Sliders
+  let lastSliderEdit = 0;
+  function pushHistory(shot, edits){
+    if(!shot) return;
+    shot.history = shot.history || [];
+    const snap = JSON.parse(JSON.stringify(edits));
+    const last = shot.history[shot.history.length - 1];
+    if(last && JSON.stringify(last) === JSON.stringify(snap)) return;
+    shot.history.push(snap);
+    if(shot.history.length > 50) shot.history.shift();
+  }
+  function undo(){
+    const shot = state.shots[state.activeShotIndex];
+    if(!shot || !shot.history || !shot.history.length){ toast('Không có thao tác để hoàn tác'); return; }
+    state.edits = shot.history.pop();
+    syncSlidersFromEdits();
+    renderLutGrid();
+    syncAspectChips();
+    preparePreview(false);
+    renderPreview();
+    toast('Đã hoàn tác');
+  }
+  $('btnUndo').addEventListener('click', undo);
+  window.addEventListener('keydown', (e)=>{
+    if((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z')){
+      e.preventDefault();
+      undo();
+    }
+  });
+
   const ctrlEls = {};
   document.querySelectorAll('.evoto-ctrl').forEach(el=>{
     const key = el.dataset.key;
@@ -2272,11 +2888,15 @@
     if(!key || !input || !val) return;
     ctrlEls[key] = {el, input, val};
     input.addEventListener('input', ()=>{
+      const now = Date.now();
+      if(now - lastSliderEdit > 400) pushHistory(state.shots[state.activeShotIndex], state.edits);
+      lastSliderEdit = now;
       const v = parseInt(input.value,10);
       state.edits[key] = v;
       val.textContent = key === 'lutStrength' ? (v + '%') : v;
       if(key === 'straighten'){ scheduleGeometry(); }
       else { schedulePreview(); }
+      schedulePersist();
     });
   });
 
@@ -2285,8 +2905,10 @@
     const key = cb.dataset.key;
     if(!key) return;
     cb.addEventListener('change', ()=>{
+      pushHistory(state.shots[state.activeShotIndex], state.edits);
       state.edits[key] = cb.checked ? 1 : 0;
       schedulePreview();
+      schedulePersist();
     });
   });
 
@@ -2350,8 +2972,11 @@
     const w = editCanvas.width, h = editCanvas.height;
     const out = new Uint8ClampedArray(previewImageData.data);
     const fm = currentMasks();
+    const shot = state.shots[state.activeShotIndex];
     const e = state.edits;
     applyToneAndColor(out, w, h, e);
+    applyCurves(out, w, h);
+    applyColorGrade(out, w, h);
     const skinAmt = Math.max(e.skin||0, e.freckleAcne||0);
     if(skinAmt > 0){ applySkinSmooth(out, w, h, skinAmt/100, fm); }
     if(e.eye > 0){ applyEyeBrighten(out, w, h, e.eye/100, fm); }
@@ -2368,12 +2993,19 @@
     if(L){ applyLUT(out, w, h, L.lut, L.N, (e.lutStrength||100)/100); }
     if(e.grain > 0){ applyGrain(out, w, h, e.grain/100); }
     if(e.vignette > 0){ applyVignette(out, w, h, e.vignette/100); }
+    applyBackground(out, w, h, shot, e);
+    applyWarp(out, w, h, currentFaceLandmarks(), e);
     ectx.putImageData(new ImageData(out, w, h), 0, 0);
   }
 
   function currentMasks(){
     const shot = state.shots[state.activeShotIndex];
     return shot && shot.faceMasks ? shot.faceMasks : null;
+  }
+
+  function currentFaceLandmarks(){
+    const shot = state.shots[state.activeShotIndex];
+    return shot && shot.faceLandmarks ? shot.faceLandmarks : null;
   }
 
   // ---------------- geometry (crop / rotate / flip / straighten) ----------------
@@ -2440,7 +3072,7 @@
 
   function onGeometryChanged(){
     const shot = state.shots[state.activeShotIndex];
-    if(shot) shot.faceMasks = null;
+    if(shot){ shot.faceMasks = null; shot.faceLandmarks = null; shot.bgMask = null; }
     preparePreview(cropMode);
     if(cropMode){ syncCropOverlay(); }
     else { renderPreview(); }
@@ -2460,9 +3092,10 @@
         const faces = await detectFaces(editCanvas);
         if(faces && faces.length){
           shot.faceMasks = buildFaceMasks(faces, editCanvas.width, editCanvas.height);
+          shot.faceLandmarks = faces.map(f => f.map(p => ({x:p.x, y:p.y})));
           shot.hasFace = true;
         } else {
-          shot.faceMasks = null; shot.hasFace = false;
+          shot.faceMasks = null; shot.faceLandmarks = null; shot.hasFace = false;
         }
         if(!cropMode) renderPreview();
       }catch(e){ /* ignored */ }
@@ -2910,6 +3543,7 @@
 
   // ---------------- export ----------------
   $('btnExport').addEventListener('click', ()=>{
+    persistActiveShot();
     toast('Đang xuất ảnh…');
     setTimeout(()=>{
       const c = renderOutputCanvas();
@@ -2917,18 +3551,20 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'lenslab-' + Date.now() + '.jpg';
+        a.download = exportName();
         document.body.appendChild(a);
         a.click();
         a.remove();
         setTimeout(()=>URL.revokeObjectURL(url), 4000);
         toast('Đã lưu — kiểm tra Ảnh / Tệp tải xuống');
-      }, 'image/jpeg', 0.92);
+      }, exportMime(), 0.92);
     }, 30);
   });
 
   $('btnDeleteShot').addEventListener('click', ()=>{
     if(state.activeShotIndex<0) return;
+    const shot = state.shots[state.activeShotIndex];
+    if(shot && shot.id) dbDeleteShot(shot.id);
     state.shots.splice(state.activeShotIndex,1);
     state.batchQueue = state.batchQueue.filter(b=>b.shotIndex !== state.activeShotIndex);
     state.batchQueue.forEach(b=>{ if(b.shotIndex > state.activeShotIndex) b.shotIndex--; });
@@ -3108,8 +3744,8 @@
       const ar=wr/wcnt, ag=wg/wcnt, ab=wb/wcnt;
       const dr = ab - ar;
       const dg = ar + ab - 2*ag;
-      if(Math.abs(dr) > 6) e.warmth = clampAbs(Math.round(dr * 0.45), 12);
-      if(Math.abs(dg) > 6) e.tint = clampAbs(Math.round(dg * 0.35), 10);
+      if(Math.abs(dr) > 6) e.warmth = clampAbs(Math.round(dr * 0.45), 22);
+      if(Math.abs(dg) > 6) e.tint = clampAbs(Math.round(dg * 0.35), 16);
     }
     e.saturation = 2;
     e.vignette = 0;
@@ -3244,10 +3880,357 @@
     }
   }
 
+  // ---------------- Liquify (face slim / eye enlarge / body slim) ----------------
+  function applyWarp(out, w, h, faces, e){
+    const slim = (e.faceSlim||0)/100;
+    const enlarge = (e.eyeEnlarge||0)/100;
+    const body = (e.bodySlim||0)/100;
+    if((!slim && !enlarge && !body) || !faces || !faces.length) return;
+    const ops = [];
+    for(const f of faces){
+      if(!f || f.length < 300) continue;
+      let minX=1,maxX=0,minY=1,maxY=0,cx=0,cy=0,n=0;
+      for(const k of FACE_OVAL){ const p=f[k]; if(!p) continue; if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x; if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y; cx+=p.x; cy+=p.y; n++; }
+      if(n===0) continue;
+      cx/=n; cy/=n;
+      const halfW = Math.max(4, (maxX-minX)/2);
+      if(slim) ops.push({ type:'slim', cx:cx*w, top:minY*h, bot:maxY*h, halfW:halfW*w, k:slim*0.4 });
+      if(body){ const chin = f[152] || f[10]; if(chin) ops.push({ type:'body', cx:cx*w, top:chin.y*h, bot:h, halfW:Math.max(halfW*w, w*0.25), k:body*0.3 }); }
+      if(enlarge){
+        for(const ei of [LEFT_EYE, RIGHT_EYE]){
+          let ex=0,ey=0,m=0,exmin=1,exmax=0;
+          for(const k of ei){ const p=f[k]; if(!p) continue; ex+=p.x; ey+=p.y; m++; if(p.x<exmin)exmin=p.x; if(p.x>exmax)exmax=p.x; }
+          if(m===0) continue;
+          ex/=m; ey/=m;
+          const r = Math.max(6, (exmax-exmin)*w*0.9);
+          ops.push({ type:'eye', cx:ex*w, cy:ey*h, r, k:enlarge*0.5 });
+        }
+      }
+    }
+    if(!ops.length) return;
+    let bx0=w, by0=h, bx1=0, by1=0;
+    for(const op of ops){
+      if(op.type==='eye'){ bx0=Math.min(bx0,op.cx-op.r); bx1=Math.max(bx1,op.cx+op.r); by0=Math.min(by0,op.cy-op.r); by1=Math.max(by1,op.cy+op.r); }
+      else { bx0=Math.min(bx0,op.cx-op.halfW); bx1=Math.max(bx1,op.cx+op.halfW); by0=Math.min(by0,op.top); by1=Math.max(by1,op.bot); }
+    }
+    bx0=Math.max(0,bx0|0); by0=Math.max(0,by0|0); bx1=Math.min(w,bx1+1|0); by1=Math.min(h,by1+1|0);
+    const src = new Uint8ClampedArray(out);
+    for(let y=by0;y<by1;y++){
+      for(let x=bx0;x<bx1;x++){
+        let sx=x, sy=y;
+        for(let oi=0;oi<ops.length;oi++){
+          const op=ops[oi];
+          if(op.type==='eye'){
+            const dx=x-op.cx, dy=y-op.cy;
+            const r=Math.hypot(dx,dy);
+            if(r<op.r && r>0.001){
+              const t=r/op.r;
+              const scale = 1 - op.k*(1-t*t);
+              const sr = r*scale;
+              sx = op.cx + dx*(sr/r);
+              sy = op.cy + dy*(sr/r);
+            }
+          } else if(op.type==='slim'){
+            if(y>=op.top && y<=op.bot){
+              const dx=x-op.cx, adx=Math.abs(dx);
+              if(adx<op.halfW){ const t=adx/op.halfW; sx = op.cx + dx*(1 + op.k*(1-t*t)); }
+            }
+          } else if(op.type==='body'){
+            if(y>=op.top){
+              const dx=x-op.cx, adx=Math.abs(dx);
+              if(adx<op.halfW){ const t=adx/op.halfW; const fade=Math.min(1,(y-op.top)/(h*0.25)); sx = op.cx + dx*(1 + op.k*(1-t*t)*fade); }
+            }
+          }
+        }
+        let xx=sx, yy=sy;
+        if(xx<0)xx=0; else if(xx>w-1)xx=w-1;
+        if(yy<0)yy=0; else if(yy>h-1)yy=h-1;
+        const x0=xx|0, y0=yy|0;
+        const x1=x0+1<w?x0+1:x0, y1=y0+1<h?y0+1:y0;
+        const fx=xx-x0, fy=yy-y0;
+        const i00=(y0*w+x0)*4, i10=(y0*w+x1)*4, i01=(y1*w+x0)*4, i11=(y1*w+x1)*4;
+        const di=(y*w+x)*4;
+        for(let c=0;c<4;c++){
+          const v = src[i00+c]*(1-fx)*(1-fy) + src[i10+c]*fx*(1-fy) + src[i01+c]*(1-fx)*fy + src[i11+c]*fx*fy;
+          out[di+c]=v;
+        }
+      }
+    }
+  }
+
+  // ---------------- Background (AI segmentation) ----------------
+  async function loadSegmenter(){
+    if(state.segmenter) return state.segmenter;
+    const vision = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+MP_VERSION+'/+esm');
+    const ImageSegmenter = vision.ImageSegmenter || (vision.default && vision.default.ImageSegmenter);
+    const FilesetResolver = vision.FilesetResolver || (vision.default && vision.default.FilesetResolver);
+    const fileset = await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+MP_VERSION+'/wasm');
+    const seg = await ImageSegmenter.createFromOptions(fileset, {
+      baseOptions: { modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite', delegate: 'CPU' },
+      runningMode: 'IMAGE',
+      outputCategoryMask: true,
+      outputConfidenceMasks: true
+    });
+    state.segmenter = seg;
+    return seg;
+  }
+
+  async function runSegmentation(){
+    const shot = state.shots[state.activeShotIndex];
+    if(!shot){ toast('Mở ảnh trong editor trước'); return; }
+    toast('Đang phân tích chủ thể…');
+    try{
+      const seg = await loadSegmenter();
+      const scale = Math.min(1, 512/Math.max(editCanvas.width, editCanvas.height));
+      const src = document.createElement('canvas');
+      src.width = Math.max(1, Math.round(editCanvas.width*scale));
+      src.height = Math.max(1, Math.round(editCanvas.height*scale));
+      src.getContext('2d').drawImage(editCanvas, 0, 0, src.width, src.height);
+      const res = seg.segment(src);
+      let conf = null;
+      if(res.confidenceMasks && res.confidenceMasks.length > 1){
+        conf = res.confidenceMasks[1].getAsFloat32Array();
+      } else if(res.categoryMask){
+        const cm = res.categoryMask.getAsUint8Array();
+        conf = new Float32Array(cm.length); for(let i=0;i<cm.length;i++) conf[i] = cm[i] >= 1 ? 1 : 0;
+      }
+      if(!conf){ toast('Không phân tích được chủ thể'); return; }
+      shot.bgMask = { data: conf, w: src.width, h: src.height };
+      if(res.close) res.close();
+      renderPreview();
+      toast('Đã phân tích chủ thể ✓');
+    }catch(err){
+      console.error(err);
+      toast('Không tải được mô hình AI (cần mạng lần đầu)');
+    }
+  }
+
+  function applyBackground(out, w, h, shot, e){
+    const remove = (e.bgRemove||0)/100;
+    const blur = (e.bgBlur||0)/100;
+    if((!remove && !blur) || !shot || !shot.bgMask) return;
+    const m = shot.bgMask;
+    const mw=m.w, mh=m.h, md=m.data;
+    if(blur > 0){
+      const radius = Math.max(2, Math.round(2 + blur*10));
+      const blurred = boxBlurRGBA(out, w, h, radius);
+      for(let i=0,y=0;y<h;y++){
+        const py=Math.min(mh-1,(y/h*mh)|0);
+        for(let x=0;x<w;x++,i+=4){
+          const p=md[py*mw+Math.min(mw-1,(x/w*mw)|0)];
+          const b=(1-p)*blur;
+          if(b<=0.004) continue;
+          out[i]   = out[i]*(1-b) + blurred[i]*b;
+          out[i+1] = out[i+1]*(1-b) + blurred[i+1]*b;
+          out[i+2] = out[i+2]*(1-b) + blurred[i+2]*b;
+        }
+      }
+    }
+    if(remove > 0){
+      for(let i=0,y=0;y<h;y++){
+        const py=Math.min(mh-1,(y/h*mh)|0);
+        for(let x=0;x<w;x++,i+=4){
+          const p=md[py*mw+Math.min(mw-1,(x/w*mw)|0)];
+          const a=(1-p)*remove;
+          if(a<=0.004) continue;
+          out[i+3] = out[i+3]*(1-a);
+        }
+      }
+    }
+  }
+
+  // ---------------- Curves ----------------
+  function curvePoints(ch){
+    const c = state.edits.curves;
+    if(c && c[ch] && c[ch].length) return c[ch];
+    return [{x:0,y:0},{x:255,y:255}];
+  }
+  function buildCurveLUT(points){
+    const pts = points.slice().sort((a,b)=>a.x-b.x);
+    const lut = new Float32Array(256);
+    let j=0;
+    for(let i=0;i<256;i++){
+      while(j<pts.length-1 && pts[j+1].x <= i) j++;
+      if(j>=pts.length-1){ lut[i]=pts[pts.length-1].y; continue; }
+      const a=pts[j], b=pts[j+1];
+      if(b.x===a.x){ lut[i]=b.y; continue; }
+      const t=(i-a.x)/(b.x-a.x);
+      lut[i]=a.y + (b.y-a.y)*t;
+    }
+    return lut;
+  }
+  function applyCurves(data, w, h){
+    const c = state.edits.curves;
+    if(!c) return;
+    const luts = {};
+    for(const ch of ['r','g','b']){ if(c[ch] && c[ch].length > 2) luts[ch]=buildCurveLUT(c[ch]); }
+    const master = (c.master && c.master.length > 2) ? buildCurveLUT(c.master) : null;
+    if(!master && !luts.r && !luts.g && !luts.b) return;
+    for(let i=0;i<data.length;i+=4){
+      let r=data[i], g=data[i+1], b=data[i+2];
+      if(luts.r) r=luts.r[r|0];
+      if(luts.g) g=luts.g[g|0];
+      if(luts.b) b=luts.b[b|0];
+      if(master){ r=master[r|0]; g=master[g|0]; b=master[b|0]; }
+      data[i]=clamp(r); data[i+1]=clamp(g); data[i+2]=clamp(b);
+    }
+  }
+
+  // ---------------- Color grading (wheels) ----------------
+  function hsv2rgb(h,s,v){
+    const c=v*s, x=c*(1-Math.abs((h/60)%2-1)), m=v-c;
+    let r=0,g=0,b=0;
+    if(h<60){r=c;g=x;} else if(h<120){r=x;g=c;} else if(h<180){g=c;b=x;} else if(h<240){g=x;b=c;} else if(h<300){r=x;b=c;} else {r=c;b=x;}
+    return [r+m,g+m,b+m];
+  }
+  function applyColorGrade(data, w, h){
+    const cg = state.edits.colorGrade;
+    if(!cg) return;
+    const bands = { shadows:null, midtones:null, highlights:null };
+    for(const b of ['shadows','midtones','highlights']){
+      const g = cg[b];
+      if(g && g.amt>0 && g.s>0){
+        const rgb = hsv2rgb(g.h, g.s, 1);
+        bands[b] = rgb.map(v => (v-0.5)*2*(g.amt/100)*0.6);
+      }
+    }
+    if(!bands.shadows && !bands.midtones && !bands.highlights) return;
+    for(let i=0;i<data.length;i+=4){
+      const l = (0.299*data[i]+0.587*data[i+1]+0.114*data[i+2])/255;
+      const shW=(1-l)*(1-l), hiW=l*l, mdW=4*l*(1-l);
+      let dr=0,dg=0,db=0;
+      if(bands.shadows){ dr+=bands.shadows[0]*shW; dg+=bands.shadows[1]*shW; db+=bands.shadows[2]*shW; }
+      if(bands.midtones){ dr+=bands.midtones[0]*mdW; dg+=bands.midtones[1]*mdW; db+=bands.midtones[2]*mdW; }
+      if(bands.highlights){ dr+=bands.highlights[0]*hiW; dg+=bands.highlights[1]*hiW; db+=bands.highlights[2]*hiW; }
+      data[i]=clamp(data[i]+dr*255); data[i+1]=clamp(data[i+1]+dg*255); data[i+2]=clamp(data[i+2]+db*255);
+    }
+  }
+
+  // ---------------- Curves + Color wheel UI wiring ----------------
+  let curveChannel = 'master';
+  let curveDrag = -1;
+  function drawCurveCanvas(){
+    const cv = $('curveCanvas');
+    if(!cv) return;
+    const ctx = cv.getContext('2d');
+    const W=cv.width, H=cv.height;
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='#2a2f37'; ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){ const p=i/4; ctx.beginPath(); ctx.moveTo(W*p,0); ctx.lineTo(W*p,H); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0,H*p); ctx.lineTo(W,H*p); ctx.stroke(); }
+    ctx.strokeStyle='#3a4047'; ctx.beginPath(); ctx.moveTo(0,H); ctx.lineTo(W,0); ctx.stroke();
+    const pts = curvePoints(curveChannel);
+    const px = pts.map(p=>({x:p.x/255*W, y:H-p.y/255*H}));
+    ctx.strokeStyle='#f3d84b'; ctx.lineWidth=2; ctx.beginPath();
+    ctx.moveTo(px[0].x, px[0].y);
+    for(let i=1;i<px.length;i++) ctx.lineTo(px[i].x, px[i].y);
+    ctx.stroke();
+    ctx.fillStyle='#fff';
+    px.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill(); });
+  }
+  function ensureCurves(){
+    if(!state.edits.curves) state.edits.curves={};
+    if(!state.edits.curves[curveChannel]) state.edits.curves[curveChannel]=[{x:0,y:0},{x:255,y:255}];
+  }
+  function curveFromEvent(cv, e){
+    const r=cv.getBoundingClientRect();
+    const x=(e.clientX-r.left)/r.width*255;
+    const y=(e.clientY-r.top)/r.height*255;
+    return {x:clamp(Math.round(x)), y:clamp(255-Math.round(y))};
+  }
+  (function initCurvesAndWheels(){
+    const cv = $('curveCanvas');
+    if(cv){
+      cv.addEventListener('pointerdown', (e)=>{
+        ensureCurves();
+        const pts = state.edits.curves[curveChannel];
+        const p = curveFromEvent(cv, e);
+        let idx=-1, best=1e9;
+        for(let i=0;i<pts.length;i++){ const d=Math.hypot(pts[i].x-p.x, pts[i].y-p.y); if(d<best){best=d;idx=i;} }
+        if(best<30) curveDrag=idx; else { pts.push(p); pts.sort((a,b)=>a.x-b.x); curveDrag=pts.indexOf(p); }
+        cv.setPointerCapture(e.pointerId);
+        pushHistory(state.shots[state.activeShotIndex], state.edits);
+        drawCurveCanvas();
+        schedulePreview();
+      });
+      cv.addEventListener('pointermove', (e)=>{
+        if(curveDrag<0) return;
+        ensureCurves();
+        const pts = state.edits.curves[curveChannel];
+        const p = curveFromEvent(cv, e);
+        p.x=Math.max(0,Math.min(255,p.x)); p.y=Math.max(0,Math.min(255,p.y));
+        pts[curveDrag]=p;
+        drawCurveCanvas();
+        schedulePreview();
+      });
+      cv.addEventListener('pointerup', ()=>{ curveDrag=-1; });
+      cv.addEventListener('pointercancel', ()=>{ curveDrag=-1; });
+    }
+    document.querySelectorAll('.curve-tab').forEach(t=>{
+      t.addEventListener('click', ()=>{
+        document.querySelectorAll('.curve-tab').forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+        curveChannel = t.dataset.ch;
+        drawCurveCanvas();
+      });
+    });
+    const bc = $('btnCurveReset');
+    if(bc) bc.addEventListener('click', ()=>{
+      if(state.edits.curves) delete state.edits.curves[curveChannel];
+      drawCurveCanvas();
+      schedulePreview();
+    });
+    drawCurveCanvas();
+    document.querySelectorAll('.wheel-row').forEach(row=>{
+      const band = row.dataset.band;
+      const wcv = row.querySelector('.wheel-canvas');
+      const amt = row.querySelector('.wheel-amt');
+      function drawWheel(){
+        const g = state.edits.colorGrade && state.edits.colorGrade[band] ? state.edits.colorGrade[band] : {h:0,s:0,amt:0};
+        const ctx=wcv.getContext('2d');
+        const W=wcv.width, H=wcv.height, cx=W/2, cy=H/2, R=Math.min(W,H)/2-2;
+        const img=ctx.createImageData(W,H);
+        for(let y=0;y<H;y++) for(let x=0;x<W;x++){
+          const dx=x-cx, dy=y-cy, d=Math.hypot(dx,dy);
+          const i=(y*W+x)*4;
+          if(d>R){ img.data[i+3]=0; continue; }
+          const s=Math.min(1,d/R);
+          let h=Math.atan2(-dy,dx)*180/Math.PI; if(h<0)h+=360;
+          const rgb=hsv2rgb(h,s,1);
+          img.data[i]=rgb[0]*255; img.data[i+1]=rgb[1]*255; img.data[i+2]=rgb[2]*255; img.data[i+3]=255;
+        }
+        ctx.putImageData(img,0,0);
+        const mx=cx+Math.cos(g.h*Math.PI/180)*g.s*R, my=cy-Math.sin(g.h*Math.PI/180)*g.s*R;
+        ctx.beginPath(); ctx.arc(mx,my,4,0,Math.PI*2); ctx.fillStyle='#fff'; ctx.fill(); ctx.strokeStyle='#000'; ctx.lineWidth=1.5; ctx.stroke();
+      }
+      function ensureGrade(){ if(!state.edits.colorGrade) state.edits.colorGrade={}; if(!state.edits.colorGrade[band]) state.edits.colorGrade[band]={h:0,s:0,amt:0}; return state.edits.colorGrade[band]; }
+      function pick(e){
+        const r=wcv.getBoundingClientRect();
+        const cx=r.left+r.width/2, cy=r.top+r.height/2, R=Math.min(r.width,r.height)/2-2;
+        const dx=e.clientX-cx, dy=e.clientY-cy;
+        let s=Math.hypot(dx,dy)/R; s=Math.min(1,Math.max(0,s));
+        let h=Math.atan2(-dy,dx)*180/Math.PI; if(h<0)h+=360;
+        if(s<0.03) h=0;
+        const g=ensureGrade(); g.h=h; g.s=s;
+        drawWheel();
+        schedulePreview();
+      }
+      let dragging=false;
+      wcv.addEventListener('pointerdown', (e)=>{ dragging=true; wcv.setPointerCapture(e.pointerId); pushHistory(state.shots[state.activeShotIndex], state.edits); pick(e); });
+      wcv.addEventListener('pointermove', (e)=>{ if(dragging) pick(e); });
+      wcv.addEventListener('pointerup', ()=>{ dragging=false; });
+      wcv.addEventListener('pointercancel', ()=>{ dragging=false; });
+      amt.addEventListener('input', (e)=>{ ensureGrade().amt=+e.target.value; schedulePreview(); });
+      drawWheel();
+    });
+    const bs = $('btnSegmentNow');
+    if(bs) bs.addEventListener('click', runSegmentation);
+  })();
+
   async function runAuto(){
     if(!previewImageData || state.activeShotIndex < 0) return;
     const shot = state.shots[state.activeShotIndex];
     const w = editCanvas.width, h = editCanvas.height;
+    pushHistory(shot, state.edits);
     const auto = analyzeScene(previewImageData.data, w, h);
     state.edits = Object.assign(auto, {
       rotation: state.edits.rotation, flipH: state.edits.flipH, flipV: state.edits.flipV,
@@ -3263,6 +4246,7 @@
       const faces = await detectFaces(editCanvas);
       if(faces && faces.length){
         shot.faceMasks = buildFaceMasks(faces, w, h);
+        shot.faceLandmarks = faces.map(f => f.map(p => ({x:p.x, y:p.y})));
         shot.hasFace = true;
         state.edits.skin = 22;
         state.edits.freckleAcne = 18;
@@ -3400,22 +4384,50 @@
 
   function parseCube(text){
     const lines = text.split(/\r?\n/);
-    let N = 0;
+    let N = 0, N1d = 0;
     let dMin = [0,0,0], dMax = [1,1,1];
     const raw = [];
+    const oneD = [];
+    let in1d = false;
     for(let line of lines){
       line = line.trim();
       if(!line || line[0] === '#') continue;
       const p = line.split(/\s+/);
-      if(p[0] === 'TITLE' || p[0] === 'LUT_1D_SIZE' || p[0] === 'LUT_3D_INPUT_RANGE') continue;
-      if(p[0] === 'LUT_3D_SIZE'){ N = parseInt(p[1],10); continue; }
-      if(p[0] === 'DOMAIN_MIN'){ dMin = p.slice(1,4).map(Number); continue; }
-      if(p[0] === 'DOMAIN_MAX'){ dMax = p.slice(1,4).map(Number); continue; }
+      const key = p[0].toUpperCase();
+      if(key === 'TITLE' || key === 'LUT_3D_INPUT_RANGE' || key === 'LUT_1D_INPUT_RANGE') continue;
+      if(key === 'LUT_3D_SIZE'){ N = parseInt(p[1],10); continue; }
+      if(key === 'LUT_1D_SIZE'){ N1d = parseInt(p[1],10); in1d = true; continue; }
+      if(key === 'DOMAIN_MIN'){ dMin = p.slice(1,4).map(Number); continue; }
+      if(key === 'DOMAIN_MAX'){ dMax = p.slice(1,4).map(Number); continue; }
       if(p.length >= 3){
         const a = parseFloat(p[0]), b = parseFloat(p[1]), c = parseFloat(p[2]);
-        if(!isNaN(a) && !isNaN(b) && !isNaN(c)) raw.push([a,b,c]);
+        if(!isNaN(a) && !isNaN(b) && !isNaN(c)){ if(in1d) oneD.push([a,b,c]); else raw.push([a,b,c]); }
       }
     }
+
+    // 1D LUT -> expand to a 3D LUT by applying the curve per-channel
+    if(N1d > 0 && oneD.length >= N1d){
+      const size = 33;
+      const lut = new Float32Array(size*size*size*3);
+      const scale = (N1d-1)/255;
+      const dr = [dMax[0]-dMin[0], dMax[1]-dMin[1], dMax[2]-dMin[2]];
+      let i = 0;
+      for(let b=0;b<size;b++){
+        const kb = Math.min(N1d-1, Math.max(0, Math.round((b*255/(size-1))*scale)));
+        for(let g=0;g<size;g++){
+          const kg = Math.min(N1d-1, Math.max(0, Math.round((g*255/(size-1))*scale)));
+          for(let r=0;r<size;r++){
+            const kr = Math.min(N1d-1, Math.max(0, Math.round((r*255/(size-1))*scale)));
+            lut[i*3]   = (oneD[kr][0]-dMin[0])/dr[0]*255;
+            lut[i*3+1] = (oneD[kg][1]-dMin[1])/dr[1]*255;
+            lut[i*3+2] = (oneD[kb][2]-dMin[2])/dr[2]*255;
+            i++;
+          }
+        }
+      }
+      return {lut, N: size};
+    }
+
     if(!N || raw.length < N*N*N) return null;
     const lut = new Float32Array(raw.length*3);
     for(let i=0;i<raw.length && i<N*N*N;i++){
@@ -3659,11 +4671,17 @@
     refreshDriveList();
   }
 
-  async function listDriveFolders(parentId){
+  async function listDriveFolders(parentId, _retried){
+    if(!driveToken) driveToken = await getAccessToken();
     const q = "mimeType='application/vnd.google-apps.folder' and trashed=false and '" + parentId + "' in parents";
     const url = 'https://www.googleapis.com/drive/v3/files?spaces=drive&fields=files(id,name)&pageSize=200&orderBy=name&q=' + encodeURIComponent(q);
     const resp = await fetch(url, { headers: { Authorization: 'Bearer ' + driveToken, Accept: 'application/json' } });
-    if(resp.status === 401){ clearGoogleToken(); throw new Error('Phiên Google đã hết hạn, hãy đăng nhập lại'); }
+    if(resp.status === 401){
+      if(_retried){ clearGoogleToken(); throw new Error('Phiên Google đã hết hạn, hãy đăng nhập lại'); }
+      clearGoogleToken();
+      driveToken = await getAccessToken();
+      return listDriveFolders(parentId, true);
+    }
     if(!resp.ok){ throw new Error('Lỗi tải thư mục (' + resp.status + ')'); }
     const j = await resp.json();
     return j.files || [];
@@ -3743,9 +4761,9 @@
   async function doDriveUpload(){
     try{
       await new Promise((r)=> setTimeout(r, 30));
-      const blob = await new Promise((res)=> renderOutputCanvas().toBlob(res, 'image/jpeg', 0.92));
+      const blob = await new Promise((res)=> renderOutputCanvas().toBlob(res, exportMime(), 0.92));
       const token = driveToken || await getAccessToken();
-      const meta = { name: 'lenslab-' + Date.now() + '.jpg', mimeType: 'image/jpeg' };
+      const meta = { name: exportName(), mimeType: exportMime() };
       if(driveFolder.id && driveFolder.id !== 'root'){ meta.parents = [driveFolder.id]; }
       const form = new FormData();
       form.append('metadata', new Blob([JSON.stringify(meta)], {type:'application/json'}));
