@@ -12,23 +12,27 @@
 <link rel="manifest" href="manifest.json">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#121310;
-    --bg-panel:#1b1c18;
-    --bg-elevated:#232420;
-    --bg-elevated-2:#2b2c26;
-    --text:#f2f1ec;
-    --text-dim:#9a998f;
-    --text-faint:#65645c;
-    --accent:#5eead4;
-    --accent-dim:#2f6f66;
-    --accent-soft:rgba(94,234,212,0.12);
-    --warn:#e8a33d;
-    --border:#33342e;
+    --bg:#101112;
+    --bg-panel:#181a1d;
+    --bg-elevated:#222529;
+    --bg-elevated-2:#2b2f34;
+    --text:#f1f2f0;
+    --text-dim:#9ba1a8;
+    --text-faint:#697078;
+    --accent:#f3d84b;
+    --accent-dim:#9f8d27;
+    --accent-soft:rgba(243,216,75,0.13);
+    --evoto-blue:#3b82f6;
+    --evoto-blue-soft:rgba(59,130,246,0.18);
+    --teal:#65d9ca;
+    --warn:#e6a94b;
+    --border:#30343a;
+    --border-light:#3e444c;
     --danger:#e2685a;
-    --radius:14px;
+    --radius:10px;
     --safe-top:env(safe-area-inset-top);
     --safe-bottom:env(safe-area-inset-bottom);
   }
@@ -47,24 +51,26 @@
   /* ---------- top bar ---------- */
   header.bar{
     display:flex; align-items:center; justify-content:space-between;
-    padding:14px 18px; border-bottom:1px solid var(--border);
+    padding:12px 20px; border-bottom:1px solid var(--border); background:#17191c;
     flex-shrink:0;
   }
   header.bar .brand{display:flex; align-items:center; gap:10px;}
-  header.bar .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent); box-shadow:0 0 10px var(--accent);}
+  header.bar .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--teal); box-shadow:0 0 10px rgba(101,217,202,.65);}
   header.bar .brand span{font-weight:600; letter-spacing:0.02em; font-size:16px;}
   header.bar .status{font-size:11px; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase;}
   header.bar .status.live{color:var(--accent);}
   header.bar button.icon-btn{
     background:none;border:1px solid var(--border);color:var(--text-dim);
     width:34px;height:34px;border-radius:10px;font-size:15px;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
   }
+  header.bar button.icon-btn:hover{background:var(--bg-elevated); color:var(--text);}
 
   section.screen{flex:1; min-height:0; display:none; flex-direction:column;}
   section.screen.active{display:flex;}
 
   /* ---------- welcome ---------- */
-  #screen-welcome{align-items:center; justify-content:center; padding:32px 24px; text-align:center; gap:20px;}
+  #screen-welcome{align-items:center; justify-content:center; padding:32px 24px; text-align:center; gap:20px; overflow-y:auto;}
   #screen-welcome .glyph{
     width:88px;height:88px;border-radius:24px;background:var(--bg-elevated);
     display:flex;align-items:center;justify-content:center; margin-bottom:6px;
@@ -72,8 +78,8 @@
   }
   #screen-welcome .glyph svg{width:40px;height:40px;}
   #screen-welcome h1{font-size:26px; margin:0; line-height:1.25;}
-  #screen-welcome p{color:var(--text-dim); font-size:14.5px; line-height:1.6; max-width:380px; margin:0;}
-  .steps{display:flex; flex-direction:column; gap:10px; width:100%; max-width:380px; margin-top:6px;}
+  #screen-welcome p{color:var(--text-dim); font-size:14.5px; line-height:1.6; max-width:400px; margin:0;}
+  .steps{display:flex; flex-direction:column; gap:10px; width:100%; max-width:400px; margin-top:6px;}
   .step{display:flex; gap:12px; align-items:flex-start; background:var(--bg-panel); border:1px solid var(--border); border-radius:12px; padding:12px 14px; text-align:left;}
   .step .n{font-family:'JetBrains Mono',monospace; color:var(--accent); font-size:12px; padding-top:2px;}
   .step .t{font-size:13.5px; color:var(--text); line-height:1.45;}
@@ -81,169 +87,247 @@
   .step .t small{color:var(--text-faint); display:block; margin-top:2px;}
 
   button.primary{
-    background:var(--accent); color:#0a1210; border:none; font-weight:600;
-    padding:15px 22px; border-radius:12px; font-size:15px; width:100%; max-width:380px;
-    font-family:'Inter',sans-serif; letter-spacing:0.01em;
+    background:var(--accent); color:#171717; border:none; font-weight:600;
+    padding:15px 22px; border-radius:12px; font-size:15px; width:100%; max-width:400px;
+    font-family:'Inter',sans-serif; letter-spacing:0.01em; cursor:pointer;
   }
   button.primary:active{transform:scale(0.98);}
   button.secondary{
     background:transparent; color:var(--text); border:1px solid var(--border);
-    padding:13px 20px; border-radius:12px; font-size:14px; width:100%; max-width:380px; font-weight:500;
+    padding:13px 20px; border-radius:12px; font-size:14px; width:100%; max-width:400px; font-weight:500;
+    cursor:pointer;
   }
+  button.secondary:hover{background:var(--bg-elevated);}
   .err-box{
     background:rgba(226,104,90,0.1); border:1px solid rgba(226,104,90,0.35); color:#f0a89e;
-    border-radius:10px; padding:12px 14px; font-size:13px; max-width:380px; text-align:left; line-height:1.5; display:none;
+    border-radius:10px; padding:12px 14px; font-size:13px; max-width:400px; text-align:left; line-height:1.5; display:none;
   }
   .err-box.show{display:block;}
 
   /* ---------- capture screen ---------- */
-  #screen-capture{background:#000;}
+  #screen-capture{background:#090a0b;}
   .viewport-wrap{flex:1; position:relative; min-height:0; background:#000; display:flex; align-items:center; justify-content:center; overflow:hidden;}
   #liveVideo{width:100%; height:100%; object-fit:contain; background:#000;}
   .viewport-wrap .no-signal{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; color:var(--text-faint); font-size:13px;}
   .viewport-wrap .no-signal.hide{display:none;}
   .rec-pill{
     position:absolute; top:14px; left:14px; display:flex; align-items:center; gap:6px;
-    background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); padding:6px 10px 6px 8px; border-radius:20px;
+    background:rgba(0,0,0,0.65); backdrop-filter:blur(8px); padding:6px 12px 6px 10px; border-radius:20px;
     font-size:11px; color:var(--text-dim); border:1px solid rgba(255,255,255,0.08);
   }
   .rec-pill .rdot{width:7px;height:7px;border-radius:50%;background:var(--accent); animation:pulse 1.6s infinite;}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.35;}}
 
   .device-chip{
-    position:absolute; top:14px; right:14px; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px);
-    border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:7px 12px; font-size:11.5px; color:var(--text-dim);
+    position:absolute; top:14px; right:14px; background:rgba(0,0,0,0.65); backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,0.08); border-radius:20px; padding:7px 14px; font-size:11.5px; color:var(--text-dim);
     max-width:55%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
 
   .capture-bar{
-    flex-shrink:0; background:var(--bg-panel); border-top:1px solid var(--border);
-    padding:14px 16px 18px; display:flex; flex-direction:column; gap:12px;
+    flex-shrink:0; background:#17191c; border-top:1px solid var(--border);
+    padding:12px 16px 16px; display:flex; flex-direction:column; gap:10px;
   }
-  .filmstrip{display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; -webkit-overflow-scrolling:touch;}
+  .filmstrip{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch;}
   .filmstrip::-webkit-scrollbar{display:none;}
   .filmstrip .thumb{
-    flex-shrink:0; width:52px; height:52px; border-radius:8px; overflow:hidden; border:1.5px solid var(--border);
-    background:var(--bg-elevated); position:relative;
+    flex-shrink:0; width:56px; height:56px; border-radius:8px; overflow:hidden; border:1.5px solid var(--border);
+    background:var(--bg-elevated); position:relative; cursor:pointer;
   }
   .filmstrip .thumb img{width:100%;height:100%;object-fit:cover; display:block;}
   .filmstrip .thumb.empty{display:flex; align-items:center; justify-content:center; color:var(--text-faint); font-size:10px; border-style:dashed;}
+  
+  .filmstrip .thumb .batch-dot{
+    position:absolute; bottom:3px; right:3px; width:10px; height:10px; border-radius:50%;
+    border:1.5px solid #17191c; z-index:2;
+  }
+  .filmstrip .thumb .batch-dot.pending{background:#9ba1a8;}
+  .filmstrip .thumb .batch-dot.processing{background:#f59e0b; animation:pulse 0.9s infinite;}
+  .filmstrip .thumb .batch-dot.done{background:#10b981;}
+  .filmstrip .thumb .batch-dot.error{background:var(--danger);}
 
-  .capture-row{display:flex; align-items:center; justify-content:space-between; gap:14px;}
+  .capture-row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
   .capture-row .side-btn{
     background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
     width:46px;height:46px;border-radius:12px; font-size:16px; display:flex;align-items:center;justify-content:center; flex-shrink:0;
+    cursor:pointer;
   }
+  .capture-row .side-btn:hover{background:var(--bg-elevated-2); color:var(--text);}
+  
   .shutter{
-    width:72px;height:72px;border-radius:50%; background:var(--bg); border:3px solid var(--accent);
-    display:flex;align-items:center;justify-content:center; flex-shrink:0;
+    width:68px;height:68px;border-radius:50%; background:#101112; border:3px solid var(--accent);
+    display:flex;align-items:center;justify-content:center; flex-shrink:0; cursor:pointer;
+    transition:border-color 0.25s, transform 0.15s;
   }
-  .shutter .inner{width:56px;height:56px;border-radius:50%;background:var(--accent);}
-  .shutter:active .inner{transform:scale(0.86);}
+  .shutter.batch-active{border-color:#10b981;}
+  .shutter .inner{width:52px;height:52px;border-radius:50%;background:var(--accent); transition:background 0.25s, transform 0.15s;}
+  .shutter.batch-active .inner{background:#10b981;}
+  .shutter:active .inner{transform:scale(0.85);}
+  
   .device-select{flex:1; min-width:0;}
   .device-select select{
     width:100%; background:var(--bg-elevated); color:var(--text); border:1px solid var(--border);
-    border-radius:10px; padding:9px 10px; font-size:12.5px; font-family:'Inter',sans-serif;
+    border-radius:10px; padding:9px 10px; font-size:12.5px; font-family:'Inter',sans-serif; outline:none;
   }
 
-  /* ---------- edit screen ---------- */
-  #screen-edit{background:var(--bg);}
+  .batch-status-pill{
+    display:none; align-items:center; gap:7px; background:var(--bg-elevated);
+    border:1px solid var(--border); border-radius:20px; padding:6px 14px; font-size:11.5px; color:var(--text-dim);
+    flex-shrink:0;
+  }
+  .batch-status-pill.show{display:flex;}
+  .batch-status-pill .bs-icon{font-size:13px;}
+  .batch-status-pill .bs-text{white-space:nowrap; font-weight:500;}
+
+  /* ---------- Evoto-style Edit Screen ---------- */
+  #screen-edit{background:#111315;}
+  .editor-toolbar{height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px 0 14px;background:#17191c;border-bottom:1px solid var(--border);color:#d8dbdc;font-size:12px;}
+  .editor-context,.editor-actions,.editor-toolbar-center{display:flex;align-items:center;gap:9px;min-width:0;}
+  .editor-context strong{font-size:13.5px;color:#f4f4f2;font-weight:600;}
+  .editor-context span{color:#7e858d;}
+  .toolbar-back{width:30px;height:30px;border:1px solid #3a3f45;background:#222529;color:#e7e8e6;border-radius:6px;font-size:22px;line-height:22px;display:grid;place-items:center;cursor:pointer;}
+  .editor-toolbar-center{color:#8e969f;}
+  .editor-state-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 9px rgba(101,217,202,.65);}
+  .toolbar-divider{height:16px;width:1px;background:#3a3e44;margin:0 3px;}
+  .toolbar-btn{border:1px solid #3a3f45;background:#222529;color:#d8dbdc;border-radius:6px;padding:7px 11px;font:500 11.5px 'Inter',sans-serif;white-space:nowrap;cursor:pointer;}
+  .toolbar-btn:hover,.toolbar-back:hover{border-color:#5a6068;background:#2a2e33;}
+  .toolbar-export-btn{background:var(--accent); border:none; color:#171717; font-weight:700; border-radius:6px; padding:7px 14px; font-size:12px; cursor:pointer;}
+
   .edit-layout{flex:1; min-height:0; display:flex; flex-direction:row;}
-  .canvas-stage{flex:1; min-width:0; display:flex; align-items:center; justify-content:center; position:relative; background:#0a0a08; overflow:hidden;}
-  .canvas-stage canvas{max-width:100%; max-height:100%; touch-action:none; box-shadow:0 10px 40px rgba(0,0,0,0.5);}
+
+  .canvas-stage{flex:1; min-width:0; display:flex; align-items:center; justify-content:center; position:relative; background:#0b0c0e; overflow:hidden;}
+  .canvas-stage canvas{max-width:100%; max-height:100%; touch-action:none; box-shadow:0 10px 40px rgba(0,0,0,0.6);}
   .stage-topbar{
     position:absolute; top:12px; left:12px; right:12px; display:flex; justify-content:space-between; align-items:center;
-    pointer-events:none;
+    pointer-events:none; z-index:10;
   }
   .ba-btn{
-    pointer-events:auto; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.1);
-    color:var(--text); font-size:11.5px; padding:8px 13px; border-radius:20px; font-weight:500; letter-spacing:0.02em;
+    pointer-events:auto; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.12);
+    color:var(--text); font-size:11.5px; padding:7px 14px; border-radius:20px; font-weight:500; letter-spacing:0.02em; cursor:pointer;
   }
   .ba-btn:active{background:var(--accent); color:#0a1210;}
 
-  .edit-panel{
-    width:300px; flex-shrink:0; background:var(--bg-panel); border-left:1px solid var(--border);
-    display:flex; flex-direction:column; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  /* Evoto Right Navigation Strip (Thin Icon Rail) */
+  .evoto-icon-strip{
+    width:48px; flex-shrink:0; background:#151719; border-left:1px solid var(--border);
+    display:flex; flex-direction:column; align-items:center; padding:10px 0; gap:4px;
   }
-  .edit-panel-inner{padding:16px 16px 24px; display:flex; flex-direction:column; gap:4px;}
-  .panel-tabs{display:flex; gap:6px; padding:12px 16px 0;}
-  .panel-tabs button{
-    flex:1; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
-    padding:9px 6px; border-radius:9px; font-size:11.5px; font-weight:500; letter-spacing:0.02em;
+  .evoto-icon-strip .strip-btn{
+    width:38px; height:38px; border:none; background:transparent; color:#8d959d;
+    border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-size:17px; cursor:pointer; transition:all 0.15s;
   }
-  .panel-tabs button.active{background:var(--accent-soft); border-color:var(--accent-dim); color:var(--accent);}
+  .evoto-icon-strip .strip-btn.active{background:#2a2d32; color:var(--accent);}
+  .evoto-icon-strip .strip-btn:hover{background:#222529; color:#f0f1ee;}
+  .evoto-icon-strip .strip-sep{width:26px; height:1px; background:var(--border); margin:4px 0;}
 
-  .ctrl-group{display:none; flex-direction:column; gap:2px;}
-  .ctrl-group.active{display:flex;}
-  .ctrl{padding:12px 2px; border-bottom:1px solid var(--border);}
-  .ctrl:last-child{border-bottom:none;}
-  .ctrl .row1{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
-  .ctrl .row1 label{font-size:12.5px; color:var(--text); font-weight:500;}
-  .ctrl .row1 .val{font-size:11.5px; color:var(--accent); font-family:'JetBrains Mono',monospace;}
-  .ctrl input[type=range]{
-    -webkit-appearance:none; width:100%; height:26px; background:transparent; margin:0;
+  /* Evoto Panel */
+  .evoto-panel{
+    width:320px; flex-shrink:0; background:#191b1e; border-left:1px solid var(--border);
+    display:flex; flex-direction:column; overflow:hidden;
   }
-  .ctrl input[type=range]::-webkit-slider-runnable-track{
-    height:3px; background:var(--border); border-radius:2px;
+  .evoto-panel-header{
+    padding:14px 16px 12px; border-bottom:1px solid var(--border); flex-shrink:0; background:#191b1e;
   }
-  .ctrl input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
-    background:var(--accent); border:2px solid #0a1210; margin-top:-6.5px;
-    box-shadow:0 0 0 3px rgba(94,234,212,0.15);
+  .evoto-panel-title{
+    display:flex; align-items:center; gap:8px; margin-bottom:10px;
   }
-  .ctrl.zero input[type=range]::-webkit-slider-thumb{background:var(--text-faint); box-shadow:none;}
+  .evoto-panel-title .panel-dot{width:8px; height:8px; border-radius:50%; background:var(--accent);}
+  .evoto-panel-title span{font-size:13.5px; font-weight:600; color:#f0f1ee; letter-spacing:0.01em;}
+  
+  .gender-selector{display:flex; gap:5px;}
+  .gender-btn{
+    flex:1; padding:6px 4px; border:1px solid #363b42; background:#222529; color:#9ba1a8;
+    border-radius:6px; font:500 11px 'Inter',sans-serif; text-align:center; cursor:pointer; transition:all 0.15s;
+  }
+  .gender-btn.active{background:#2f353d; border-color:#5a626d; color:#fff; font-weight:600;}
+  .gender-btn:hover:not(.active){border-color:#4a525d; color:#d8dbdc;}
 
-  .reset-row{display:flex; gap:8px; padding:14px 2px 4px;}
-  .reset-row button{
-    flex:1; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
-    padding:10px; border-radius:9px; font-size:12px; font-weight:500;
+  .evoto-panel-scroll{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:4px 0;}
+  .evoto-panel-scroll::-webkit-scrollbar{width:4px;}
+  .evoto-panel-scroll::-webkit-scrollbar-thumb{background:#3a3f45; border-radius:2px;}
+
+  /* Collapsible sections */
+  .evoto-section{border-bottom:1px solid var(--border);}
+  .evoto-section-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 16px; cursor:pointer; user-select:none; transition:background 0.15s;
+  }
+  .evoto-section-header:hover{background:rgba(255,255,255,0.02);}
+  .evoto-section-header .sec-left{display:flex; align-items:center; gap:8px;}
+  .evoto-section-header .sec-arrow{
+    font-size:10px; color:#6b7280; transition:transform 0.2s; display:inline-block;
+  }
+  .evoto-section-header .sec-title{font-size:12.5px; font-weight:600; color:#e0e2e4;}
+  .evoto-section-header .sec-reset{
+    width:22px; height:22px; border:none; background:transparent; color:#6b7280;
+    border-radius:50%; font-size:13px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; transition:all 0.15s;
+  }
+  .evoto-section-header .sec-reset:hover{background:#2a2d32; color:#d8dbdc;}
+  .evoto-section.collapsed .sec-arrow{transform:rotate(-90deg);}
+  .evoto-section-body{padding:0 16px 12px; display:flex; flex-direction:column; gap:2px;}
+  .evoto-section.collapsed .evoto-section-body{display:none;}
+
+  /* Evoto slider row */
+  .evoto-ctrl{padding:6px 0; display:flex; flex-direction:column; gap:4px;}
+  .evoto-ctrl .ctrl-top{display:flex; justify-content:space-between; align-items:center;}
+  .evoto-ctrl .ctrl-top label{font-size:12px; color:#c8cbd0; font-weight:400;}
+  .evoto-ctrl .ctrl-top .ctrl-val{
+    font-size:11.5px; color:var(--text-dim); font-family:'JetBrains Mono',monospace; min-width:26px; text-align:right;
+  }
+  .evoto-ctrl input[type=range]{
+    -webkit-appearance:none; width:100%; height:20px; background:transparent; margin:0; cursor:pointer;
+  }
+  .evoto-ctrl input[type=range]::-webkit-slider-runnable-track{
+    height:3px; background:#373c42; border-radius:2px;
+  }
+  .evoto-ctrl input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:#eef0f2; border:2px solid #1e2024; margin-top:-5.5px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.4); transition:box-shadow 0.15s;
+  }
+  .evoto-ctrl input[type=range]:active::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(59,130,246,0.3);}
+
+  /* Evoto toggle */
+  .evoto-toggle-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 0;
+  }
+  .evoto-toggle-row label{font-size:12px; color:#c8cbd0;}
+  .evoto-toggle{position:relative; width:36px; height:20px; flex-shrink:0;}
+  .evoto-toggle input{opacity:0; width:0; height:0;}
+  .evoto-toggle i{
+    position:absolute; inset:0; border-radius:20px; background:#373c42;
+    transition:background 0.2s; cursor:pointer;
+  }
+  .evoto-toggle i::after{
+    content:""; position:absolute; width:14px; height:14px; left:3px; top:3px;
+    border-radius:50%; background:#d7dadd; transition:transform 0.2s;
+  }
+  .evoto-toggle input:checked+i{background:var(--evoto-blue);}
+  .evoto-toggle input:checked+i::after{transform:translateX(16px); background:#fff;}
+
+  /* Evoto panel footer */
+  .evoto-panel-footer{
+    flex-shrink:0; padding:10px 14px calc(10px + var(--safe-bottom));
+    border-top:1px solid var(--border); background:#17191c;
+    display:flex; gap:8px; align-items:center;
+  }
+  .evoto-footer-btn{
+    flex:1; padding:9px 10px; border:1px solid #3a3f45; background:#222529; color:#d8dbdc;
+    border-radius:7px; font:500 11.5px 'Inter',sans-serif; text-align:center; cursor:pointer;
+    transition:all 0.15s;
+  }
+  .evoto-footer-btn:hover{border-color:#5a6068; background:#2a2e33;}
+  .evoto-footer-btn.primary-sm{background:var(--accent); border-color:var(--accent); color:#171717; font-weight:700;}
+  .evoto-footer-icon{
+    width:34px; height:34px; border:1px solid #3a3f45; background:#222529; color:#9ba1a8;
+    border-radius:7px; font-size:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    cursor:pointer;
   }
 
-  .export-row{
-    padding:14px 16px calc(16px + var(--safe-bottom)); border-top:1px solid var(--border); background:var(--bg-panel);
-    display:flex; gap:10px; flex-shrink:0;
-  }
-  .export-row button.primary{padding:14px;}
-  .export-row .icon-btn-lg{
-    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
-    width:50px; border-radius:12px; font-size:16px; flex-shrink:0;
-  }
-  .drive-btn{
-    background:var(--accent-soft); border:1px solid var(--accent-dim); color:var(--accent);
-    padding:14px 14px; border-radius:12px; font-size:13px; font-weight:600; flex-shrink:0; white-space:nowrap;
-    font-family:'Inter',sans-serif;
-  }
-  .drive-btn:active{transform:scale(0.97);}
-  .head-right{display:flex; align-items:center; gap:10px;}
-  #screen-settings{overflow-y:auto; padding:24px 20px calc(24px + var(--safe-bottom));}
-  .settings-inner{max-width:420px; margin:0 auto; display:flex; flex-direction:column; gap:12px; width:100%;}
-  .settings-inner h2{margin:0; font-size:20px;}
-  .settings-desc{color:var(--text-dim); font-size:13.5px; line-height:1.55; margin:0;}
-  .settings-label{font-size:12px; color:var(--text-dim); letter-spacing:0.04em;}
-  .settings-input{
-    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text);
-    border-radius:10px; padding:12px 14px; font-size:13px; font-family:'JetBrains Mono',monospace; width:100%;
-  }
-  .settings-input:focus{outline:none; border-color:var(--accent-dim);}
-  .lut-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; padding:12px 2px 4px;}
-  .lut-chip{
-    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
-    padding:11px 8px; border-radius:9px; font-size:12px; font-weight:500; text-align:center;
-    font-family:'Inter',sans-serif; word-break:break-word;
-  }
-  .lut-chip.active{background:var(--accent-soft); border-color:var(--accent-dim); color:var(--accent);}
-  .tool-row{display:flex; gap:8px; padding:12px 2px 6px;}
-  .tool-btn{
-    flex:1; background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
-    padding:11px 6px; border-radius:9px; font-size:12px; font-weight:500; font-family:'Inter',sans-serif;
-  }
-  .tool-btn:active{transform:scale(0.96);}
-  .aspect-row{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding:8px 2px 2px;}
-  .aspect-chip{
-    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
-    padding:8px 4px; border-radius:8px; font-size:11px; font-weight:500; text-align:center; font-family:'Inter',sans-serif;
-  }
-  .aspect-chip.active{background:var(--accent-soft); border-color:var(--accent-dim); color:var(--accent);}
+  /* Crop overlay */
   .crop-overlay{position:absolute; display:none; touch-action:none; z-index:6;}
   .crop-overlay.show{display:block;}
   .crop-box{
@@ -259,55 +343,83 @@
   .crop-handle.ne{right:-11px; top:-11px; cursor:nesw-resize;}
   .crop-handle.sw{left:-11px; bottom:-11px; cursor:nesw-resize;}
   .crop-handle.se{right:-11px; bottom:-11px; cursor:nwse-resize;}
-  .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index:80; padding:20px;}
+
+  /* LUT & Aspect styles */
+  .lut-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; padding:8px 0 4px;}
+  .lut-chip{
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
+    padding:10px 8px; border-radius:8px; font-size:11.5px; font-weight:500; text-align:center;
+    font-family:'Inter',sans-serif; word-break:break-word; cursor:pointer;
+  }
+  .lut-chip.active{background:var(--accent-soft); border-color:var(--accent-dim); color:var(--accent);}
+  .lut-chip b{display:block;font-size:11px;line-height:1.25;color:inherit;font-weight:600;}
+  .lut-chip small{display:block;margin-top:2px;font-size:9px;line-height:1.2;color:var(--text-faint);font-weight:400;}
+
+  .aspect-row{display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding:6px 0 2px;}
+  .aspect-chip{
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text-dim);
+    padding:8px 4px; border-radius:7px; font-size:11px; font-weight:500; text-align:center; font-family:'Inter',sans-serif;
+    cursor:pointer;
+  }
+  .aspect-chip.active{background:var(--accent-soft); border-color:var(--accent-dim); color:var(--accent);}
+
+  /* Bottom Filmstrip for Editor (Evoto Style) */
+  .editor-bottom-bar{
+    height:72px; flex-shrink:0; background:#141618; border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; padding:0 16px; gap:14px;
+  }
+  .editor-bottom-left{display:flex; align-items:center; gap:10px; font-size:12px; color:var(--text-dim);}
+  .editor-bottom-filmstrip{display:flex; align-items:center; gap:8px; overflow-x:auto; padding:4px 0;}
+  .editor-bottom-filmstrip::-webkit-scrollbar{display:none;}
+  .editor-bottom-filmstrip .thumb{
+    flex-shrink:0; width:48px; height:48px; border-radius:6px; overflow:hidden; border:1.5px solid var(--border);
+    background:var(--bg-elevated); cursor:pointer; position:relative;
+  }
+  .editor-bottom-filmstrip .thumb.active{border-color:var(--accent); box-shadow:0 0 0 2px rgba(243,216,75,0.25);}
+  .editor-bottom-filmstrip .thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+
+  /* Settings Screen */
+  #screen-settings{overflow-y:auto; padding:24px 20px calc(24px + var(--safe-bottom));}
+  .settings-inner{max-width:440px; margin:0 auto; display:flex; flex-direction:column; gap:14px; width:100%;}
+  .settings-inner h2{margin:0; font-size:22px;}
+  .settings-desc{color:var(--text-dim); font-size:13.5px; line-height:1.55; margin:0;}
+  .settings-label{font-size:12px; color:var(--text-dim); letter-spacing:0.04em;}
+  .settings-input{
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text);
+    border-radius:10px; padding:12px 14px; font-size:13px; font-family:'JetBrains Mono',monospace; width:100%;
+  }
+  .settings-input:focus{outline:none; border-color:var(--accent-dim);}
+
+  /* Modals */
+  .modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.65); display:none; align-items:center; justify-content:center; z-index:80; padding:20px;}
   .modal-backdrop.show{display:flex;}
-  .modal{background:var(--bg-panel); border:1px solid var(--border); border-radius:16px; width:100%; max-width:420px; max-height:82vh; display:flex; flex-direction:column; overflow:hidden;}
-  .modal-head{display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--border);}
+  .modal{background:var(--bg-panel); border:1px solid var(--border); border-radius:16px; width:100%; max-width:440px; max-height:82vh; display:flex; flex-direction:column; overflow:hidden;}
+  .modal-head{display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border);}
   .modal-title{font-weight:600; font-size:15px;}
-  .drive-crumbs{padding:10px 16px; font-size:12px; color:var(--text-dim); border-bottom:1px solid var(--border); white-space:nowrap; overflow-x:auto;}
+  .drive-crumbs{padding:10px 18px; font-size:12px; color:var(--text-dim); border-bottom:1px solid var(--border); white-space:nowrap; overflow-x:auto;}
   .drive-crumbs b{color:var(--text); cursor:pointer;}
-  .drive-list{flex:1; overflow-y:auto; padding:8px; min-height:120px;}
-  .drive-item{display:flex; align-items:center; gap:10px; padding:12px; border-radius:10px; cursor:pointer; font-size:14px;}
-  .drive-item:active{background:var(--bg-elevated);}
+  .drive-list{flex:1; overflow-y:auto; padding:8px; min-height:140px;}
+  .drive-item{display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; cursor:pointer; font-size:13.5px;}
+  .drive-item:active,.drive-item:hover{background:var(--bg-elevated);}
   .drive-item .fico{font-size:16px;}
-  .drive-empty{padding:20px; text-align:center; color:var(--text-faint); font-size:13px;}
-  .modal-actions{padding:12px 16px calc(12px + var(--safe-bottom)); border-top:1px solid var(--border); display:flex; gap:10px;}
+  .drive-empty{padding:24px; text-align:center; color:var(--text-faint); font-size:13px;}
+  .modal-actions{padding:12px 18px calc(12px + var(--safe-bottom)); border-top:1px solid var(--border); display:flex; gap:10px;}
   .modal-actions .primary{flex:1;}
 
-  /* mobile: stack panel below canvas */
-  @media (max-width: 760px){
-    .edit-layout{flex-direction:column;}
-    .canvas-stage{flex:1 1 45%; min-height:180px;}
-    .edit-panel{width:100%; flex:1 1 55%; border-left:none; border-top:1px solid var(--border);}
-  }
-
-  .hint{font-size:11px; color:var(--text-faint); line-height:1.5; padding:10px 2px 2px;}
+  /* Toast */
   .toast{
     position:fixed; bottom:calc(24px + var(--safe-bottom)); left:50%; transform:translateX(-50%) translateY(20px);
-    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text); padding:12px 20px;
-    border-radius:30px; font-size:13px; opacity:0; pointer-events:none; transition:all 0.25s ease; z-index:50;
-    display:flex; align-items:center; gap:8px;
+    background:var(--bg-elevated); border:1px solid var(--border); color:var(--text); padding:12px 22px;
+    border-radius:30px; font-size:13px; opacity:0; pointer-events:none; transition:all 0.25s ease; z-index:90;
+    display:flex; align-items:center; gap:8px; box-shadow:0 12px 32px rgba(0,0,0,0.5);
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
-  .toast .td{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+  .toast .td{width:7px;height:7px;border-radius:50%;background:var(--accent);}
   #fileInput{display:none;}
-  /* landscape phone: let live view fill the screen, overlay controls */
-  @media (orientation: landscape) and (max-height: 520px){
-    header.bar{padding:8px 14px;}
-    #screen-capture{position:relative;}
-    .capture-bar{
-      position:absolute; left:0; right:0; bottom:0; z-index:5;
-      background:linear-gradient(transparent, rgba(0,0,0,0.72));
-      border-top:none; padding:12px 20px calc(8px + var(--safe-bottom));
-    }
-    .filmstrip, .device-select{display:none;}
-    .capture-row{justify-content:space-between;}
-    .shutter{width:60px;height:60px;}
-    .shutter .inner{width:46px;height:46px;}
-  }
 
-  /* ---------- Evoto-inspired workspace flow ---------- */
+  /* Auth Screen & Projects Screen */
   .screen.auth-screen,.screen.projects-screen{background:#101112;color:#f4f4f2;}
+  body.auth-mode header.bar,body.projects-mode header.bar{display:none;}
   .auth-screen{align-items:center;justify-content:center;padding:28px;position:relative;overflow:hidden;}
   .auth-screen::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 15%,rgba(72,94,120,.2),transparent 44%),linear-gradient(135deg,#0c0d0f,#17191d 58%,#0d0f11);}
   .auth-shell{position:relative;width:min(440px,100%);display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center;}
@@ -315,29 +427,30 @@
   .auth-mark svg{width:42px;height:42px;}
   .auth-shell h1{font-size:30px;line-height:1.1;margin:0;letter-spacing:-.02em;}
   .auth-shell p{margin:0;color:#9da2aa;line-height:1.6;font-size:14px;max-width:370px;}
-  .google-btn{width:min(340px,100%);background:#f7f7f5;color:#181a1d;border:0;border-radius:9px;padding:13px 16px;display:flex;align-items:center;justify-content:center;gap:10px;font:600 14px 'Inter',sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.22);}
+  .google-btn{width:min(340px,100%);background:#f7f7f5;color:#181a1d;border:0;border-radius:9px;padding:13px 16px;display:flex;align-items:center;justify-content:center;gap:10px;font:600 14px 'Inter',sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.22);cursor:pointer;}
   .google-btn:active{transform:translateY(1px);}
   .google-icon{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#4285f4;font-size:16px;background:#fff;}
   .auth-note{font-size:11px!important;color:#656b74!important;}
+
   .projects-screen{flex-direction:column;min-height:0;}
   .projects-screen.active{display:flex!important;}
   .projects-nav{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid #2a2d32;background:#17191c;flex-shrink:0;}
   .projects-nav .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.01em;}
-  .projects-nav .brand .dot{width:9px;height:9px;border-radius:50%;background:#65d9ca;box-shadow:0 0 14px rgba(101,217,202,.7);}
+  .projects-nav .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--teal);box-shadow:0 0 14px rgba(101,217,202,.7);}
   .projects-nav .nav-right{display:flex;align-items:center;gap:14px;color:#a2a7ae;font-size:12px;}
   .account-pill{display:flex;align-items:center;gap:8px;border:1px solid #363a40;border-radius:20px;padding:5px 10px 5px 5px;background:#202328;color:#e8e9e8;}
   .account-avatar{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:#3b82f6;color:white;font-size:11px;font-weight:700;}
   .projects-body{display:flex;min-height:0;flex:1;}
   .projects-sidebar{width:210px;flex-shrink:0;border-right:1px solid #2a2d32;background:#151719;padding:18px 12px;display:flex;flex-direction:column;gap:5px;}
   .sidebar-label{padding:0 10px 9px;color:#707780;font:500 10px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;}
-  .side-link{border:0;background:transparent;color:#9ca2aa;text-align:left;padding:10px 11px;border-radius:7px;font-size:13px;display:flex;align-items:center;gap:9px;}
+  .side-link{border:0;background:transparent;color:#9ca2aa;text-align:left;padding:10px 11px;border-radius:7px;font-size:13px;display:flex;align-items:center;gap:9px;cursor:pointer;}
   .side-link.active{background:#2a2d32;color:#f4f4f2;}
-  .side-link .si{width:18px;text-align:center;color:#7fd9cc;}
+  .side-link .si{width:18px;text-align:center;color:var(--teal);}
   .projects-main{flex:1;min-width:0;overflow:auto;padding:30px clamp(22px,5vw,58px) 40px;background:#111315;}
   .projects-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:24px;}
   .projects-heading h2{font-size:27px;margin:0 0 7px;letter-spacing:-.02em;}
   .projects-heading p{margin:0;color:#8c939c;font-size:13px;}
-  .new-project-btn{border:0;background:#f3d84b;color:#171717;border-radius:7px;padding:11px 15px;font:600 13px 'Inter',sans-serif;white-space:nowrap;}
+  .new-project-btn{border:0;background:#f3d84b;color:#171717;border-radius:7px;padding:11px 16px;font:600 13px 'Inter',sans-serif;white-space:nowrap;cursor:pointer;}
   .project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;}
   .project-card{background:#1a1d20;border:1px solid #30343a;border-radius:8px;overflow:hidden;min-height:178px;display:flex;flex-direction:column;}
   .project-thumb{height:100px;background:linear-gradient(135deg,#192b3d,#293f54 45%,#cb6875 100%);position:relative;overflow:hidden;}
@@ -346,33 +459,62 @@
   .project-card-body{padding:12px 13px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
   .project-card h3{font:600 14px 'Inter',sans-serif;margin:0 0 4px;}
   .project-meta{font-size:11px;color:#7f8790;}
-  .project-open{border:1px solid #3b4148;background:#24282d;color:#dfe1e3;border-radius:6px;padding:7px 9px;font-size:11px;}
+  .project-open{border:1px solid #3b4148;background:#24282d;color:#dfe1e3;border-radius:6px;padding:7px 11px;font-size:11px;cursor:pointer;}
   .empty-project{grid-column:1/-1;border:1px dashed #3a4047;border-radius:8px;padding:42px 20px;text-align:center;color:#858c94;background:#17191c;}
   .empty-project strong{display:block;color:#d6d9dc;font-size:14px;margin-bottom:7px;}
+  
+  /* Project Modal */
   .project-modal{position:fixed;inset:0;background:rgba(0,0,0,.68);display:none;align-items:center;justify-content:center;padding:18px;z-index:80;}
   .project-modal.show{display:flex;}
-  .project-modal-card{width:min(520px,100%);background:#1b1e22;border:1px solid #3a3f46;border-radius:10px;box-shadow:0 24px 80px rgba(0,0,0,.5);}
+  .project-modal-card{width:min(520px,100%);background:#1b1e22;border:1px solid #3a3f46;border-radius:10px;box-shadow:0 24px 80px rgba(0,0,0,.5);max-height:90vh;overflow-y:auto;}
   .project-modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #30343a;}
   .project-modal-head h3{margin:0;font-size:17px;}
-  .modal-close{border:0;background:transparent;color:#8e959d;font-size:20px;line-height:1;}
+  .modal-close{border:0;background:transparent;color:#8e959d;font-size:20px;line-height:1;cursor:pointer;}
   .project-form{padding:20px;display:grid;gap:15px;}
   .form-field{display:grid;gap:7px;}
   .form-field label{font-size:11px;color:#9ca3ab;}
   .form-field input,.form-field select{width:100%;background:#121416;border:1px solid #383e45;border-radius:6px;color:#eef0ef;padding:11px 12px;font:13px 'Inter',sans-serif;outline:none;}
-  .form-field input:focus,.form-field select:focus{border-color:#65d9ca;box-shadow:0 0 0 2px rgba(101,217,202,.14);}
+  .form-field input:focus,.form-field select:focus{border-color:var(--teal);box-shadow:0 0 0 2px rgba(101,217,202,.14);}
   .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px;background:#15181b;border:1px solid #30353b;border-radius:7px;}
   .toggle-row span{font-size:12px;color:#d5d8da;}
   .toggle{position:relative;width:38px;height:21px;}
   .toggle input{opacity:0;width:0;height:0;}
-  .toggle i{position:absolute;inset:0;border-radius:20px;background:#3b4148;transition:.2s;}
+  .toggle i{position:absolute;inset:0;border-radius:20px;background:#3b4148;transition:.2s;cursor:pointer;}
   .toggle i::after{content:"";position:absolute;width:15px;height:15px;left:3px;top:3px;border-radius:50%;background:#d7dadd;transition:.2s;}
   .toggle input:checked+i{background:#2f8e81;}
   .toggle input:checked+i::after{transform:translateX(17px);background:#fff;}
-  .project-form-actions{display:flex;justify-content:flex-end;gap:9px;padding-top:3px;}
-  .form-cancel{border:1px solid #3a4047;background:transparent;color:#c3c7ca;border-radius:6px;padding:10px 14px;font-size:12px;}
-  .form-submit{border:0;background:#f3d84b;color:#171717;border-radius:6px;padding:10px 16px;font:600 12px 'Inter',sans-serif;}
-  @media (max-width:720px){.projects-sidebar{width:58px;padding:14px 7px}.sidebar-label,.side-link span:not(.si){display:none}.side-link{justify-content:center}.projects-main{padding:22px 16px 30px}.projects-heading{align-items:flex-start;flex-direction:column}.new-project-btn{width:100%}.form-row{grid-template-columns:1fr}.auth-shell h1{font-size:26px}}
+  .project-form-actions{display:flex;justify-content:flex-end;gap:9px;padding-top:4px;}
+  .form-cancel{border:1px solid #3a4047;background:transparent;color:#c3c7ca;border-radius:6px;padding:10px 14px;font-size:12px;cursor:pointer;}
+  .form-submit{border:0;background:#f3d84b;color:#171717;border-radius:6px;padding:10px 16px;font:600 12px 'Inter',sans-serif;cursor:pointer;}
+  .drive-folder-selector{display:flex;align-items:center;gap:8px;background:#121416;border:1px solid #383e45;border-radius:6px;padding:8px 12px;}
+  .drive-folder-selector span{flex:1;font-size:12px;color:#9ca3ab;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .drive-folder-selector button{flex-shrink:0;font-size:11px;padding:6px 10px;}
+
+  /* Mobile responsiveness */
+  @media (max-width: 760px){
+    .editor-toolbar{padding:0 10px;height:48px;}
+    .editor-toolbar-center{display:none;}
+    .editor-actions .toolbar-btn{font-size:10px;padding:7px 8px;}
+    .evoto-icon-strip{width:100%;height:46px;flex-direction:row;justify-content:space-around;padding:4px 6px;border-left:none;border-top:1px solid var(--border);order:3;}
+    .evoto-icon-strip .strip-sep{display:none;}
+    .evoto-icon-strip .strip-btn{width:auto;min-width:44px;}
+    .evoto-panel{width:100%;border-left:none;border-top:1px solid var(--border);}
+    .edit-layout{flex-direction:column;}
+    .canvas-stage{flex:1 1 40%; min-height:160px;}
+    .evoto-panel{flex:1 1 50%;}
+  }
+
+  @media (max-width:720px){
+    .projects-sidebar{width:58px;padding:14px 7px}
+    .sidebar-label,.side-link span:not(.si){display:none}
+    .side-link{justify-content:center}
+    .projects-main{padding:22px 16px 30px}
+    .projects-heading{align-items:flex-start;flex-direction:column}
+    .new-project-btn{width:100%}
+    .form-row{grid-template-columns:1fr}
+    .auth-shell h1{font-size:26px}
+  }
 </style>
 </head>
 <body>
@@ -391,9 +533,9 @@
     <div class="auth-shell">
       <div class="auth-mark"><svg viewBox="0 0 48 48" fill="none"><path d="M10 17.5c0-2.2 1.8-4 4-4h5.1l2.2-3.2a2.2 2.2 0 0 1 3.6 0l2.2 3.2H32c2.2 0 4 1.8 4 4v13c0 2.2-1.8 4-4 4H14c-2.2 0-4-1.8-4-4v-13Z" stroke="#71d9cb" stroke-width="2"/><circle cx="23" cy="24" r="5.4" stroke="#71d9cb" stroke-width="2"/><path d="M31 18h.01" stroke="#71d9cb" stroke-width="3" stroke-linecap="round"/></svg></div>
       <h1>LensLab Studio</h1>
-      <p>Kết nối máy ảnh DSLR với máy tính hoặc iPad, xem ảnh trực tiếp và chỉnh sửa ngay trong buổi chụp.</p>
+      <p>Kết nối máy ảnh DSLR với iPad/Máy tính, chụp liên tục và tự động chỉnh sửa bằng AI, upload thẳng lên Google Drive.</p>
       <button class="google-btn" id="btnGoogleLogin"><span class="google-icon">G</span><span>Tiếp tục với Google</span></button>
-      <p class="auth-note">Đăng nhập để đồng bộ dự án, cài đặt tethering và thư viện ảnh.</p>
+      <p class="auth-note">Đăng nhập để đồng bộ dự án, kết nối máy ảnh và tự động tải ảnh lên Drive.</p>
     </div>
   </section>
 
@@ -402,7 +544,7 @@
     <div class="projects-nav"><div class="brand"><div class="dot"></div><span>LensLab Studio</span></div><div class="nav-right"><span>Trung tâm ảnh</span><div class="account-pill"><span class="account-avatar" id="accountAvatar">T</span><span id="accountName">Tài khoản Google</span></div></div></div>
     <div class="projects-body">
       <aside class="projects-sidebar"><div class="sidebar-label">Workspace</div><button class="side-link active"><span class="si">▦</span><span>Dự án</span></button><button class="side-link" id="btnLibrary"><span class="si">◫</span><span>Thư viện ảnh</span></button><button class="side-link" id="btnWorkspaceSettings"><span class="si">⚙</span><span>Cài đặt</span></button></aside>
-      <main class="projects-main"><div class="projects-heading"><div><h2>Dự án chụp ảnh</h2><p>Tạo một phiên tethering mới để bắt đầu chụp và chỉnh sửa theo thời gian thực.</p></div><button class="new-project-btn" id="btnNewProject">＋ Tạo dự án</button></div><div class="project-grid" id="projectGrid"><div class="empty-project" id="emptyProject"><strong>Chưa có dự án nào</strong><span>Tạo dự án đầu tiên để kết nối máy ảnh và bắt đầu buổi chụp.</span></div></div></main>
+      <main class="projects-main"><div class="projects-heading"><div><h2>Dự án chụp ảnh</h2><p>Tạo một phiên chụp tethering mới để chụp, AI tự động chỉnh và tải lên Google Drive.</p></div><button class="new-project-btn" id="btnNewProject">＋ Tạo dự án</button></div><div class="project-grid" id="projectGrid"><div class="empty-project" id="emptyProject"><strong>Chưa có dự án nào</strong><span>Tạo dự án đầu tiên để kết nối máy ảnh và bắt đầu buổi chụp.</span></div></div></main>
     </div>
   </section>
 
@@ -412,12 +554,12 @@
       <svg viewBox="0 0 24 24" fill="none"><path d="M4 8.5C4 7.12 5.12 6 6.5 6h2.2c.4 0 .77-.2 1-.53l.8-1.14A1.5 1.5 0 0 1 11.72 3.7h.56a1.5 1.5 0 0 1 1.22.63l.8 1.14c.23.33.6.53 1 .53h2.2C18.88 6 20 7.12 20 8.5v8c0 1.38-1.12 2.5-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-8Z" stroke="#5eead4" stroke-width="1.4"/><circle cx="12" cy="13" r="3.6" stroke="#5eead4" stroke-width="1.4"/></svg>
     </div>
     <h1>Kết nối máy ảnh với iPad</h1>
-    <p>Dùng capture card HDMI → USB‑C để đưa hình ảnh trực tiếp từ Nikon D5500 lên iPad, chụp lại và chỉnh sửa ngay tại chỗ.</p>
+    <p>Dùng capture card HDMI → USB‑C để đưa hình ảnh trực tiếp từ máy ảnh lên iPad, chụp lại và chỉnh sửa ngay tại chỗ.</p>
 
     <div class="steps">
-      <div class="step"><div class="n">01</div><div class="t"><b>Cắm dây</b><small>Mini‑HDMI trên máy ảnh → HDMI → capture card → cổng USB‑C của iPad.</small></div></div>
-      <div class="step"><div class="n">02</div><div class="t"><b>Bật chế độ Live View / quay phim</b> trên D5500<small>Máy ảnh cần đang phát tín hiệu HDMI (thường là chế độ Live View hoặc quay video).</small></div></div>
-      <div class="step"><div class="n">03</div><div class="t"><b>Cho phép truy cập Camera</b><small>Safari sẽ hỏi quyền — chọn Cho phép để nhận tín hiệu từ capture card.</small></div></div>
+      <div class="step"><div class="n">01</div><div class="t"><b>Cắm dây</b><small>Mini‑HDMI trên máy ảnh → HDMI → capture card → cổng USB‑C của iPad/PC.</small></div></div>
+      <div class="step"><div class="n">02</div><div class="t"><b>Bật chế độ Live View / quay phim</b> trên máy ảnh<small>Máy ảnh cần đang phát tín hiệu HDMI ra ngoài.</small></div></div>
+      <div class="step"><div class="n">03</div><div class="t"><b>Cho phép truy cập Camera</b><small>Trình duyệt sẽ hỏi quyền — chọn Cho phép để nhận tín hiệu từ capture card.</small></div></div>
     </div>
 
     <button class="primary" id="btnConnect">Kết nối máy ảnh</button>
@@ -432,7 +574,7 @@
       <video id="liveVideo" autoplay playsinline muted></video>
       <div class="no-signal" id="noSignal">
         <span class="mono" style="font-size:11px;letter-spacing:0.1em;">ĐANG CHỜ TÍN HIỆU…</span>
-        <span style="max-width:260px;text-align:center;">Kiểm tra máy ảnh đã bật Live View / quay phim và dây HDMI đã cắm chắc chưa.</span>
+        <span style="max-width:260px;text-align:center;">Kiểm tra máy ảnh đã bật Live View và dây HDMI đã cắm chắc chưa.</span>
       </div>
       <div class="rec-pill"><div class="rdot"></div><span class="mono">LIVE</span></div>
       <div class="device-chip" id="deviceChip">—</div>
@@ -446,14 +588,25 @@
           <select id="deviceSelect"></select>
         </div>
         <div class="shutter" id="btnShutter"><div class="inner"></div></div>
+        <div class="batch-status-pill" id="batchPill"><span class="bs-icon">🔄</span><span class="bs-text" id="batchPillText">0/0</span></div>
         <button class="side-btn" id="btnBack" title="Quay lại">✕</button>
       </div>
     </div>
   </section>
 
-  <!-- ============ EDIT ============ -->
+  <!-- ============ EDIT (Evoto Style Layout) ============ -->
   <section class="screen" id="screen-edit">
+    <div class="editor-toolbar">
+      <div class="editor-context"><button class="toolbar-back" id="btnEditorBack" title="Quay lại buổi chụp">‹</button><div><strong id="activeFileName">LensLab Studio</strong><span id="activeFileMeta"> / 100%</span></div></div>
+      <div class="editor-toolbar-center"><span class="editor-state-dot"></span><span>Đang chỉnh sửa</span><span class="toolbar-divider"></span><span class="mono" id="activeZoomLevel">100%</span></div>
+      <div class="editor-actions">
+        <button class="toolbar-btn" title="So sánh trước và sau" id="btnToolbarBefore">Trước / Sau</button>
+        <button class="toolbar-btn" title="Toàn màn hình" id="btnToolbarFullscreen">Toàn màn hình</button>
+        <button class="toolbar-export-btn" id="btnQuickExport">Export</button>
+      </div>
+    </div>
     <div class="edit-layout">
+      <!-- Canvas Stage -->
       <div class="canvas-stage">
         <div class="stage-topbar">
           <button class="ba-btn" id="btnBackToCapture">← Chụp tiếp</button>
@@ -469,113 +622,242 @@
           </div>
         </div>
       </div>
-      <div class="edit-panel">
-        <div class="panel-tabs">
-          <button class="tab-btn active" data-tab="light">Ánh sáng</button>
-          <button class="tab-btn" data-tab="color">Màu sắc</button>
-          <button class="tab-btn" data-tab="retouch">Làm mịn</button>
-          <button class="tab-btn" data-tab="lut">LUT</button>
-          <button class="tab-btn" data-tab="crop">Cắt</button>
+
+      <!-- Evoto Panel -->
+      <div class="evoto-panel" id="evotoPanel">
+        <div class="evoto-panel-header">
+          <div class="evoto-panel-title"><div class="panel-dot"></div><span id="panelTitle">Portrait Retouching</span></div>
+          <div class="gender-selector" id="genderSelector">
+            <button class="gender-btn" data-gender="male">Male</button>
+            <button class="gender-btn active" data-gender="female">Female</button>
+            <button class="gender-btn" data-gender="child">Child</button>
+            <button class="gender-btn" data-gender="elderly">Elderly</button>
+          </div>
         </div>
-        <div class="edit-panel-inner">
+        <div class="evoto-panel-scroll" id="panelScroll">
 
-          <div class="ctrl-group active" data-group="light">
-            <div class="ctrl" data-key="exposure"><div class="row1"><label>Phơi sáng (Exposure)</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
-            <div class="ctrl" data-key="contrast"><div class="row1"><label>Tương phản</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
-            <div class="ctrl" data-key="highlights"><div class="row1"><label>Highlights</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
-            <div class="ctrl" data-key="shadows"><div class="row1"><label>Shadows</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
-            <div class="ctrl" data-key="clarity"><div class="row1"><label>Độ rõ (Clarity)</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
-            <div class="ctrl" data-key="vignette"><div class="row1"><label>Vignette</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
-          </div>
-
-          <div class="ctrl-group" data-group="color">
-            <div class="ctrl" data-key="saturation"><div class="row1"><label>Bão hoà (Saturation)</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
-            <div class="ctrl" data-key="warmth"><div class="row1"><label>Ấm / Lạnh</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
-            <div class="ctrl" data-key="tint"><div class="row1"><label>Tint (Xanh lá / Hồng)</label><span class="val mono">0</span></div><input type="range" min="-100" max="100" value="0"></div>
-            <div class="ctrl" data-key="grain"><div class="row1"><label>Hạt film (Grain)</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
-          </div>
-
-          <div class="ctrl-group" data-group="retouch">
-            <div class="ctrl" data-key="skin"><div class="row1"><label>Làm mịn da</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
-            <div class="ctrl" data-key="eye"><div class="row1"><label>Sáng mắt</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
-            <div class="ctrl" data-key="teeth"><div class="row1"><label>Tẩy trắng răng</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
-            <div class="ctrl" data-key="redeye"><div class="row1"><label>Xoá mắt đỏ</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
-            <div class="ctrl" data-key="undereye"><div class="row1"><label>Giảm quầng thâm</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
-            <div class="ctrl" data-key="blush"><div class="row1"><label>Má hồng</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
-            <div class="ctrl" data-key="sharpen"><div class="row1"><label>Làm nét</label><span class="val mono">0</span></div><input type="range" min="0" max="100" value="0"></div>
-            <div class="hint">AI nhận diện khuôn mặt (MediaPipe) để chỉnh theo từng vùng: da, mắt, răng, quầng thâm, má hồng. Cần mạng lần đầu để tải model.</div>
-          </div>
-
-          <div class="ctrl-group" data-group="lut">
-            <div class="lut-grid" id="lutGrid"></div>
-            <div class="ctrl" data-key="lutStrength"><div class="row1"><label>Cường độ LUT</label><span class="val mono">100</span></div><input type="range" min="0" max="100" value="100"></div>
-            <button class="secondary" id="btnImportLut" style="margin-top:10px;">Nhập LUT (.cube)</button>
-            <input type="file" id="lutFileInput" accept=".cube" style="display:none;">
-            <div class="hint">Bộ lọc màu (LUT 3D) tạo tone phim / điện ảnh. Có thể nhập file .cube của riêng bạn.</div>
-          </div>
-
-          <div class="ctrl-group" data-group="crop">
-            <div class="tool-row">
-              <button class="tool-btn" id="btnRotate90">↻ Xoay 90°</button>
-              <button class="tool-btn" id="btnFlipH">⇋ Lật ngang</button>
-              <button class="tool-btn" id="btnFlipV">⇵ Lật dọc</button>
-            </div>
-            <div class="ctrl" data-key="straighten"><div class="row1"><label>Nắn thẳng (xoay nhỏ)</label><span class="val mono">0</span></div><input type="range" min="-45" max="45" value="0"></div>
-            <div class="ctrl"><div class="row1"><label>Tỉ lệ khung</label></div>
-              <div class="aspect-row" id="aspectRow">
-                <button class="aspect-chip active" data-aspect="">Tự do</button>
-                <button class="aspect-chip" data-aspect="1:1">1:1</button>
-                <button class="aspect-chip" data-aspect="4:3">4:3</button>
-                <button class="aspect-chip" data-aspect="3:2">3:2</button>
-                <button class="aspect-chip" data-aspect="16:9">16:9</button>
-                <button class="aspect-chip" data-aspect="9:16">9:16</button>
-                <button class="aspect-chip" data-aspect="3:4">3:4</button>
-                <button class="aspect-chip" data-aspect="2:3">2:3</button>
+          <!-- ===== Panel: Portrait (default Evoto layout) ===== -->
+          <div class="evoto-panel-content" data-panel="portrait">
+            <!-- Blemish Removal -->
+            <div class="evoto-section" data-section="blemish">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Blemish Removal</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="freckleAcne"><div class="ctrl-top"><label>Freckle & Acne</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="freckle"><div class="ctrl-top"><label>Freckle</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="acne"><div class="ctrl-top"><label>Acne</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
               </div>
             </div>
-            <button class="secondary" id="btnCropReset" style="margin-top:10px;">Đặt lại khung</button>
-            <button class="primary" id="btnCropApply" style="margin-top:8px;">Xong</button>
-            <div class="hint">Vào tab này để cắt ảnh. Kéo 4 góc để chỉnh khung, kéo giữa để di chuyển. Chọn tỉ lệ để khoá khung hình.</div>
+
+            <!-- Face Mole -->
+            <div class="evoto-section" data-section="facemole">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Face Mole</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-toggle-row"><label>Tự động phát hiện & xóa nốt ruồi</label><label class="evoto-toggle"><input type="checkbox" data-key="faceMoleToggle"><i></i></label></div>
+              </div>
+            </div>
+
+            <!-- Body Blemish -->
+            <div class="evoto-section" data-section="bodyblemish">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Body Blemish</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="bodyBlemish"><div class="ctrl-top"><label>Body Blemish</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+              </div>
+            </div>
+
+            <!-- Reduce Face Shine -->
+            <div class="evoto-section" data-section="faceshine">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Reduce Face Shine</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="faceShine"><div class="ctrl-top"><label>Reduce Face Shine</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+              </div>
+            </div>
+
+            <!-- Face Forehead Wrinkle -->
+            <div class="evoto-section" data-section="foreheadwrinkle">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Face Forehead Wrinkle</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="foreheadWrinkle"><div class="ctrl-top"><label>Face Forehead Wrinkle</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+              </div>
+            </div>
+
+            <!-- Eye Wrinkle -->
+            <div class="evoto-section" data-section="eyewrinkle">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Eye Wrinkle</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="eyeWrinkle"><div class="ctrl-top"><label>Eye Wrinkle</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+              </div>
+            </div>
+
+            <!-- Dark Circle -->
+            <div class="evoto-section" data-section="darkcircle">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Dark Circle</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="undereye"><div class="ctrl-top"><label>Dark Circle</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+              </div>
+            </div>
+
+            <!-- Glasses Glare -->
+            <div class="evoto-section" data-section="glassesglare">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Glasses Glare</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="glassesGlare"><div class="ctrl-top"><label>Glasses Glare</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+              </div>
+            </div>
+
+            <!-- Eyes & Teeth -->
+            <div class="evoto-section" data-section="features">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Eyes & Teeth</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="eye"><div class="ctrl-top"><label>Sáng mắt</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="teeth"><div class="ctrl-top"><label>Tẩy trắng răng</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="blush"><div class="ctrl-top"><label>Má hồng</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="redeye"><div class="ctrl-top"><label>Xoá mắt đỏ</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+              </div>
+            </div>
           </div>
 
-          <div class="reset-row">
-            <button id="btnReset">Đặt lại</button>
-            <button id="btnAuto">Tự động</button>
+          <!-- ===== Panel: Light ===== -->
+          <div class="evoto-panel-content" data-panel="light" style="display:none;">
+            <div class="evoto-section" data-section="tone">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Tone & Exposure</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="exposure"><div class="ctrl-top"><label>Phơi sáng (Exposure)</label><span class="ctrl-val">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="contrast"><div class="ctrl-top"><label>Tương phản (Contrast)</label><span class="ctrl-val">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="highlights"><div class="ctrl-top"><label>Highlights</label><span class="ctrl-val">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="shadows"><div class="ctrl-top"><label>Shadows</label><span class="ctrl-val">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+              </div>
+            </div>
+            <div class="evoto-section" data-section="detail">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Detail & Clarity</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="clarity"><div class="ctrl-top"><label>Độ rõ (Clarity)</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="sharpen"><div class="ctrl-top"><label>Làm nét (Sharpen)</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="vignette"><div class="ctrl-top"><label>Vignette</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+              </div>
+            </div>
           </div>
+
+          <!-- ===== Panel: Color ===== -->
+          <div class="evoto-panel-content" data-panel="color" style="display:none;">
+            <div class="evoto-section" data-section="coloradj">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Color Balance</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="evoto-ctrl" data-key="saturation"><div class="ctrl-top"><label>Bão hoà (Saturation)</label><span class="ctrl-val">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="warmth"><div class="ctrl-top"><label>Ấm / Lạnh (Temp)</label><span class="ctrl-val">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="tint"><div class="ctrl-top"><label>Tint (Xanh lá / Hồng)</label><span class="ctrl-val">0</span></div><input type="range" min="-100" max="100" value="0"></div>
+                <div class="evoto-ctrl" data-key="grain"><div class="ctrl-top"><label>Hạt film (Grain)</label><span class="ctrl-val">0</span></div><input type="range" min="0" max="100" value="0"></div>
+              </div>
+            </div>
+            <div class="evoto-section" data-section="lut">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">LUT / Color Grade</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div class="lut-grid" id="lutGrid"></div>
+                <div class="evoto-ctrl" data-key="lutStrength"><div class="ctrl-top"><label>Cường độ LUT</label><span class="ctrl-val">30%</span></div><input type="range" min="0" max="100" value="30"></div>
+                <button class="secondary" id="btnImportLut" style="margin-top:6px;max-width:none;padding:10px;">Nhập LUT (.cube)</button>
+                <input type="file" id="lutFileInput" accept=".cube" style="display:none;">
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== Panel: Crop ===== -->
+          <div class="evoto-panel-content" data-panel="crop" style="display:none;">
+            <div class="evoto-section" data-section="transform">
+              <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">Transform & Crop</span></div><button class="sec-reset" title="Reset">↺</button></div>
+              <div class="evoto-section-body">
+                <div style="display:flex;gap:8px;padding:4px 0;">
+                  <button class="evoto-footer-btn" id="btnRotate90">↻ Xoay 90°</button>
+                  <button class="evoto-footer-btn" id="btnFlipH">⇋ Lật ngang</button>
+                  <button class="evoto-footer-btn" id="btnFlipV">⇵ Lật dọc</button>
+                </div>
+                <div class="evoto-ctrl" data-key="straighten"><div class="ctrl-top"><label>Nắn thẳng</label><span class="ctrl-val">0</span></div><input type="range" min="-45" max="45" value="0"></div>
+                <div style="padding:6px 0 2px;"><label style="font-size:11px;color:#9ba1a8;">Tỉ lệ khung</label></div>
+                <div class="aspect-row" id="aspectRow">
+                  <button class="aspect-chip active" data-aspect="">Tự do</button>
+                  <button class="aspect-chip" data-aspect="1:1">1:1</button>
+                  <button class="aspect-chip" data-aspect="4:3">4:3</button>
+                  <button class="aspect-chip" data-aspect="3:2">3:2</button>
+                  <button class="aspect-chip" data-aspect="16:9">16:9</button>
+                  <button class="aspect-chip" data-aspect="9:16">9:16</button>
+                  <button class="aspect-chip" data-aspect="3:4">3:4</button>
+                  <button class="aspect-chip" data-aspect="2:3">2:3</button>
+                </div>
+                <div style="display:flex;gap:8px;padding:10px 0 4px;">
+                  <button class="evoto-footer-btn" id="btnCropReset">Đặt lại khung</button>
+                  <button class="evoto-footer-btn primary-sm" id="btnCropApply">Xong</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- Evoto Bottom Action Row -->
+        <div class="evoto-panel-footer">
+          <button class="evoto-footer-btn" id="btnSavePreset">Save Preset</button>
+          <button class="evoto-footer-btn" id="btnSync">Sync</button>
+          <button class="evoto-footer-btn primary-sm" id="btnAuto">Auto AI</button>
+          <button class="evoto-footer-icon" id="btnDeleteShot" title="Xoá ảnh này">🗑</button>
         </div>
       </div>
+
+      <!-- Evoto Thin Icon Rail on far right -->
+      <div class="evoto-icon-strip">
+        <button class="strip-btn active" data-panel="portrait" title="Portrait Retouching">👤</button>
+        <div class="strip-sep"></div>
+        <button class="strip-btn" data-panel="light" title="Ánh sáng">☼</button>
+        <button class="strip-btn" data-panel="color" title="Màu sắc">◐</button>
+        <div class="strip-sep"></div>
+        <button class="strip-btn" data-panel="crop" title="Cắt ảnh">⌗</button>
+        <div class="strip-sep"></div>
+        <button class="strip-btn" data-panel="camera" id="btnStripCamera" title="Quay lại Camera">📷</button>
+      </div>
     </div>
-    <div class="export-row">
-      <button class="icon-btn-lg" id="btnDeleteShot" title="Xoá ảnh này">🗑</button>
-      <button class="primary" id="btnExport" style="flex:1;">Lưu về iPad</button>
-      <button class="drive-btn" id="btnDriveExport">⬆ Drive</button>
+
+    <!-- Bottom Thumbnail Bar (Evoto iPad filmstrip) -->
+    <div class="editor-bottom-bar">
+      <div class="editor-bottom-left">
+        <span id="photoCountMeta">0 ảnh</span>
+      </div>
+      <div class="editor-bottom-filmstrip" id="editorFilmstrip"></div>
+      <div style="display:flex; gap:8px;">
+        <button class="secondary" id="btnDriveExport" style="padding:9px 14px; font-size:12px; max-width:none; width:auto; border-color:var(--accent-dim); color:var(--accent);">⬆ Google Drive</button>
+        <button class="primary" id="btnExport" style="padding:9px 16px; font-size:12px; max-width:none; width:auto;">Lưu iPad</button>
+      </div>
     </div>
   </section>
 
   <!-- ============ SETTINGS ============ -->
   <section class="screen" id="screen-settings">
     <div class="settings-inner">
-      <h2>⚙ Cài đặt</h2>
-      <p class="settings-desc">Nhập Google OAuth Client ID để bật nút xuất ảnh lên Google Drive. Cách tạo: xem mục "Xuất lên Google Drive" trong README.md.</p>
+      <h2>⚙ Cài đặt hệ thống</h2>
+      <p class="settings-desc">Google OAuth Client ID cho phép đăng nhập và tự động upload ảnh chụp lên Google Drive.</p>
       <label class="settings-label" for="driveClientIdInput">Google OAuth Client ID</label>
       <input type="text" id="driveClientIdInput" class="settings-input" placeholder="xxxxxxxx.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
       <button class="primary" id="btnDriveSave">Lưu Client ID</button>
       <button class="secondary" id="btnSettingsBack">← Quay lại</button>
-      <div class="hint">Client ID chỉ được lưu trên iPad của bạn (localStorage), không gửi đi đâu. Khi xuất, app chỉ xin quyền tạo file trong chính Google Drive của bạn.</div>
+      <div style="font-size:12px; color:var(--text-faint); line-height:1.5;">Client ID được lưu cục bộ trên thiết bị của bạn. App chỉ lưu ảnh vào thư mục Drive do bạn chỉ định.</div>
     </div>
   </section>
 
 </div>
 
+<!-- Project Modal -->
 <div class="project-modal" id="projectModal">
   <div class="project-modal-card">
     <div class="project-modal-head"><h3>Tạo dự án chụp ảnh</h3><button class="modal-close" id="projectModalClose">×</button></div>
     <div class="project-form">
       <div class="form-field"><label for="projectNameInput">Tên dự án</label><input id="projectNameInput" value="Buổi chụp mới" autocomplete="off"></div>
       <div class="form-row"><div class="form-field"><label for="cameraSourceSelect">Nguồn máy ảnh</label><select id="cameraSourceSelect"><option>Capture card / Webcam</option><option>Nikon DSLR</option><option>Canon DSLR</option><option>Sony Alpha</option></select></div><div class="form-field"><label for="projectFormatSelect">Định dạng xem trước</label><select id="projectFormatSelect"><option>RAW + JPEG</option><option>JPEG</option><option>RAW</option></select></div></div>
-      <div class="toggle-row"><span>Áp dụng chỉnh màu AI theo thời gian thực</span><label class="toggle"><input id="realtimeAiToggle" type="checkbox" checked><i></i></label></div>
+      <div class="toggle-row"><span>Áp dụng chỉnh màu & làm đẹp AI theo thời gian thực</span><label class="toggle"><input id="realtimeAiToggle" type="checkbox" checked><i></i></label></div>
       <div class="toggle-row"><span>Tự động lưu ảnh vào thư viện dự án</span><label class="toggle"><input id="autoSaveToggle" type="checkbox" checked><i></i></label></div>
-      <div class="project-form-actions"><button class="form-cancel" id="projectModalCancel">Hủy</button><button class="form-submit" id="projectCreateSubmit">Tạo và kết nối máy ảnh</button></div>
+      <div class="toggle-row"><span>Tự động upload lên Google Drive khi chụp</span><label class="toggle"><input id="autoDriveToggle" type="checkbox" checked><i></i></label></div>
+      <div class="form-field" id="driveFolderField">
+        <label>Thư mục Google Drive đích</label>
+        <div class="drive-folder-selector">
+          <span id="projectDriveFolderName">My Drive (Mặc định)</span>
+          <button class="form-cancel" id="btnPickDriveFolder" type="button">Chọn thư mục</button>
+        </div>
+      </div>
+      <div class="project-form-actions"><button class="form-cancel" id="projectModalCancel">Hủy</button><button class="form-submit" id="projectCreateSubmit">Tạo và bắt đầu chụp</button></div>
     </div>
   </div>
 </div>
@@ -585,7 +867,7 @@
 <div class="modal-backdrop" id="driveModal">
   <div class="modal">
     <div class="modal-head">
-      <span class="modal-title">Chọn thư mục lưu</span>
+      <span class="modal-title">Chọn thư mục Google Drive</span>
       <button class="icon-btn" id="driveModalClose">✕</button>
     </div>
     <div class="drive-crumbs" id="driveCrumbs"></div>
@@ -611,20 +893,33 @@
     beforeAfter: false,
     settings: { driveClientId: localStorage.getItem('lenslab_drive_client_id') || '' },
     auth: JSON.parse(localStorage.getItem('lenslab_auth') || 'null'),
+    googleAccessToken: sessionStorage.getItem('lenslab_google_access_token') || null,
     projects: JSON.parse(localStorage.getItem('lenslab_projects') || '[]'),
     faceLandmarker: null,
     mpLoading: null,
     customLut: null,
     customLutName: null,
+    activeProject: null,
+    batchQueue: [],        // [{shotIndex, status: 'pending'|'processing'|'done'|'error'}]
+    batchAutoMode: false,
+    batchProcessing: false,
+    activeGender: 'female',
+    drivePickerMode: 'export',
+    projectDriveFolder: { id:'root', name:'My Drive' },
   };
 
   function defaultEdits(){
-    return {exposure:0, contrast:0, highlights:0, shadows:0, clarity:0, vignette:0,
-             saturation:0, warmth:0, tint:0, grain:0,
-             skin:0, eye:0, teeth:0, redeye:0, undereye:0, blush:0, sharpen:0,
-             lut:'none', lutStrength:100,
-             rotation:0, flipH:0, flipV:0, straighten:0,
-             cropX:0, cropY:0, cropW:1, cropH:1, cropAspect:''};
+    return {
+      exposure:0, contrast:0, highlights:0, shadows:0, clarity:0, vignette:0,
+      saturation:0, warmth:0, tint:0, grain:0,
+      skin:0, eye:0, teeth:0, redeye:0, undereye:0, blush:0, sharpen:0,
+      eyeenlarge:0, faceslim:0,
+      freckleAcne:0, freckle:0, acne:0, faceMoleToggle:0, bodyBlemish:0,
+      faceShine:0, foreheadWrinkle:0, eyeWrinkle:0, glassesGlare:0,
+      lut:'none', lutStrength:30,
+      rotation:0, flipH:0, flipV:0, straighten:0,
+      cropX:0, cropY:0, cropW:1, cropH:1, cropAspect:''
+    };
   }
 
   // ---------------- elements ----------------
@@ -637,6 +932,8 @@
     if(name !== 'settings') prevScreen = name;
     Object.values(screens).forEach(s=>s.classList.remove('active'));
     screens[name].classList.add('active');
+    document.body.classList.toggle('auth-mode', name === 'auth');
+    document.body.classList.toggle('projects-mode', name === 'projects');
   }
 
   function renderProjects(){
@@ -649,7 +946,8 @@
     }
     state.projects.forEach((p, i)=>{
       const card = document.createElement('article'); card.className='project-card';
-      card.innerHTML = '<div class="project-thumb"><div class="thumb-orbit"></div></div><div class="project-card-body"><div><h3>'+esc(p.name)+'</h3><div class="project-meta">'+esc(p.source)+' · '+esc(p.format)+'<br>'+esc(p.created)+'</div></div><button class="project-open" data-project="'+i+'">Mở</button></div>';
+      const driveInfo = p.driveFolder ? '<br>📁 ' + esc(p.driveFolder.name) : '';
+      card.innerHTML = '<div class="project-thumb"><div class="thumb-orbit"></div></div><div class="project-card-body"><div><h3>'+esc(p.name)+'</h3><div class="project-meta">'+esc(p.source)+' · '+esc(p.format)+driveInfo+'<br>'+esc(p.created)+'</div></div><button class="project-open" data-project="'+i+'">Mở</button></div>';
       card.querySelector('.project-open').addEventListener('click', ()=> startProject(p));
       grid.appendChild(card);
     });
@@ -657,16 +955,37 @@
 
   function startProject(project){
     state.activeProject = project;
-    toast('Đang mở dự án ' + project.name);
+    state.batchAutoMode = !!(project.autoUpload && project.aiRealtime);
+    state.batchQueue = [];
+    state.shots = [];
+    toast('Đang mở dự án: ' + project.name + (state.batchAutoMode ? ' (Tự động AI + Upload)' : ''));
+    updateBatchShutter();
     showScreen('welcome');
     connectCamera(state.activeDeviceId);
   }
 
-  function loginWithGoogle(){
-    const auth = {name:'Tài khoản Google', email:'google.user@gmail.com', initial:'G'};
-    state.auth = auth; localStorage.setItem('lenslab_auth', JSON.stringify(auth));
-    $('accountName').textContent = auth.name; $('accountAvatar').textContent = auth.initial;
-    renderProjects(); showScreen('projects'); toast('Đã đăng nhập Google ✓');
+  async function loginWithGoogle(){
+    const cid = state.settings.driveClientId;
+    if(!cid){ toast('Hãy nhập Google OAuth Client ID trong Cài đặt trước'); prevScreen='auth'; showScreen('settings'); return; }
+    try{
+      await loadGsi();
+      const token = await new Promise((resolve, reject)=>{
+        const client = google.accounts.oauth2.initTokenClient({
+          client_id: cid,
+          scope: 'openid profile email ' + DRIVE_SCOPE,
+          callback: resp=> resp && resp.access_token ? resolve(resp.access_token) : reject(new Error((resp && resp.error) || 'Google không cấp token'))
+        });
+        client.requestAccessToken({prompt:'consent'});
+      });
+      const profileResp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {headers:{Authorization:'Bearer ' + token}});
+      if(!profileResp.ok) throw new Error('Không đọc được hồ sơ Google');
+      const profile = await profileResp.json();
+      const auth = {provider:'google', verifiedAt:Date.now(), name:profile.name || profile.email || 'Google user', email:profile.email || '', initial:(profile.name || profile.email || 'G').trim().charAt(0).toUpperCase(), picture:profile.picture || ''};
+      state.googleAccessToken = token; sessionStorage.setItem('lenslab_google_access_token', token);
+      state.auth = auth; localStorage.setItem('lenslab_auth', JSON.stringify(auth));
+      $('accountName').textContent = auth.name; $('accountAvatar').textContent = auth.initial;
+      renderProjects(); showScreen('projects'); toast('Đã đăng nhập Google ✓');
+    }catch(err){ console.error(err); toast('Đăng nhập Google thất bại: ' + (err.message || err)); }
   }
 
   $('btnGoogleLogin').addEventListener('click', loginWithGoogle);
@@ -674,22 +993,47 @@
   $('projectModalClose').addEventListener('click', ()=> $('projectModal').classList.remove('show'));
   $('projectModalCancel').addEventListener('click', ()=> $('projectModal').classList.remove('show'));
   $('projectModal').addEventListener('click', e=>{ if(e.target.id==='projectModal') $('projectModal').classList.remove('show'); });
+
+  // Drive toggle in project modal
+  $('autoDriveToggle').addEventListener('change', (e)=>{
+    $('driveFolderField').style.display = e.target.checked ? 'grid' : 'none';
+  });
+  $('btnPickDriveFolder').addEventListener('click', ()=>{
+    state.drivePickerMode = 'project';
+    openDriveModal();
+  });
+
   $('projectCreateSubmit').addEventListener('click', ()=>{
     const name = $('projectNameInput').value.trim() || 'Buổi chụp mới';
-    const project = {name, source:$('cameraSourceSelect').value, format:$('projectFormatSelect').value, created:new Date().toLocaleDateString('vi-VN')};
+    const autoUpload = $('autoDriveToggle').checked;
+    const aiRealtime = $('realtimeAiToggle').checked;
+    const project = {
+      name,
+      source: $('cameraSourceSelect').value,
+      format: $('projectFormatSelect').value,
+      created: new Date().toLocaleDateString('vi-VN'),
+      autoUpload: autoUpload,
+      aiRealtime: aiRealtime,
+      driveFolder: autoUpload ? (state.projectDriveFolder || {id:'root', name:'My Drive'}) : null
+    };
     state.projects.unshift(project); localStorage.setItem('lenslab_projects', JSON.stringify(state.projects));
-    $('projectModal').classList.remove('show'); renderProjects(); startProject(project);
+    $('projectModal').classList.remove('show');
+    renderProjects(); startProject(project);
   });
   $('btnLibrary').addEventListener('click', ()=> toast('Thư viện ảnh sẽ hiển thị sau khi có ảnh chụp'));
   $('btnWorkspaceSettings').addEventListener('click', ()=> showScreen('settings'));
 
-  if(state.auth){ $('accountName').textContent=state.auth.name; $('accountAvatar').textContent=state.auth.initial||'G'; renderProjects(); showScreen('projects'); }
+  if(state.auth && state.auth.provider === 'google'){
+    $('accountName').textContent=state.auth.name; $('accountAvatar').textContent=state.auth.initial||'G'; renderProjects(); showScreen('projects');
+  } else {
+    state.auth = null; localStorage.removeItem('lenslab_auth'); document.body.classList.add('auth-mode');
+  }
 
   function toast(msg){
     $('toastMsg').textContent = msg;
     $('toast').classList.add('show');
     clearTimeout(toast._t);
-    toast._t = setTimeout(()=> $('toast').classList.remove('show'), 2200);
+    toast._t = setTimeout(()=> $('toast').classList.remove('show'), 2400);
   }
 
   // ---------------- camera connect ----------------
@@ -728,15 +1072,15 @@
   function cameraErrorMessage(err){
     const n = err && err.name;
     if(n === 'NotAllowedError' || n === 'PermissionDeniedError'){
-      return 'iPad đã từ chối quyền camera. Vào Cài đặt → Safari → Camera (hoặc nhấn biểu tượng "aA" trên thanh địa chỉ → Cài đặt trang web) và cho phép truy cập, sau đó thử lại.';
+      return 'Trình duyệt chưa được cấp quyền Camera. Hãy nhấn icon cài đặt trang hoặc cho phép quyền camera.';
     }
     if(n === 'NotFoundError' || n === 'OverconstrainedError'){
-      return 'Không tìm thấy thiết bị camera nào. Kiểm tra capture card đã cắm chắc vào cổng USB‑C, và máy ảnh đang phát tín hiệu HDMI.';
+      return 'Không tìm thấy thiết bị camera. Hãy kiểm tra kết nối capture card và nguồn máy ảnh.';
     }
     if(n === 'NotReadableError'){
-      return 'Không đọc được tín hiệu từ capture card. Rút ra cắm lại dây USB‑C, hoặc thử đóng các app khác đang dùng camera.';
+      return 'Không đọc được tín hiệu từ capture card. Hãy thử cắm lại dây USB‑C.';
     }
-    return 'Không kết nối được camera (' + (n||'lỗi không rõ') + '). Hãy chắc chắn bạn đang mở trang này qua Safari với địa chỉ https://, không phải mở file cục bộ.';
+    return 'Không kết nối được camera (' + (n||'lỗi không xác định') + '). Hãy đảm bảo đang mở qua https://';
   }
   function showErr(msg){ const e=$('connectErr'); e.textContent = msg; e.classList.add('show'); }
   function hideErr(){ $('connectErr').classList.remove('show'); }
@@ -766,7 +1110,7 @@
     showScreen('welcome');
   });
 
-  // upload fallback (no camera / testing)
+  // upload fallback
   $('btnUpload').addEventListener('click', ()=> $('fileInput').click());
   $('fileInput').addEventListener('change', async (e)=>{
     const file = e.target.files[0];
@@ -776,7 +1120,10 @@
       await handleRawFile(file);
     } else {
       const img = new Image();
-      img.onload = ()=>{ addShotFromImage(img); openEditor(state.shots.length-1, {auto:true}); };
+      img.onload = ()=>{
+        const idx = addShotFromImage(img);
+        openEditor(idx, {auto:true});
+      };
       img.src = URL.createObjectURL(file);
     }
     e.target.value = '';
@@ -805,36 +1152,214 @@
       autoDone: false
     });
     renderFilmstrip();
+    return state.shots.length - 1;
   }
 
   $('btnShutter').addEventListener('click', ()=>{
-    if(!video.videoWidth){ toast('Chưa có tín hiệu để chụp'); return; }
-    addShotFromImage(video);
+    if(!video.videoWidth){ toast('Chưa có tín hiệu camera để chụp'); return; }
+    const idx = addShotFromImage(video);
     flashScreen();
-    openEditor(state.shots.length-1, {auto:true});
+
+    if(state.batchAutoMode){
+      // Continuous shooting mode: stay on capture screen, queue for auto AI + Drive upload
+      state.batchQueue.push({shotIndex: idx, status: 'pending'});
+      updateBatchUI();
+      toast('Đã chụp ảnh #' + (idx+1) + ' — AI đang xử lý & upload Drive');
+      processBatchNext();
+    } else {
+      openEditor(idx, {auto:true});
+    }
   });
 
   function flashScreen(){
     const f = document.createElement('div');
-    f.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:99;opacity:0.85;pointer-events:none;transition:opacity 0.25s;';
+    f.style.cssText = 'position:fixed;inset:0;background:#fff;z-index:99;opacity:0.85;pointer-events:none;transition:opacity 0.22s;';
     document.body.appendChild(f);
-    requestAnimationFrame(()=>{ f.style.opacity='0'; setTimeout(()=>f.remove(),260); });
+    requestAnimationFrame(()=>{ f.style.opacity='0'; setTimeout(()=>f.remove(),240); });
+  }
+
+  function updateBatchShutter(){
+    const shutter = $('btnShutter');
+    if(state.batchAutoMode){
+      shutter.classList.add('batch-active');
+    } else {
+      shutter.classList.remove('batch-active');
+    }
   }
 
   function renderFilmstrip(){
     const fs = $('filmstrip');
-    fs.innerHTML = '';
-    if(state.shots.length === 0){
-      fs.innerHTML = '<div class="thumb empty">Ảnh chụp</div>';
+    const efs = $('editorFilmstrip');
+    if(fs){
+      fs.innerHTML = '';
+      if(state.shots.length === 0){
+        fs.innerHTML = '<div class="thumb empty">Ảnh chụp</div>';
+      } else {
+        state.shots.forEach((s, i)=>{
+          const t = document.createElement('div');
+          t.className = 'thumb';
+          t.innerHTML = '<img src="'+s.thumb+'">';
+          const bItem = state.batchQueue.find(b=>b.shotIndex === i);
+          if(bItem){
+            const dot = document.createElement('div');
+            dot.className = 'batch-dot ' + bItem.status;
+            t.appendChild(dot);
+          }
+          t.addEventListener('click', ()=> openEditor(i));
+          fs.appendChild(t);
+        });
+        requestAnimationFrame(()=>{ fs.scrollLeft = fs.scrollWidth; });
+      }
+    }
+    if(efs){
+      efs.innerHTML = '';
+      state.shots.forEach((s, i)=>{
+        const t = document.createElement('div');
+        t.className = 'thumb' + (i === state.activeShotIndex ? ' active' : '');
+        t.innerHTML = '<img src="'+s.thumb+'">';
+        t.addEventListener('click', ()=> openEditor(i));
+        efs.appendChild(t);
+      });
+      $('photoCountMeta').textContent = state.shots.length + ' ảnh';
+    }
+  }
+
+  function updateBatchUI(){
+    renderFilmstrip();
+    const pill = $('batchPill');
+    const pillText = $('batchPillText');
+    if(!pill) return;
+    if(state.batchQueue.length === 0){
+      pill.classList.remove('show');
       return;
     }
-    state.shots.forEach((s, i)=>{
-      const t = document.createElement('div');
-      t.className = 'thumb';
-      t.innerHTML = '<img src="'+s.thumb+'">';
-      t.addEventListener('click', ()=> openEditor(i));
-      fs.appendChild(t);
+    pill.classList.add('show');
+    const done = state.batchQueue.filter(b=>b.status==='done').length;
+    const total = state.batchQueue.length;
+    const processing = state.batchQueue.filter(b=>b.status==='processing').length;
+    const errors = state.batchQueue.filter(b=>b.status==='error').length;
+    if(done === total){
+      pill.querySelector('.bs-icon').textContent = '✓';
+      pillText.textContent = total + '/' + total + ' đã tải lên Drive';
+    } else if(errors > 0){
+      pill.querySelector('.bs-icon').textContent = '⚠';
+      pillText.textContent = done + '/' + total + ' (' + errors + ' lỗi)';
+    } else {
+      pill.querySelector('.bs-icon').textContent = '🔄';
+      pillText.textContent = done + '/' + total + (processing > 0 ? ' đang xử lý…' : '');
+    }
+  }
+
+  // ------------ Batch processing & Auto Drive upload pipeline ------------
+  async function processBatchNext(){
+    if(state.batchProcessing) return;
+    state.batchProcessing = true;
+    try{
+      while(true){
+        const item = state.batchQueue.find(b=>b.status==='pending');
+        if(!item) break;
+        item.status = 'processing';
+        updateBatchUI();
+
+        const shot = state.shots[item.shotIndex];
+        if(!shot){ item.status = 'error'; updateBatchUI(); continue; }
+
+        try{
+          // 1. Run AI analysis
+          const previewCanvas = renderGeometry(shot.canvas, shot.edits, PREVIEW_MAX, false);
+          const pctx = previewCanvas.getContext('2d', {willReadFrequently:true});
+          const pData = pctx.getImageData(0,0,previewCanvas.width,previewCanvas.height);
+          const auto = analyzeScene(pData.data, previewCanvas.width, previewCanvas.height);
+          shot.edits = Object.assign(auto, {
+            rotation:0, flipH:0, flipV:0, straighten:0,
+            cropX:0, cropY:0, cropW:1, cropH:1, cropAspect:'',
+            lut:shot.edits.lut, lutStrength:shot.edits.lutStrength
+          });
+
+          // 2. Detect faces & apply skin retouching
+          try{
+            const faces = await detectFaces(previewCanvas);
+            if(faces && faces.length){
+              shot.faceMasks = buildFaceMasks(faces, previewCanvas.width, previewCanvas.height);
+              shot.hasFace = true;
+              shot.edits.skin = 40;
+              shot.edits.freckleAcne = 35;
+              shot.edits.eye = 26;
+              shot.edits.faceShine = 15;
+            }
+          }catch(e){ /* face detector fallback */ }
+
+          shot.autoDone = true;
+
+          // 3. Render Output Hi-Res Canvas
+          const outputCanvas = renderOutputForShot(item.shotIndex);
+
+          // 4. Upload to Google Drive if configured
+          if(state.activeProject && state.activeProject.driveFolder){
+            const blob = await new Promise(res=> outputCanvas.toBlob(res, 'image/jpeg', 0.92));
+            await uploadBlobToDrive(blob, state.activeProject.driveFolder.id);
+          }
+
+          item.status = 'done';
+        }catch(err){
+          console.error('Batch processing error:', err);
+          item.status = 'error';
+        }
+        updateBatchUI();
+      }
+    }finally{
+      state.batchProcessing = false;
+    }
+  }
+
+  function renderOutputForShot(shotIndex){
+    const shot = state.shots[shotIndex];
+    const c = renderGeometry(shot.canvas, shot.edits, EXPORT_MAX, false);
+    const ctx = c.getContext('2d', {willReadFrequently:true});
+    const id = ctx.getImageData(0,0,c.width,c.height);
+    const w = c.width, h = c.height;
+    const out = new Uint8ClampedArray(id.data);
+    const fm = shot.faceMasks;
+    const e = shot.edits;
+    applyToneAndColor(out, w, h, e);
+    const skinAmt = Math.max(e.skin||0, e.freckleAcne||0, e.freckle||0, e.acne||0, e.bodyBlemish||0);
+    if(skinAmt > 0){ applySkinSmooth(out, w, h, skinAmt/100, fm); }
+    if(e.eye > 0){ applyEyeBrighten(out, w, h, e.eye/100, fm); }
+    if(e.teeth > 0){ applyTeethWhiten(out, w, h, e.teeth/100, fm); }
+    if(e.redeye > 0){ applyRedEye(out, w, h, e.redeye/100, fm); }
+    if(e.undereye > 0){ applyUnderEye(out, w, h, e.undereye/100, fm); }
+    if(e.blush > 0){ applyBlush(out, w, h, e.blush/100, fm); }
+    if(e.faceShine > 0){ applyFaceShine(out, w, h, e.faceShine/100, fm); }
+    if((e.foreheadWrinkle||0) > 0 || (e.eyeWrinkle||0) > 0){ applyWrinkle(out, w, h, Math.max(e.foreheadWrinkle||0, e.eyeWrinkle||0)/100, fm); }
+    if(e.glassesGlare > 0){ applyGlassesGlare(out, w, h, e.glassesGlare/100, fm); }
+    if(e.clarity > 0){ applyClarity(out, w, h, e.clarity/100); }
+    if(e.sharpen > 0){ applySharpen(out, w, h, e.sharpen/100); }
+    const L = getLUT(e.lut);
+    if(L){ applyLUT(out, w, h, L.lut, L.N, (e.lutStrength||100)/100); }
+    if(e.grain > 0){ applyGrain(out, w, h, e.grain/100); }
+    if(e.vignette > 0){ applyVignette(out, w, h, e.vignette/100); }
+    ctx.putImageData(new ImageData(out, w, h), 0, 0);
+    return c;
+  }
+
+  async function uploadBlobToDrive(blob, folderId){
+    const token = state.googleAccessToken || await getAccessToken();
+    const meta = { name: 'lenslab-' + Date.now() + '.jpg', mimeType: 'image/jpeg' };
+    if(folderId && folderId !== 'root'){ meta.parents = [folderId]; }
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(meta)], {type:'application/json'}));
+    form.append('file', blob, meta.name);
+    const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token },
+      body: form
     });
+    if(resp.status === 401){ clearGoogleToken(); throw new Error('Phiên Google đã hết hạn'); }
+    if(!resp.ok){
+      let msg = 'Lỗi ' + resp.status;
+      try{ const j = await resp.json(); if(j && j.error && j.error.message) msg = j.error.message; }catch(e){}
+      throw new Error(msg);
+    }
   }
 
   // ---------------- editor ----------------
@@ -842,7 +1367,7 @@
   const ectx = editCanvas.getContext('2d', {willReadFrequently:true});
   const PREVIEW_MAX = 1440;
   const EXPORT_MAX = 4096;
-  let previewImageData = null; // transformed+cropped original at preview res (unedited)
+  let previewImageData = null;
   let previewRAF = null;
   let geomRAF = null;
   let cropMode = false;
@@ -856,11 +1381,13 @@
     state.activeShotIndex = index;
     const shot = state.shots[index];
     state.edits = shot.edits;
+    $('activeFileName').textContent = 'Ảnh ' + (index + 1) + ' / ' + state.shots.length;
     syncSlidersFromEdits();
     renderLutGrid();
     syncAspectChips();
     preparePreview(false);
     renderPreview();
+    renderFilmstrip();
     showScreen('edit');
     if(opts.auto && !shot.autoDone){ runAuto(); }
   }
@@ -871,59 +1398,142 @@
     $('cropOverlay').classList.remove('show');
     showScreen('capture');
   });
+  $('btnStripCamera').addEventListener('click', ()=> $('btnBackToCapture').click());
 
-  // tabs
-  document.querySelectorAll('.tab-btn').forEach(btn=>{
+  // Evoto panel switching
+  document.querySelectorAll('.strip-btn[data-panel]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const tab = btn.dataset.tab;
-      if(tab === 'crop'){ enterCropMode(); }
+      const panel = btn.dataset.panel;
+      if(panel === 'camera'){ $('btnBackToCapture').click(); return; }
+      if(panel === 'crop'){ enterCropMode(); }
       else if(cropMode){ exitCropMode(); }
-      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.ctrl-group').forEach(g=>g.classList.remove('active'));
+      document.querySelectorAll('.strip-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
-      document.querySelector('.ctrl-group[data-group="'+tab+'"]').classList.add('active');
+      document.querySelectorAll('.evoto-panel-content').forEach(p=>p.style.display='none');
+      const target = document.querySelector('.evoto-panel-content[data-panel="'+panel+'"]');
+      if(target) target.style.display = '';
+      const titles = {portrait:'Portrait Retouching', light:'Ánh sáng & Chi tiết', color:'Màu sắc & Look', crop:'Cắt & Nắn thẳng'};
+      $('panelTitle').textContent = titles[panel] || panel;
+      $('genderSelector').style.display = panel === 'portrait' ? 'flex' : 'none';
     });
   });
 
-  // sliders
+  // Collapsible sections
+  document.querySelectorAll('.evoto-section-header').forEach(hdr=>{
+    hdr.addEventListener('click', (e)=>{
+      if(e.target.classList.contains('sec-reset')) return;
+      hdr.parentElement.classList.toggle('collapsed');
+    });
+  });
+
+  // Section reset buttons
+  document.querySelectorAll('.sec-reset').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const section = btn.closest('.evoto-section');
+      section.querySelectorAll('.evoto-ctrl').forEach(ctrl=>{
+        const key = ctrl.dataset.key;
+        const input = ctrl.querySelector('input[type=range]');
+        if(key && input){
+          const def = defaultEdits()[key] || 0;
+          input.value = def;
+          state.edits[key] = def;
+          ctrl.querySelector('.ctrl-val').textContent = key === 'lutStrength' ? (def+'%') : def;
+        }
+      });
+      section.querySelectorAll('.evoto-toggle input').forEach(cb=>{
+        const key = cb.dataset.key;
+        if(key){ cb.checked = false; state.edits[key] = 0; }
+      });
+      schedulePreview();
+    });
+  });
+
+  // Gender selector
+  document.querySelectorAll('.gender-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      state.activeGender = btn.dataset.gender;
+      if(state.activeShotIndex >= 0 && state.shots[state.activeShotIndex].hasFace){
+        const presets = {
+          male:   {skin:25, freckleAcne:20, eye:15, teeth:0, blush:0, faceShine:20},
+          female: {skin:40, freckleAcne:35, eye:28, teeth:10, blush:15, faceShine:10},
+          child:  {skin:18, freckleAcne:10, eye:10, teeth:0, blush:5, faceShine:5},
+          elderly:{skin:15, freckleAcne:15, eye:10, teeth:5, blush:0, faceShine:15}
+        };
+        const p = presets[state.activeGender] || presets.female;
+        Object.assign(state.edits, p);
+        syncSlidersFromEdits();
+        renderPreview();
+        toast('Đã áp dụng preset ' + btn.dataset.gender);
+      }
+    });
+  });
+
+  // Sliders
   const ctrlEls = {};
-  document.querySelectorAll('.ctrl').forEach(el=>{
+  document.querySelectorAll('.evoto-ctrl').forEach(el=>{
     const key = el.dataset.key;
     const input = el.querySelector('input[type=range]');
-    const val = el.querySelector('.val');
+    const val = el.querySelector('.ctrl-val');
     if(!key || !input || !val) return;
     ctrlEls[key] = {el, input, val};
     input.addEventListener('input', ()=>{
       const v = parseInt(input.value,10);
       state.edits[key] = v;
-      val.textContent = v;
-      el.classList.toggle('zero', v===0);
+      val.textContent = key === 'lutStrength' ? (v + '%') : v;
       if(key === 'straighten'){ scheduleGeometry(); }
       else { schedulePreview(); }
+    });
+  });
+
+  // Toggle switches
+  document.querySelectorAll('.evoto-toggle input').forEach(cb=>{
+    const key = cb.dataset.key;
+    if(!key) return;
+    cb.addEventListener('change', ()=>{
+      state.edits[key] = cb.checked ? 1 : 0;
+      schedulePreview();
     });
   });
 
   function syncSlidersFromEdits(){
     Object.keys(state.edits).forEach(key=>{
       const c = ctrlEls[key];
-      if(!c) return;
-      c.input.value = state.edits[key];
-      c.val.textContent = state.edits[key];
-      c.el.classList.toggle('zero', state.edits[key]===0);
+      if(c){
+        c.input.value = state.edits[key];
+        c.val.textContent = key === 'lutStrength' ? (state.edits[key] + '%') : state.edits[key];
+      }
+    });
+    document.querySelectorAll('.evoto-toggle input').forEach(cb=>{
+      const key = cb.dataset.key;
+      if(key && state.edits[key] !== undefined){ cb.checked = !!state.edits[key]; }
     });
   }
 
-  $('btnReset').addEventListener('click', ()=>{
-    state.edits = defaultEdits();
-    syncSlidersFromEdits();
-    renderLutGrid();
-    syncAspectChips();
-    exitCropMode();
-    preparePreview(false);
-    renderPreview();
+  $('btnSavePreset').addEventListener('click', ()=>{
+    localStorage.setItem('lenslab_user_preset', JSON.stringify(state.edits));
+    toast('Đã lưu Preset chỉnh sửa thành công ✓');
+  });
+
+  $('btnSync').addEventListener('click', ()=>{
+    if(state.shots.length <= 1){ toast('Không có ảnh khác để đồng bộ'); return; }
+    state.shots.forEach(s=>{
+      s.edits = Object.assign({}, state.edits);
+    });
+    toast('Đã đồng bộ công thức màu cho tất cả ' + state.shots.length + ' ảnh ✓');
   });
 
   $('btnAuto').addEventListener('click', runAuto);
+  $('btnEditorBack').addEventListener('click', ()=> $('btnBackToCapture').click());
+  $('btnToolbarBefore').addEventListener('click', ()=> $('btnBeforeAfter').click());
+  $('btnToolbarFullscreen').addEventListener('click', async ()=>{
+    try{
+      if(!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    }catch(err){ toast('Không thể bật toàn màn hình trên thiết bị này'); }
+  });
+  $('btnQuickExport').addEventListener('click', ()=> $('btnExport').click());
 
   let showingOriginal = false;
   $('btnBeforeAfter').addEventListener('mousedown', showOriginal);
@@ -945,21 +1555,26 @@
   function renderPreview(force){
     if(!previewImageData) return;
     const w = editCanvas.width, h = editCanvas.height;
-    const out = new Uint8ClampedArray(previewImageData.data); // copy
+    const out = new Uint8ClampedArray(previewImageData.data);
     const fm = currentMasks();
-    applyToneAndColor(out, w, h, state.edits);
-    if(state.edits.skin > 0){ applySkinSmooth(out, w, h, state.edits.skin/100, fm); }
-    if(state.edits.eye > 0){ applyEyeBrighten(out, w, h, state.edits.eye/100, fm); }
-    if(state.edits.teeth > 0){ applyTeethWhiten(out, w, h, state.edits.teeth/100, fm); }
-    if(state.edits.redeye > 0){ applyRedEye(out, w, h, state.edits.redeye/100, fm); }
-    if(state.edits.undereye > 0){ applyUnderEye(out, w, h, state.edits.undereye/100, fm); }
-    if(state.edits.blush > 0){ applyBlush(out, w, h, state.edits.blush/100, fm); }
-    if(state.edits.clarity > 0){ applyClarity(out, w, h, state.edits.clarity/100); }
-    if(state.edits.sharpen > 0){ applySharpen(out, w, h, state.edits.sharpen/100); }
-    const L = getLUT(state.edits.lut);
-    if(L){ applyLUT(out, w, h, L.lut, L.N, (state.edits.lutStrength||100)/100); }
-    if(state.edits.grain > 0){ applyGrain(out, w, h, state.edits.grain/100); }
-    if(state.edits.vignette > 0){ applyVignette(out, w, h, state.edits.vignette/100); }
+    const e = state.edits;
+    applyToneAndColor(out, w, h, e);
+    const skinAmt = Math.max(e.skin||0, e.freckleAcne||0, e.freckle||0, e.acne||0, e.bodyBlemish||0);
+    if(skinAmt > 0){ applySkinSmooth(out, w, h, skinAmt/100, fm); }
+    if(e.eye > 0){ applyEyeBrighten(out, w, h, e.eye/100, fm); }
+    if(e.teeth > 0){ applyTeethWhiten(out, w, h, e.teeth/100, fm); }
+    if(e.redeye > 0){ applyRedEye(out, w, h, e.redeye/100, fm); }
+    if(e.undereye > 0){ applyUnderEye(out, w, h, e.undereye/100, fm); }
+    if(e.blush > 0){ applyBlush(out, w, h, e.blush/100, fm); }
+    if(e.faceShine > 0){ applyFaceShine(out, w, h, e.faceShine/100, fm); }
+    if((e.foreheadWrinkle||0) > 0 || (e.eyeWrinkle||0) > 0){ applyWrinkle(out, w, h, Math.max(e.foreheadWrinkle||0, e.eyeWrinkle||0)/100, fm); }
+    if(e.glassesGlare > 0){ applyGlassesGlare(out, w, h, e.glassesGlare/100, fm); }
+    if(e.clarity > 0){ applyClarity(out, w, h, e.clarity/100); }
+    if(e.sharpen > 0){ applySharpen(out, w, h, e.sharpen/100); }
+    const L = getLUT(e.lut);
+    if(L){ applyLUT(out, w, h, L.lut, L.N, (e.lutStrength||100)/100); }
+    if(e.grain > 0){ applyGrain(out, w, h, e.grain/100); }
+    if(e.vignette > 0){ applyVignette(out, w, h, e.vignette/100); }
     ectx.putImageData(new ImageData(out, w, h), 0, 0);
   }
 
@@ -1027,28 +1642,7 @@
   }
 
   function renderOutputCanvas(){
-    const shot = state.shots[state.activeShotIndex];
-    const c = renderGeometry(shot.canvas, state.edits, EXPORT_MAX, false);
-    const ctx = c.getContext('2d', {willReadFrequently:true});
-    const id = ctx.getImageData(0,0,c.width,c.height);
-    const w = c.width, h = c.height;
-    const out = new Uint8ClampedArray(id.data);
-    const fm = shot.faceMasks;
-    applyToneAndColor(out, w, h, state.edits);
-    if(state.edits.skin > 0){ applySkinSmooth(out, w, h, state.edits.skin/100, fm); }
-    if(state.edits.eye > 0){ applyEyeBrighten(out, w, h, state.edits.eye/100, fm); }
-    if(state.edits.teeth > 0){ applyTeethWhiten(out, w, h, state.edits.teeth/100, fm); }
-    if(state.edits.redeye > 0){ applyRedEye(out, w, h, state.edits.redeye/100, fm); }
-    if(state.edits.undereye > 0){ applyUnderEye(out, w, h, state.edits.undereye/100, fm); }
-    if(state.edits.blush > 0){ applyBlush(out, w, h, state.edits.blush/100, fm); }
-    if(state.edits.clarity > 0){ applyClarity(out, w, h, state.edits.clarity/100); }
-    if(state.edits.sharpen > 0){ applySharpen(out, w, h, state.edits.sharpen/100); }
-    const L = getLUT(state.edits.lut);
-    if(L){ applyLUT(out, w, h, L.lut, L.N, (state.edits.lutStrength||100)/100); }
-    if(state.edits.grain > 0){ applyGrain(out, w, h, state.edits.grain/100); }
-    if(state.edits.vignette > 0){ applyVignette(out, w, h, state.edits.vignette/100); }
-    ctx.putImageData(new ImageData(out, w, h), 0, 0);
-    return c;
+    return renderOutputForShot(state.activeShotIndex);
   }
 
   function onGeometryChanged(){
@@ -1078,11 +1672,11 @@
           shot.faceMasks = null; shot.hasFace = false;
         }
         if(!cropMode) renderPreview();
-      }catch(e){ /* model chưa tải — bỏ qua */ }
+      }catch(e){ /* ignored */ }
     }, 400);
   }
 
-  // ---- crop model (normalized 0..1) ----
+  // ---- crop model ----
   function getCrop(){
     const e = state.edits;
     return {x: e.cropX||0, y: e.cropY||0, w: (e.cropW==null?1:e.cropW), h: (e.cropH==null?1:e.cropH)};
@@ -1149,7 +1743,6 @@
     box.style.height = (c.h*100) + '%';
   }
 
-  // ---- crop drag ----
   const cropOverlay = $('cropOverlay');
   const cropBox = $('cropBox');
   cropBox.addEventListener('pointerdown', (e)=>{
@@ -1211,7 +1804,6 @@
     updateCropOverlay();
   }
 
-  // ---- crop / rotate controls ----
   $('btnRotate90').addEventListener('click', ()=>{
     state.edits.rotation = ((state.edits.rotation||0) + 90) % 360;
     onGeometryChanged();
@@ -1237,21 +1829,17 @@
   window.addEventListener('resize', ()=>{ if(cropMode) syncCropOverlay(); });
 
   function applyToneAndColor(data, w, h, e){
-    const exposure = e.exposure * 1.3;      // -130..130 additive-ish
-    const contrastF = (259*(e.contrast+255))/(255*(259-e.contrast)); // classic contrast formula scaled below
+    const exposure = e.exposure * 1.3;
+    const contrastF = (259*(e.contrast+255))/(255*(259-e.contrast));
     const satF = 1 + e.saturation/100;
-    const warm = e.warmth * 0.6;   // shift R/B
-    const tintG = e.tint * 0.5;    // shift G vs magenta
-    const hi = e.highlights/100;   // -1..1
-    const sh = e.shadows/100;      // -1..1
+    const warm = e.warmth * 0.6;
+    const tintG = e.tint * 0.5;
+    const hi = e.highlights/100;
+    const sh = e.shadows/100;
 
     for(let i=0;i<data.length;i+=4){
       let r=data[i], g=data[i+1], b=data[i+2];
-
-      // exposure (linear add)
       r += exposure; g += exposure; b += exposure;
-
-      // luminance for highlight/shadow masks
       const lum = (0.299*r + 0.587*g + 0.114*b)/255;
       if(sh !== 0){
         const shMask = Math.pow(1-lum, 2);
@@ -1260,36 +1848,27 @@
       }
       if(hi !== 0){
         const hiMask = Math.pow(lum, 2);
-        const amt = hi * 55 * hiMask; // positive hi = brighten highlights, negative = recover(darken)
+        const amt = hi * 55 * hiMask;
         r += amt; g += amt; b += amt;
       }
-
-      // contrast (around midpoint 128)
       r = contrastF*(r-128)+128;
       g = contrastF*(g-128)+128;
       b = contrastF*(b-128)+128;
-
-      // warmth (R up / B down) & tint (G vs magenta)
       r += warm; b -= warm;
       g += tintG; r -= tintG*0.5; b -= tintG*0.5;
-
-      // saturation
       const l2 = 0.299*r + 0.587*g + 0.114*b;
       r = l2 + (r-l2)*satF;
       g = l2 + (g-l2)*satF;
       b = l2 + (b-l2)*satF;
-
       data[i]=clamp(r); data[i+1]=clamp(g); data[i+2]=clamp(b);
     }
   }
 
-  // separable box blur (single pass, radius r) on RGBA buffer -> returns new buffer
   function boxBlurRGBA(src, w, h, r){
     if(r<1) return new Uint8ClampedArray(src);
     const tmp = new Float32Array(src.length);
     const out = new Uint8ClampedArray(src.length);
     const size = r*2+1;
-    // horizontal
     for(let y=0;y<h;y++){
       let ro=0,go=0,bo=0;
       const rowStart = y*w*4;
@@ -1309,7 +1888,6 @@
         bo += src[addIdx+2]-src[subIdx+2];
       }
     }
-    // vertical
     for(let x=0;x<w;x++){
       let ro=0,go=0,bo=0;
       for(let y=-r;y<=r;y++){
@@ -1359,15 +1937,13 @@
   }
 
   function skinScore(r,g,b){
-    // soft heuristic skin-tone score in [0,1]
     const mx = Math.max(r,g,b), mn = Math.min(r,g,b);
     const diff = mx-mn;
     let score = 0;
     if(r>60 && g>25 && b>10 && diff>10 && r>g && r>=b){
-      const cond1 = Math.min(1, Math.max(0, (r-95)/60));         // r brightness
-      const cond2 = Math.min(1, Math.max(0, (diff-10)/40));      // channel spread
-      const cond3 = Math.min(1, Math.max(0, (r-g)/50));          // r dominance over g
-      const cond4 = Math.min(1, Math.max(0, 1-((r-b<10)?1:0)));  // r somewhat > b handled by diff
+      const cond1 = Math.min(1, Math.max(0, (r-95)/60));
+      const cond2 = Math.min(1, Math.max(0, (diff-10)/40));
+      const cond3 = Math.min(1, Math.max(0, (r-g)/50));
       score = cond1*0.35 + cond2*0.3 + cond3*0.35;
     }
     return Math.min(1, Math.max(0, score));
@@ -1422,6 +1998,72 @@
     }
   }
 
+  function applyFaceShine(data, w, h, amount, fm){
+    if(!fm || amount<=0) return;
+    const MW=fm.MW, MH=fm.MH;
+    for(let y=0;y<h;y++){
+      const my = Math.min(MH-1, (y*MH/h)|0);
+      for(let x=0;x<w;x++){
+        const mx = Math.min(MW-1, (x*MW/w)|0);
+        const sm = fm.skin[my*MW+mx];
+        if(sm < 0.3) continue;
+        const i=(y*w+x)*4;
+        const r=data[i], g=data[i+1], b=data[i+2];
+        const lum = 0.299*r+0.587*g+0.114*b;
+        if(lum > 180){
+          const shine = Math.min(1, (lum-180)/60) * sm * amount;
+          const target = 170;
+          data[i]   = clamp(r - (r-target)*shine*0.4);
+          data[i+1] = clamp(g - (g-target)*shine*0.4);
+          data[i+2] = clamp(b - (b-target)*shine*0.4);
+        }
+      }
+    }
+  }
+
+  function applyWrinkle(data, w, h, amount, fm){
+    if(!fm || amount<=0) return;
+    const MW=fm.MW, MH=fm.MH;
+    const radius = Math.max(1, Math.round(1 + amount*4));
+    const blurred = boxBlurRGBA(data, w, h, radius);
+    for(let y=0;y<h;y++){
+      const my = Math.min(MH-1, (y*MH/h)|0);
+      for(let x=0;x<w;x++){
+        const mx = Math.min(MW-1, (x*MW/w)|0);
+        const sm = fm.skin[my*MW+mx];
+        if(sm < 0.2) continue;
+        const i=(y*w+x)*4;
+        const m = sm * amount * 0.6;
+        data[i]   = data[i]*(1-m) + blurred[i]*m;
+        data[i+1] = data[i+1]*(1-m) + blurred[i+1]*m;
+        data[i+2] = data[i+2]*(1-m) + blurred[i+2]*m;
+      }
+    }
+  }
+
+  function applyGlassesGlare(data, w, h, amount, fm){
+    if(!fm || amount<=0) return;
+    const MW=fm.MW, MH=fm.MH;
+    for(let y=0;y<h;y++){
+      const my = Math.min(MH-1, (y*MH/h)|0);
+      for(let x=0;x<w;x++){
+        const mx = Math.min(MW-1, (x*MW/w)|0);
+        const em = fm.eye[my*MW+mx];
+        if(em < 0.15) continue;
+        const i=(y*w+x)*4;
+        const r=data[i], g=data[i+1], b=data[i+2];
+        const lum = 0.299*r+0.587*g+0.114*b;
+        if(lum > 200){
+          const glare = Math.min(1, (lum-200)/40) * em * amount;
+          const target = 180;
+          data[i]   = clamp(r - (r-target)*glare*0.5);
+          data[i+1] = clamp(g - (g-target)*glare*0.5);
+          data[i+2] = clamp(b - (b-target)*glare*0.5);
+        }
+      }
+    }
+  }
+
   // ---------------- export ----------------
   $('btnExport').addEventListener('click', ()=>{
     toast('Đang xuất ảnh…');
@@ -1444,7 +2086,10 @@
   $('btnDeleteShot').addEventListener('click', ()=>{
     if(state.activeShotIndex<0) return;
     state.shots.splice(state.activeShotIndex,1);
+    state.batchQueue = state.batchQueue.filter(b=>b.shotIndex !== state.activeShotIndex);
+    state.batchQueue.forEach(b=>{ if(b.shotIndex > state.activeShotIndex) b.shotIndex--; });
     renderFilmstrip();
+    updateBatchUI();
     showScreen('capture');
   });
 
@@ -1541,8 +2186,6 @@
 
     for(const face of faces){
       if(!face || face.length < 468) continue;
-
-      // skin (face oval minus eyes/lips)
       ctx.clearRect(0,0,MW,MH);
       ctx.fillStyle = '#fff';
       polyPath(ctx, face, FACE_OVAL, MW, MH); ctx.fill();
@@ -1553,18 +2196,15 @@
       ctx.globalCompositeOperation = 'source-over';
       merge('skin');
 
-      // eye (both eyes)
       ctx.clearRect(0,0,MW,MH);
       ctx.fillStyle = '#fff';
       polyPath(ctx, face, LEFT_EYE, MW, MH); ctx.fill();
       polyPath(ctx, face, RIGHT_EYE, MW, MH); ctx.fill();
       merge('eye');
 
-      // teeth (inner mouth)
       polyFill(face, INNER_MOUTH);
       merge('teeth');
 
-      // iris (two soft circles)
       ctx.clearRect(0,0,MW,MH);
       if(face.length >= 478){
         const lc = face[473], rc = face[468];
@@ -1573,14 +2213,12 @@
       }
       merge('iris');
 
-      // under-eye (soft ellipse below each eye)
       ctx.clearRect(0,0,MW,MH);
       const lec = eyeCenter(face, LEFT_EYE), rec = eyeCenter(face, RIGHT_EYE);
       if(lec) softEllipse(lec.x, lec.y + MH*0.045, MW*0.09, MH*0.05);
       if(rec) softEllipse(rec.x, rec.y + MH*0.045, MW*0.09, MH*0.05);
       merge('underEye');
 
-      // cheek (soft ellipse on each cheek)
       ctx.clearRect(0,0,MW,MH);
       if(lec) softEllipse(lec.x - MW*0.05, lec.y + MH*0.11, MW*0.10, MH*0.07);
       if(rec) softEllipse(rec.x + MW*0.05, rec.y + MH*0.11, MW*0.10, MH*0.07);
@@ -1592,7 +2230,6 @@
   }
 
   function clampInt(v){ return v<-100?-100:(v>100?100:v); }
-
   function clampAbs(v, m){ return v<-m?-m:(v>m?m:v); }
 
   function analyzeScene(data, w, h){
@@ -1614,19 +2251,14 @@
     function pct(q){ let acc=0, v=0; for(let k=0;k<256;k++){ acc+=hist[k]; if(acc/cnt>=q){ v=k; break; } } return v; }
     const p1=pct(0.01), p99=pct(0.99);
     const e = defaultEdits();
-
-    // Exposure: only correct clearly under-exposed (dim highlights) or hazy (lifted shadows)
     let exposure = 0;
     if(p99 < 178){ exposure = Math.round((178 - p99) * 0.5); }
     else if(p1 > 68){ exposure = -Math.round((p1 - 68) * 0.4); }
     e.exposure = clampAbs(exposure, 25);
-
     const spread = p99 - p1;
     e.contrast = clampAbs(Math.round((140 - spread) * 0.18), 16);
     e.highlights = clampAbs(Math.round((232 - p99) * 0.35), 16);
     e.shadows = clampAbs(Math.round((26 - p1) * 0.6), 20);
-
-    // White balance: only from near-neutral mid-tone pixels, gentle + capped
     e.warmth = 0; e.tint = 0;
     if(wcnt > 300){
       const ar=wr/wcnt, ag=wg/wcnt, ab=wb/wcnt;
@@ -1635,7 +2267,6 @@
       if(Math.abs(dr) > 6) e.warmth = clampAbs(Math.round(dr * 0.45), 12);
       if(Math.abs(dg) > 6) e.tint = clampAbs(Math.round(dg * 0.35), 10);
     }
-
     e.saturation = 2;
     e.vignette = 0;
     return e;
@@ -1783,15 +2414,17 @@
     syncSlidersFromEdits();
     renderLutGrid();
     renderPreview();
-    toast('AI đang phân tích ảnh…');
+    toast('AI đang phân tích khuôn mặt…');
     try{
       const faces = await detectFaces(editCanvas);
       if(faces && faces.length){
         shot.faceMasks = buildFaceMasks(faces, w, h);
         shot.hasFace = true;
         state.edits.skin = 40;
+        state.edits.freckleAcne = 35;
         state.edits.eye = 28;
-        toast('Đã nhận diện ' + faces.length + ' khuôn mặt');
+        state.edits.faceShine = 15;
+        toast('Đã nhận diện ' + faces.length + ' khuôn mặt ✓');
       } else {
         shot.faceMasks = null;
         shot.hasFace = false;
@@ -1804,7 +2437,7 @@
       shot.hasFace = false;
       state.edits.skin = 0;
       state.edits.eye = 0;
-      toast('Không tải được model AI (cần mạng). Đã áp dụng auto cân sáng.');
+      toast('Đã áp dụng Auto cân sáng');
     }
     syncSlidersFromEdits();
     renderPreview();
@@ -1815,17 +2448,14 @@
   const LUT_SIZE = 33;
   const lutCache = {};
   const LUT_PRESETS = [
-    { id:'none', name:'Không LUT' },
-    { id:'natural', name:'Tự nhiên', look:{saturation:0.08, contrast:0.06} },
-    { id:'portrait', name:'Chân dung', look:{saturation:0.04, contrast:-0.04, lift:[10,5,5], gain:[1.02,0.99,0.97]} },
-    { id:'teal', name:'Teal & Orange', look:{saturation:0.1, contrast:0.12, splitShadow:[-20,0,20], splitHighlight:[16,4,-12]} },
-    { id:'kodak', name:'Film ấm', look:{saturation:0.05, contrast:0.1, exposure:-4, lift:[6,3,-6], gain:[1.05,0.98,0.9], splitShadow:[12,4,-8], splitHighlight:[14,6,-6]} },
-    { id:'fuji', name:'Mát lạnh', look:{saturation:0.02, contrast:0.08, exposure:-2, gain:[0.96,1.0,1.06], splitShadow:[6,-2,14], splitHighlight:[-8,2,10]} },
-    { id:'moody', name:'Moody', look:{saturation:-0.35, contrast:0.18, exposure:-12, gain:[0.92,0.9,0.94], splitShadow:[12,6,18], splitHighlight:[8,2,10]} },
-    { id:'fade', name:'Vintage Fade', look:{saturation:-0.2, contrast:-0.18, exposure:8, lift:[16,12,10], splitShadow:[14,8,-4]} },
-    { id:'vivid', name:'Rực rỡ', look:{saturation:0.3, contrast:0.16, exposure:2} },
-    { id:'bw', name:'Đen trắng', look:{bw:true, contrast:0.22} },
-    { id:'bwsoft', name:'B&W mềm', look:{bw:true, contrast:-0.1, exposure:4} }
+    { id:'none', name:'Không LUT', group:'Tắt look', hint:'Giữ màu gốc sau khi cân WB / exposure.' },
+    { id:'portra-clean', name:'01_Portra_Clean', group:'Tự nhiên', hint:'Da tự nhiên, trắng sạch, tương phản nhẹ.', look:{saturation:0.02, contrast:0.035, lift:[2,2,3], gain:[1.01,1.0,0.99], splitShadow:[3,2,1], splitHighlight:[4,3,2]} },
+    { id:'portra-warm', name:'02_Portra_Warm', group:'Hội trường', hint:'Ấm nhẹ dưới đèn, giữ màu da không cam.', look:{saturation:0.035, contrast:0.035, exposure:1, gain:[1.035,1.0,0.965], splitShadow:[8,3,-2], splitHighlight:[10,4,-4]} },
+    { id:'portra-soft', name:'03_Portra_Soft', group:'Chân dung', hint:'Pastel mềm, highlight dịu, hợp ảnh cận.', look:{saturation:-0.035, contrast:-0.105, exposure:2, lift:[9,7,7], gain:[1.01,1.0,0.99], splitShadow:[5,4,5], splitHighlight:[5,4,5]} },
+    { id:'fuji-400h-clean', name:'04_Fuji_400H_Clean', group:'Ngoài trời', hint:'Xanh sạch, da sáng, cân bằng nắng.', look:{saturation:0.045, contrast:0.02, gain:[0.985,1.01,1.035], splitShadow:[-2,5,12], splitHighlight:[-4,6,10]} },
+    { id:'fuji-400h-pastel', name:'05_Fuji_400H_Pastel', group:'Nắng gắt', hint:'Pastel nhẹ, giảm gắt khi nắng mạnh.', look:{saturation:-0.075, contrast:-0.12, exposure:2, lift:[13,12,15], gain:[0.99,1.01,1.02], splitShadow:[0,5,11], splitHighlight:[-5,7,12]} },
+    { id:'event-natural', name:'06_Event_Natural', group:'Sự kiện', hint:'Trung tính, giữ màu trang phục ổn định.', look:{saturation:0.015, contrast:0.055, exposure:1, lift:[2,2,2], gain:[1.01,1.0,0.99], splitShadow:[2,3,4], splitHighlight:[3,3,3]} },
+    { id:'portrait-premium', name:'07_Portrait_Premium', group:'Khách hàng', hint:'Nổi khối vừa phải, da sạch sang trọng.', look:{saturation:0.075, contrast:0.095, exposure:1, lift:[2,1,2], gain:[1.03,1.0,0.98], splitShadow:[8,4,7], splitHighlight:[12,4,-4]} }
   ];
 
   function makeLookFn(L){
@@ -1954,9 +2584,11 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'lut-chip' + (state.edits.lut === p.id ? ' active' : '');
-      b.textContent = p.name;
+      b.innerHTML = '<b>'+esc(p.name)+'</b><small>'+esc(p.group || 'Preset')+'</small>';
+      b.title = (p.group ? p.group + ': ' : '') + (p.hint || '');
       b.addEventListener('click', ()=>{
         state.edits.lut = p.id;
+        if(p.id !== 'none' && state.edits.lutStrength > 60){ state.edits.lutStrength = 30; syncSlidersFromEdits(); }
         renderLutGrid();
         renderPreview();
       });
@@ -1966,7 +2598,7 @@
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'lut-chip' + (state.edits.lut === '__custom__' ? ' active' : '');
-      b.textContent = state.customLutName || 'Custom LUT';
+      b.innerHTML = '<b>'+esc(state.customLutName || 'Custom LUT')+'</b><small>File .cube</small>';
       b.addEventListener('click', ()=>{
         state.edits.lut = '__custom__';
         renderLutGrid();
@@ -2030,7 +2662,7 @@
     } else {
       return null;
     }
-    if(data.length < 10 || data[0] !== 0x50 || data[1] !== 0x36) return null; // not P6
+    if(data.length < 10 || data[0] !== 0x50 || data[1] !== 0x36) return null;
     let pos = 2;
     function skip(){
       while(pos < data.length){
@@ -2084,8 +2716,8 @@
       const c = document.createElement('canvas');
       c.width = parsed.width; c.height = parsed.height;
       c.getContext('2d').putImageData(parsed.imageData, 0, 0);
-      addShotFromImage(c);
-      openEditor(state.shots.length-1, {auto:true});
+      const idx = addShotFromImage(c);
+      openEditor(idx, {auto:true});
       toast('Đã mở RAW ' + parsed.width + '×' + parsed.height);
     }catch(err){
       console.error(err);
@@ -2114,13 +2746,14 @@
   function getAccessToken(){
     const cid = state.settings.driveClientId;
     if(!cid) return Promise.reject(new Error('NO_CLIENT_ID'));
+    if(state.googleAccessToken){ return Promise.resolve(state.googleAccessToken); }
     return loadGsi().then(()=> new Promise((resolve, reject)=>{
       const client = google.accounts.oauth2.initTokenClient({
         client_id: cid,
-        scope: DRIVE_SCOPE,
+        scope: 'openid profile email ' + DRIVE_SCOPE,
         callback: (resp)=>{
           if(resp.error) reject(new Error(resp.error));
-          else resolve(resp.access_token);
+          else { state.googleAccessToken = resp.access_token; sessionStorage.setItem('lenslab_google_access_token', resp.access_token); resolve(resp.access_token); }
         }
       });
       client.requestAccessToken();
@@ -2160,9 +2793,15 @@
     const q = "mimeType='application/vnd.google-apps.folder' and trashed=false and '" + parentId + "' in parents";
     const url = 'https://www.googleapis.com/drive/v3/files?spaces=drive&fields=files(id,name)&pageSize=200&orderBy=name&q=' + encodeURIComponent(q);
     const resp = await fetch(url, { headers: { Authorization: 'Bearer ' + driveToken, Accept: 'application/json' } });
+    if(resp.status === 401){ clearGoogleToken(); throw new Error('Phiên Google đã hết hạn, hãy đăng nhập lại'); }
     if(!resp.ok){ throw new Error('Lỗi tải thư mục (' + resp.status + ')'); }
     const j = await resp.json();
     return j.files || [];
+  }
+
+  function clearGoogleToken(){
+    state.googleAccessToken = null; driveToken = null;
+    sessionStorage.removeItem('lenslab_google_access_token');
   }
 
   async function refreshDriveList(){
@@ -2178,7 +2817,7 @@
     const list = $('driveList');
     list.innerHTML = '';
     if(!folders || folders.length === 0){
-      list.innerHTML = '<div class="drive-empty">Không có thư mục con. Nhấn "Lưu vào thư mục này" để lưu vào đây.</div>';
+      list.innerHTML = '<div class="drive-empty">Không có thư mục con. Nhấn "Lưu vào thư mục này" để chọn vị trí này.</div>';
     }
     (folders||[]).forEach(f=>{
       const d = document.createElement('div');
@@ -2215,6 +2854,13 @@
   $('driveModal').addEventListener('click', (e)=>{ if(e.target.id === 'driveModal') e.target.classList.remove('show'); });
 
   $('driveSaveHere').addEventListener('click', ()=>{
+    if(state.drivePickerMode === 'project'){
+      state.projectDriveFolder = { id: driveCurrent.id, name: driveCurrent.name };
+      $('projectDriveFolderName').textContent = driveCurrent.name;
+      $('driveModal').classList.remove('show');
+      toast('Đã chọn thư mục: ' + driveCurrent.name);
+      return;
+    }
     driveFolder.id = driveCurrent.id;
     driveFolder.name = driveCurrent.name;
     localStorage.setItem('lenslab_drive_folder', driveFolder.id);
@@ -2239,6 +2885,7 @@
         headers: { Authorization: 'Bearer ' + token },
         body: form
       });
+      if(resp.status === 401){ clearGoogleToken(); throw new Error('Phiên Google đã hết hạn, hãy đăng nhập lại'); }
       if(!resp.ok){
         let msg = 'Lỗi ' + resp.status;
         try{ const j = await resp.json(); if(j && j.error && j.error.message) msg = j.error.message; }catch(e){}
@@ -2252,7 +2899,10 @@
     }
   }
 
-  $('btnDriveExport').addEventListener('click', openDriveModal);
+  $('btnDriveExport').addEventListener('click', ()=>{
+    state.drivePickerMode = 'export';
+    openDriveModal();
+  });
 
   // ---------------- settings ----------------
   $('btnSettings').addEventListener('click', ()=>{
@@ -2267,7 +2917,7 @@
     toast(v ? 'Đã lưu Client ID ✓' : 'Đã xoá Client ID');
   });
 
-  // ---------------- pwa install (service worker) ----------------
+  // ---------------- pwa install ----------------
   if('serviceWorker' in navigator){
     window.addEventListener('load', ()=>{
       navigator.serviceWorker.register('sw.js').catch(()=>{});
