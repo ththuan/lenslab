@@ -1,4 +1,4 @@
-const CACHE = 'lenslab-v3';
+const CACHE = 'lenslab-v4';
 const ASSETS = [
   './index.html',
   './manifest.json',

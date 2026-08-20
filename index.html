@@ -1468,6 +1468,10 @@
   }
 
   // ---------------- state ----------------
+  function safeJSON(raw, fallback){
+    if(!raw) return fallback;
+    try{ return JSON.parse(raw); }catch(e){ return fallback; }
+  }
   const state = {
     stream: null,
     devices: [],
@@ -1477,9 +1481,9 @@
     edits: defaultEdits(),
     beforeAfter: false,
     settings: { driveClientId: localStorage.getItem('lenslab_drive_client_id') || DEFAULT_GOOGLE_CLIENT_ID },
-    auth: JSON.parse(localStorage.getItem('lenslab_auth') || 'null'),
+    auth: safeJSON(localStorage.getItem('lenslab_auth'), null),
     googleAccessToken: sessionStorage.getItem('lenslab_google_access_token') || null,
-    projects: JSON.parse(localStorage.getItem('lenslab_projects') || '[]'),
+    projects: safeJSON(localStorage.getItem('lenslab_projects'), []),
     faceLandmarker: null,
     mpLoading: null,
     segmenter: null,
@@ -2036,6 +2040,8 @@
       toast('Đã kết nối camera thành công ✓');
     }catch(err){
       console.error('Camera connection error:', err);
+      state.activeDeviceId = null;
+      localStorage.removeItem('lenslab_device');
       showErr(cameraErrorMessage(err));
       toast('Lỗi camera: ' + (err.name || err.message || err));
     }
@@ -2044,15 +2050,15 @@
   function cameraErrorMessage(err){
     const n = err && err.name;
     if(n === 'NotAllowedError' || n === 'PermissionDeniedError'){
-      return 'Trình duyệt chưa được cấp quyền Camera. Hãy nhấn icon cài đặt trang hoặc cho phép quyền camera.';
+      return 'Camera bị từ chối quyền. Vào Cài đặt iPad/iPhone → Safari → Camera → cho phép trang này, rồi mở lại. Hoặc mở app bằng tab Safari thường (không phải app đã cài lên màn hình chính).';
     }
     if(n === 'NotFoundError' || n === 'OverconstrainedError'){
-      return 'Không tìm thấy thiết bị camera. Hãy kiểm tra kết nối capture card và nguồn máy ảnh.';
+      return 'Không tìm thấy camera. Nếu đang cắm capture card, kiểm tra dây HDMI/USB. Nếu dùng iPad/điện thoại, hãy chọn lại camera trong danh sách nguồn.';
     }
     if(n === 'NotReadableError'){
-      return 'Không đọc được tín hiệu từ capture card. Hãy thử cắm lại dây USB‑C.';
+      return 'Không đọc được tín hiệu camera. Thử đóng app camera khác đang chiếm quyền, hoặc cắm lại dây.';
     }
-    return 'Không kết nối được camera (' + (n||'lỗi không xác định') + '). Hãy đảm bảo đang mở qua https://';
+    return 'Không kết nối được camera (' + (n||'lỗi không xác định') + '). Đảm bảo đang mở qua https://';
   }
   function showErr(msg){ const e=$('connectErr'); e.textContent = msg; e.classList.add('show'); }
   function hideErr(){ $('connectErr').classList.remove('show'); }
