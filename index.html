@@ -983,6 +983,35 @@
   </div>
 </div>
 
+<!-- Google Setup Modal -->
+<div class="project-modal" id="googleSetupModal">
+  <div class="project-modal-card" style="max-width:480px;">
+    <div class="project-modal-head">
+      <h3>Kết nối Google Account (Thật)</h3>
+      <button class="modal-close" id="googleSetupClose">×</button>
+    </div>
+    <div class="project-form">
+      <p style="margin:0; font-size:13px; color:#94a3b8; line-height:1.55;">
+        Để mở <b>cửa sổ đăng nhập Google chính thức</b> và lưu ảnh trực tiếp vào Google Drive cá nhân của bạn, Google yêu cầu một mã <b>OAuth Client ID</b> (miễn phí, tạo 1 lần).
+      </p>
+      
+      <div class="form-field">
+        <label for="googleClientIdSetupInput">Google OAuth Client ID</label>
+        <input id="googleClientIdSetupInput" placeholder="xxxxxx.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div style="background:#121417; border:1px solid #2a2f37; border-radius:8px; padding:11px 13px; font-size:11.5px; color:#94a3b8; line-height:1.5;">
+        💡 <b>Cách tạo nhanh (~2 phút):</b> Mở <code>console.cloud.google.com</code> → Tạo Credentials → OAuth Client ID (Web Application) → Thêm Authorized JavaScript origin: <code>https://ththuan.github.io</code>
+      </div>
+
+      <div class="project-form-actions">
+        <button class="form-cancel" id="googleSetupCancel">Hủy</button>
+        <button class="form-submit" id="googleSetupSubmit">Lưu & Đăng nhập Google</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -1070,53 +1099,61 @@
   }
 
   async function loginWithGoogle(){
-    const cid = state.settings.driveClientId;
+    let cid = state.settings.driveClientId;
     
-    // If OAuth Client ID is present, run official OAuth flow
-    if(cid){
-      try{
-        await loadGsi();
-        const token = await new Promise((resolve, reject)=>{
-          const client = google.accounts.oauth2.initTokenClient({
-            client_id: cid,
-            scope: 'openid profile email ' + DRIVE_SCOPE,
-            callback: resp=> resp && resp.access_token ? resolve(resp.access_token) : reject(new Error((resp && resp.error) || 'Hủy đăng nhập Google'))
-          });
-          client.requestAccessToken({prompt:'consent'});
-        });
-        const profileResp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {headers:{Authorization:'Bearer ' + token}});
-        if(profileResp.ok){
-          const profile = await profileResp.json();
-          const auth = {
-            provider: 'google',
-            verifiedAt: Date.now(),
-            name: profile.name || profile.email || 'Tài khoản Google',
-            email: profile.email || '',
-            initial: (profile.name || profile.email || 'G').trim().charAt(0).toUpperCase(),
-            picture: profile.picture || ''
-          };
-          state.googleAccessToken = token;
-          sessionStorage.setItem('lenslab_google_access_token', token);
-          applyAuthSession(auth);
-          toast('Đã đăng nhập thành công: ' + auth.name + ' ✓');
-          return;
-        }
-      }catch(err){
-        console.warn('OAuth attempt failed, proceeding with direct primary account session:', err);
-      }
+    // If no Client ID configured yet, open dedicated Google setup modal
+    if(!cid){
+      $('googleSetupModal').classList.add('show');
+      $('googleClientIdSetupInput').focus();
+      return;
     }
 
-    // Direct Seamless Google Sign-In as Primary Account (no setup required)
-    const defaultAuth = {
-      provider: 'google',
-      verifiedAt: Date.now(),
-      name: 'Tài khoản Google',
-      email: 'user@gmail.com',
-      initial: 'G',
-      picture: ''
-    };
-    applyAuthSession(defaultAuth);
-    toast('Đã kích hoạt Tài khoản Google chính ✓');
+    try{
+      toast('Đang mở cửa sổ đăng nhập Google…');
+      await loadGsi();
+      const token = await new Promise((resolve, reject)=>{
+        const client = google.accounts.oauth2.initTokenClient({
+          client_id: cid,
+          scope: 'openid profile email ' + DRIVE_SCOPE,
+          callback: resp=> {
+            if(resp && resp.access_token) resolve(resp.access_token);
+            else if(resp && resp.error) reject(new Error(resp.error_description || resp.error));
+            else reject(new Error('Người dùng đã đóng cửa sổ Google'));
+          }
+        });
+        client.requestAccessToken({prompt:'consent'});
+      });
+
+      toast('Đang lấy thông tin hồ sơ Google…');
+      const profileResp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers:{Authorization:'Bearer ' + token}
+      });
+      
+      if(!profileResp.ok) throw new Error('Không lấy được thông tin hồ sơ từ Google');
+      const profile = await profileResp.json();
+      
+      const auth = {
+        provider: 'google',
+        verifiedAt: Date.now(),
+        name: profile.name || profile.email || 'Tài khoản Google',
+        email: profile.email || '',
+        initial: (profile.name || profile.email || 'G').trim().charAt(0).toUpperCase(),
+        picture: profile.picture || ''
+      };
+
+      state.googleAccessToken = token;
+      sessionStorage.setItem('lenslab_google_access_token', token);
+      applyAuthSession(auth);
+      toast('Đã đăng nhập tài khoản Google: ' + auth.name + ' ✓');
+    }catch(err){
+      console.error('Google OAuth error:', err);
+      const msg = err && err.message ? err.message : String(err);
+      if(msg.includes('origin_mismatch') || msg.includes('idpiframe_initialization_failed')){
+        alert('Lỗi Origin Google: Bạn cần thêm domain trang web (https://ththuan.github.io) vào mục "Authorized JavaScript origins" trên Google Cloud Console.');
+      } else {
+        toast('Lỗi đăng nhập Google: ' + msg);
+      }
+    }
   }
 
   function applyAuthSession(auth){
@@ -1139,6 +1176,24 @@
 
   $('btnGoogleLogin').addEventListener('click', loginWithGoogle);
   $('btnLogout').addEventListener('click', logoutSession);
+
+  // Google Setup Modal Events
+  $('googleSetupClose').addEventListener('click', ()=> $('googleSetupModal').classList.remove('show'));
+  $('googleSetupCancel').addEventListener('click', ()=> $('googleSetupModal').classList.remove('show'));
+  $('googleSetupModal').addEventListener('click', e=>{ if(e.target.id==='googleSetupModal') $('googleSetupModal').classList.remove('show'); });
+  $('googleSetupSubmit').addEventListener('click', ()=>{
+    const val = $('googleClientIdSetupInput').value.trim();
+    if(!val){
+      toast('Vui lòng nhập chuỗi Client ID từ Google Cloud');
+      return;
+    }
+    state.settings.driveClientId = val;
+    localStorage.setItem('lenslab_drive_client_id', val);
+    $('googleSetupModal').classList.remove('show');
+    toast('Đã lưu Client ID, đang mở Google Sign-In…');
+    loginWithGoogle();
+  });
+
   $('btnNewProject').addEventListener('click', ()=>{ $('projectModal').classList.add('show'); $('projectNameInput').focus(); });
   $('projectModalClose').addEventListener('click', ()=> $('projectModal').classList.remove('show'));
   $('projectModalCancel').addEventListener('click', ()=> $('projectModal').classList.remove('show'));
