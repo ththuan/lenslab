@@ -51,12 +51,31 @@
   /* ---------- top bar ---------- */
   header.bar{
     display:flex; align-items:center; justify-content:space-between;
-    padding:12px 20px; border-bottom:1px solid var(--border); background:#17191c;
+    padding:10px 18px; border-bottom:1px solid var(--border); background:#17191c;
     flex-shrink:0;
   }
-  header.bar .brand{display:flex; align-items:center; gap:10px;}
+  header.bar .brand{
+    display:flex; align-items:center; gap:8px; cursor:pointer; padding:4px 8px; border-radius:8px;
+    transition:background 0.15s;
+  }
+  header.bar .brand:hover{background:rgba(255,255,255,0.06);}
+  .nav-back-home{
+    background:var(--bg-elevated); border:1px solid var(--border); color:#d8dbdc;
+    border-radius:6px; font-size:11.5px; padding:4px 8px; display:inline-flex; align-items:center; gap:4px;
+    cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .nav-back-home:hover{background:var(--bg-elevated-2); border-color:#5a6068; color:#fff;}
+  .home-pill{
+    position:absolute; top:14px; left:14px; display:flex; align-items:center; gap:6px;
+    background:rgba(0,0,0,0.75); backdrop-filter:blur(8px); padding:7px 14px; border-radius:20px;
+    font-size:12px; color:#e2e8f0; border:1px solid rgba(255,255,255,0.15); cursor:pointer; z-index:12;
+    transition:background 0.15s, transform 0.15s;
+  }
+  .home-pill:hover{background:rgba(255,255,255,0.18); color:#fff;}
+  .home-pill:active{transform:scale(0.97);}
   header.bar .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--teal); box-shadow:0 0 10px rgba(101,217,202,.65);}
-  header.bar .brand span{font-weight:600; letter-spacing:0.02em; font-size:16px;}
+  header.bar .brand span{font-weight:600; letter-spacing:0.02em; font-size:15px;}
+  .project-badge-pill{font-size:11px; background:rgba(101,217,202,0.12); color:var(--teal); border:1px solid rgba(101,217,202,0.3); padding:2px 8px; border-radius:12px; margin-left:4px;}
   header.bar .status{font-size:11px; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase;}
   header.bar .status.live{color:var(--accent);}
   header.bar button.icon-btn{
@@ -568,7 +587,12 @@
 <div id="app">
 
   <header class="bar">
-    <div class="brand"><div class="dot" id="brandDot"></div><span>LensLab</span></div>
+    <div class="brand" id="btnBrandHome" title="Về trang chủ dự án">
+      <button class="nav-back-home" id="btnNavHome" type="button" title="Về danh sách dự án">‹ 🏠 Dự án</button>
+      <div class="dot" id="brandDot"></div>
+      <span>LensLab</span>
+      <span class="project-badge-pill" id="activeProjectBadge" style="display:none;"></span>
+    </div>
     <div class="head-right">
       <div class="status" id="topStatus">chưa kết nối</div>
       <button class="icon-btn" id="btnSettings" title="Cài đặt">⚙</button>
@@ -655,6 +679,7 @@
 
   <!-- ============ WELCOME ============ -->
   <section class="screen" id="screen-welcome">
+    <button class="nav-back-home" id="btnWelcomeBack" style="align-self:flex-start; margin-bottom:-4px; padding:6px 12px;">‹ 🏠 Về danh sách dự án</button>
     <div class="glyph">
       <svg viewBox="0 0 24 24" fill="none"><path d="M4 8.5C4 7.12 5.12 6 6.5 6h2.2c.4 0 .77-.2 1-.53l.8-1.14A1.5 1.5 0 0 1 11.72 3.7h.56a1.5 1.5 0 0 1 1.22.63l.8 1.14c.23.33.6.53 1 .53h2.2C18.88 6 20 7.12 20 8.5v8c0 1.38-1.12 2.5-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-8Z" stroke="#5eead4" stroke-width="1.4"/><circle cx="12" cy="13" r="3.6" stroke="#5eead4" stroke-width="1.4"/></svg>
     </div>
@@ -677,12 +702,13 @@
   <section class="screen" id="screen-capture">
     <div class="viewport-wrap">
       <video id="liveVideo" autoplay playsinline muted></video>
+      <button class="home-pill" id="btnCaptureHome" title="Về danh sách dự án">‹ 🏠 Dự án</button>
       <div class="no-signal" id="noSignal">
         <span class="mono" style="font-size:11px;letter-spacing:0.1em;">ĐANG CHỜ TÍN HIỆU…</span>
         <span style="max-width:260px;text-align:center;">Kiểm tra máy ảnh đã bật Live View và dây HDMI đã cắm chắc chưa.</span>
       </div>
-      <div class="rec-pill"><div class="rdot"></div><span class="mono">LIVE</span></div>
-      <div class="device-chip" id="deviceChip">—</div>
+      <div class="rec-pill" style="left:auto; right:14px;"><div class="rdot"></div><span class="mono">LIVE</span></div>
+      <div class="device-chip" id="deviceChip" style="top:52px; right:14px;">—</div>
     </div>
     <div class="capture-bar">
       <div class="filmstrip" id="filmstrip">
@@ -694,7 +720,7 @@
         </div>
         <div class="shutter" id="btnShutter"><div class="inner"></div></div>
         <div class="batch-status-pill" id="batchPill"><span class="bs-icon">🔄</span><span class="bs-text" id="batchPillText">0/0</span></div>
-        <button class="side-btn" id="btnBack" title="Quay lại">✕</button>
+        <button class="side-btn" id="btnBack" title="Về trang chủ dự án">🏠</button>
       </div>
     </div>
   </section>
@@ -702,7 +728,18 @@
   <!-- ============ EDIT (Evoto Style Layout) ============ -->
   <section class="screen" id="screen-edit">
     <div class="editor-toolbar">
-      <div class="editor-context"><button class="toolbar-back" id="btnEditorBack" title="Quay lại buổi chụp">‹</button><div><strong id="activeFileName">LensLab Studio</strong><span id="activeFileMeta"> / 100%</span></div></div>
+      <div class="editor-context">
+        <button class="toolbar-back" id="btnEditorBack" title="Quay lại buổi chụp">‹</button>
+        <button class="toolbar-btn" id="btnEditorHome" title="Về trang chủ dự án">🏠 Dự án</button>
+        <div><strong id="activeFileName">LensLab Studio</strong><span id="activeFileMeta"> / 100%</span></div>
+      </div>
+      <div class="editor-toolbar-center"><span class="editor-state-dot"></span><span>Đang chỉnh sửa</span><span class="toolbar-divider"></span><span class="mono" id="activeZoomLevel">100%</span></div>
+      <div class="editor-actions">
+        <button class="toolbar-btn" title="So sánh trước và sau" id="btnToolbarBefore">Trước / Sau</button>
+        <button class="toolbar-btn" title="Toàn màn hình" id="btnToolbarFullscreen">Toàn màn hình</button>
+        <button class="toolbar-export-btn" id="btnQuickExport">Export</button>
+      </div>
+    </div>
       <div class="editor-toolbar-center"><span class="editor-state-dot"></span><span>Đang chỉnh sửa</span><span class="toolbar-divider"></span><span class="mono" id="activeZoomLevel">100%</span></div>
       <div class="editor-actions">
         <button class="toolbar-btn" title="So sánh trước và sau" id="btnToolbarBefore">Trước / Sau</button>
@@ -1095,6 +1132,11 @@
     state.batchAutoMode = !!(project.autoUpload && project.aiRealtime);
     state.batchQueue = [];
     state.shots = [];
+    const badge = $('activeProjectBadge');
+    if(badge){
+      badge.textContent = project.name;
+      badge.style.display = 'inline-block';
+    }
     toast('Đang mở dự án: ' + project.name + (state.batchAutoMode ? ' (Tự động AI + Upload)' : ''));
     updateBatchShutter();
     showScreen('welcome');
@@ -1311,14 +1353,35 @@
     }catch(e){ /* ignore */ }
   }
 
-  $('btnConnect').addEventListener('click', ()=> connectCamera(state.activeDeviceId));
-  $('deviceSelect').addEventListener('change', (e)=> connectCamera(e.target.value));
-  $('btnBack').addEventListener('click', ()=>{
-    if(state.stream){ state.stream.getTracks().forEach(t=>t.stop()); state.stream=null; }
+  function goToProjects(){
+    if(state.stream){
+      state.stream.getTracks().forEach(t=>t.stop());
+      state.stream = null;
+    }
+    const badge = $('activeProjectBadge');
+    if(badge) badge.style.display = 'none';
     $('topStatus').textContent = 'chưa kết nối';
     $('topStatus').classList.remove('live');
-    showScreen('welcome');
+    cropMode = false;
+    if($('cropOverlay')) $('cropOverlay').classList.remove('show');
+    renderProjects();
+    showScreen('projects');
+    toast('Đã quay về Trang chủ / Dự án');
+  }
+
+  // Home navigation event listeners
+  if($('btnBrandHome')) $('btnBrandHome').addEventListener('click', (e)=>{
+    if(e.target.id === 'btnSettings') return;
+    goToProjects();
   });
+  if($('btnNavHome')) $('btnNavHome').addEventListener('click', (e)=>{ e.stopPropagation(); goToProjects(); });
+  if($('btnWelcomeBack')) $('btnWelcomeBack').addEventListener('click', goToProjects);
+  if($('btnCaptureHome')) $('btnCaptureHome').addEventListener('click', goToProjects);
+  if($('btnEditorHome')) $('btnEditorHome').addEventListener('click', goToProjects);
+
+  $('btnConnect').addEventListener('click', ()=> connectCamera(state.activeDeviceId));
+  $('deviceSelect').addEventListener('change', (e)=> connectCamera(e.target.value));
+  $('btnBack').addEventListener('click', goToProjects);
 
   // upload fallback
   $('btnUpload').addEventListener('click', ()=> $('fileInput').click());
