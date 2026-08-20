@@ -1586,13 +1586,16 @@
   if($('btnCaptureHome')) $('btnCaptureHome').addEventListener('click', goToProjects);
   if($('btnEditorHome')) $('btnEditorHome').addEventListener('click', goToProjects);
 
-  $('btnConnect').addEventListener('click', ()=> connectCamera(state.activeDeviceId));
-  $('deviceSelect').addEventListener('change', (e)=> connectCamera(e.target.value));
-  $('btnBack').addEventListener('click', goToProjects);
+  if($('btnConnect')) $('btnConnect').addEventListener('click', ()=> connectCamera(state.activeDeviceId));
+  if($('deviceSelect')) $('deviceSelect').addEventListener('change', (e)=> connectCamera(e.target.value));
+  if($('btnBack')) $('btnBack').addEventListener('click', goToProjects);
 
   // upload fallback
-  $('btnUpload').addEventListener('click', ()=> $('fileInput').click());
-  $('fileInput').addEventListener('change', async (e)=>{
+  if($('btnUpload')) $('btnUpload').addEventListener('click', ()=> {
+    const fi = $('fileInput');
+    if(fi) fi.click();
+  });
+  if($('fileInput')) $('fileInput').addEventListener('change', async (e)=>{
     const file = e.target.files[0];
     if(!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
