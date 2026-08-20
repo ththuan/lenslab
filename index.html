@@ -277,6 +277,20 @@
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
   .toast .td{width:6px;height:6px;border-radius:50%;background:var(--accent);}
   #fileInput{display:none;}
+  /* landscape phone: let live view fill the screen, overlay controls */
+  @media (orientation: landscape) and (max-height: 520px){
+    header.bar{padding:8px 14px;}
+    #screen-capture{position:relative;}
+    .capture-bar{
+      position:absolute; left:0; right:0; bottom:0; z-index:5;
+      background:linear-gradient(transparent, rgba(0,0,0,0.72));
+      border-top:none; padding:12px 20px calc(8px + var(--safe-bottom));
+    }
+    .filmstrip, .device-select{display:none;}
+    .capture-row{justify-content:space-between;}
+    .shutter{width:60px;height:60px;}
+    .shutter .inner{width:46px;height:46px;}
+  }
 </style>
 </head>
 <body>
@@ -693,6 +707,7 @@
     const key = el.dataset.key;
     const input = el.querySelector('input[type=range]');
     const val = el.querySelector('.val');
+    if(!key || !input || !val) return;
     ctrlEls[key] = {el, input, val};
     input.addEventListener('input', ()=>{
       const v = parseInt(input.value,10);
