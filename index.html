@@ -1016,6 +1016,9 @@
 (function(){
   "use strict";
 
+  // Google OAuth Client ID mặc định gắn trực tiếp vào app
+  const DEFAULT_GOOGLE_CLIENT_ID = '143172360902-2i46fvos8fr2i22l1mm9qot25lc19eht.apps.googleusercontent.com';
+
   // ---------------- state ----------------
   const state = {
     stream: null,
@@ -1025,7 +1028,7 @@
     activeShotIndex: -1,
     edits: defaultEdits(),
     beforeAfter: false,
-    settings: { driveClientId: localStorage.getItem('lenslab_drive_client_id') || '' },
+    settings: { driveClientId: localStorage.getItem('lenslab_drive_client_id') || DEFAULT_GOOGLE_CLIENT_ID },
     auth: JSON.parse(localStorage.getItem('lenslab_auth') || 'null'),
     googleAccessToken: sessionStorage.getItem('lenslab_google_access_token') || null,
     projects: JSON.parse(localStorage.getItem('lenslab_projects') || '[]'),
