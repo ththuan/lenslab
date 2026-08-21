@@ -1530,6 +1530,7 @@
     auth: $('screen-auth'), projects: $('screen-projects'), library: $('screen-library'), welcome: $('screen-welcome'), capture: $('screen-capture'), edit: $('screen-edit'), settings: $('screen-settings')
   };
   let prevScreen = 'projects';
+  let histRAF = null;
   function showScreen(name){
     if(name !== 'settings') prevScreen = name;
     Object.values(screens).forEach(s=>s.classList.remove('active'));
@@ -2336,7 +2337,6 @@
   }
 
   // ---------------- Live Histogram & Real-time Tethering Controls ----------------
-  let histRAF = null;
   const histSampleCanvas = document.createElement('canvas');
   histSampleCanvas.width = 120;
   histSampleCanvas.height = 80;
