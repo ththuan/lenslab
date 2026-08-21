@@ -2159,6 +2159,7 @@
       try{ await video.play(); }catch(e){ console.warn('Video play catch:', e); }
 
       const track = stream.getVideoTracks()[0];
+      if(track){ track.addEventListener('ended', ()=> setTimeout(reconnectCameraIfDead, 300)); }
       const settings = track.getSettings ? track.getSettings() : {};
       state.activeDeviceId = settings.deviceId || deviceId || null;
       if(state.activeDeviceId){ localStorage.setItem('lenslab_device', state.activeDeviceId); }
@@ -2195,6 +2196,26 @@
     }
     return 'Không kết nối được camera (' + (n||'lỗi không xác định') + '). Đảm bảo đang mở qua https://';
   }
+
+  // Auto-restart camera if it dies (e.g. iOS releases it after backgrounding)
+  let cameraReconnecting = false;
+  async function reconnectCameraIfDead(){
+    if(cameraReconnecting) return;
+    const captureActive = $('screen-capture') && $('screen-capture').classList.contains('active');
+    if(!captureActive) return;
+    const dead = !state.stream || state.stream.getVideoTracks().every(t=>t.readyState === 'ended');
+    if(!dead) return;
+    cameraReconnecting = true;
+    try{
+      await connectCamera(state.activeDeviceId);
+    }finally{
+      cameraReconnecting = false;
+    }
+  }
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.visibilityState === 'visible'){ setTimeout(reconnectCameraIfDead, 300); }
+  });
+
   function showErr(msg){ const e=$('connectErr'); e.textContent = msg; e.classList.add('show'); }
   function hideErr(){ $('connectErr').classList.remove('show'); }
 
