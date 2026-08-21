@@ -2116,7 +2116,7 @@
       try{
         return await navigator.mediaDevices.getUserMedia({
           audio: false,
-          video: { deviceId: { ideal: deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+          video: { deviceId: { ideal: deviceId }, width: { ideal: 3840 }, height: { ideal: 2160 } }
         });
       }catch(e){
         console.warn('Attempt 1 (specific deviceId) failed, trying environment facingMode:', e);
@@ -2127,7 +2127,7 @@
     try{
       return await navigator.mediaDevices.getUserMedia({
         audio: false,
-        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 3840 }, height: { ideal: 2160 } }
       });
     }catch(e){
       console.warn('Attempt 2 (environment) failed, trying generic video:', e);
@@ -2136,7 +2136,7 @@
     // Attempt 3: Any video source (Universal Fallback)
     return await navigator.mediaDevices.getUserMedia({
       audio: false,
-      video: true
+      video: { width: { ideal: 3840 }, height: { ideal: 2160 } }
     });
   }
 
@@ -2177,7 +2177,7 @@
       state.activeDeviceId = settings.deviceId || deviceId || null;
       if(state.activeDeviceId){ localStorage.setItem('lenslab_device', state.activeDeviceId); }
       
-      if($('deviceChip')) $('deviceChip').textContent = track.label || 'Camera (Live)';
+      if($('deviceChip')) $('deviceChip').textContent = (track.label || 'Camera') + ' · ' + (settings.width||'?') + '×' + (settings.height||'?');
       if($('topStatus')){
         $('topStatus').textContent = 'đang phát trực tiếp';
         $('topStatus').classList.add('live');
