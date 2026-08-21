@@ -1231,7 +1231,7 @@
               <div class="evoto-section-header"><div class="sec-left"><span class="sec-arrow">▼</span><span class="sec-title">LUT / Color Grade</span></div><button class="sec-reset" title="Reset">↺</button></div>
               <div class="evoto-section-body">
                 <div class="lut-grid" id="lutGrid"></div>
-                <div class="evoto-ctrl" data-key="lutStrength"><div class="ctrl-top"><label>Cường độ LUT</label><span class="ctrl-val">55%</span></div><input type="range" min="0" max="100" value="55"></div>
+                <div class="evoto-ctrl" data-key="lutStrength"><div class="ctrl-top"><label>Cường độ LUT</label><span class="ctrl-val">100%</span></div><input type="range" min="0" max="100" value="100"></div>
                 <button class="secondary" id="btnImportLut" style="margin-top:6px;max-width:none;padding:10px;">Nhập LUT (.cube)</button>
                 <input type="file" id="lutFileInput" accept=".cube" style="display:none;">
               </div>
@@ -1520,7 +1520,7 @@
       faceShine:0, foreheadWrinkle:0, eyeWrinkle:0, glassesGlare:0,
       faceSlim:0, eyeEnlarge:0, bodySlim:0,
       bgRemove:0, bgBlur:0,
-      lut:'none', lutStrength:55,
+      lut:'none', lutStrength:100,
       rotation:0, flipH:0, flipV:0, straighten:0,
       cropX:0, cropY:0, cropW:1, cropH:1, cropAspect:''
     };
@@ -4518,14 +4518,14 @@
   const lutCache = {};
   const LUT_PRESETS = [
     { id:'none', name:'Không LUT', group:'Tắt look', hint:'Giữ màu gốc sau khi cân WB / exposure.' },
-    { id:'portra-clean', name:'01_Portra_Clean', group:'Tự nhiên', hint:'Da tự nhiên, trắng sạch, tương phản nhẹ.', look:{saturation:0.05, contrast:0.05, lift:[2,2,3], gain:[1.02,1.0,0.98], splitShadow:[6,4,2], splitHighlight:[8,6,4]} },
-    { id:'portra-warm', name:'02_Portra_Warm', group:'Hội trường', hint:'Ấm nhẹ dưới đèn, giữ màu da không cam.', look:{saturation:0.07, contrast:0.06, exposure:2, gain:[1.06,1.0,0.94], splitShadow:[14,6,-4], splitHighlight:[18,8,-8]} },
-    { id:'portra-soft', name:'03_Portra_Soft', group:'Chân dung', hint:'Pastel mềm, highlight dịu, hợp ảnh cận.', look:{saturation:-0.08, contrast:-0.12, exposure:3, lift:[12,10,11], gain:[1.01,1.0,0.99], splitShadow:[8,7,9], splitHighlight:[8,7,9]} },
-    { id:'fuji-400h-clean', name:'04_Fuji_400H_Clean', group:'Ngoài trời', hint:'Xanh sạch, da sáng, cân bằng nắng.', look:{saturation:0.08, contrast:0.03, gain:[0.97,1.02,1.06], splitShadow:[-3,8,20], splitHighlight:[-6,10,16]} },
-    { id:'fuji-400h-pastel', name:'05_Fuji_400H_Pastel', group:'Nắng gắt', hint:'Pastel nhẹ, giảm gắt khi nắng mạnh.', look:{saturation:-0.14, contrast:-0.14, exposure:3, lift:[16,15,18], gain:[0.99,1.01,1.02], splitShadow:[0,8,16], splitHighlight:[-8,10,18]} },
-    { id:'event-natural', name:'06_Event_Natural', group:'Sự kiện', hint:'Trung tính, giữ màu trang phục ổn định.', look:{saturation:0.04, contrast:0.07, exposure:1, lift:[2,2,2], gain:[1.01,1.0,0.99], splitShadow:[4,5,7], splitHighlight:[5,5,5]} },
-    { id:'event-indoor', name:'07_Event_Indoor', group:'Hội trường', hint:'Ấm dưới đèn trong nhà, giảm xanh lá, sáng đều.', look:{saturation:0.05, contrast:0.04, exposure:3, gain:[1.09,0.98,0.9], splitShadow:[9,5,-4], splitHighlight:[10,5,-7]} },
-    { id:'portrait-premium', name:'08_Portrait_Premium', group:'Khách hàng', hint:'Nổi khối vừa phải, da sạch sang trọng.', look:{saturation:0.12, contrast:0.12, exposure:1, lift:[2,1,3], gain:[1.05,1.0,0.97], splitShadow:[12,6,10], splitHighlight:[18,7,-7]} }
+    { id:'portra-clean', name:'01_Portra_Clean', group:'Tự nhiên', hint:'Da tự nhiên, trắng sạch, tương phản nhẹ.', look:{saturation:0.12, contrast:0.1, lift:[3,3,4], gain:[1.04,1.0,0.96], splitShadow:[10,6,3], splitHighlight:[14,10,7]} },
+    { id:'portra-warm', name:'02_Portra_Warm', group:'Hội trường', hint:'Ấm rõ dưới đèn, giữ màu da không cam.', look:{saturation:0.14, contrast:0.1, exposure:3, gain:[1.12,1.0,0.88], splitShadow:[22,10,-6], splitHighlight:[28,12,-12]} },
+    { id:'portra-soft', name:'03_Portra_Soft', group:'Chân dung', hint:'Pastel mềm, highlight dịu, hợp ảnh cận.', look:{saturation:-0.16, contrast:-0.18, exposure:5, lift:[18,15,16], gain:[1.02,1.0,0.98], splitShadow:[14,12,16], splitHighlight:[14,12,16]} },
+    { id:'fuji-400h-clean', name:'04_Fuji_400H_Clean', group:'Ngoài trời', hint:'Xanh sạch, da sáng, cân bằng nắng.', look:{saturation:0.16, contrast:0.06, gain:[0.94,1.04,1.12], splitShadow:[-5,12,30], splitHighlight:[-9,15,24]} },
+    { id:'fuji-400h-pastel', name:'05_Fuji_400H_Pastel', group:'Nắng gắt', hint:'Pastel nhẹ, giảm gắt khi nắng mạnh.', look:{saturation:-0.24, contrast:-0.2, exposure:5, lift:[24,22,26], gain:[0.98,1.02,1.04], splitShadow:[0,12,24], splitHighlight:[-12,15,26]} },
+    { id:'event-natural', name:'06_Event_Natural', group:'Sự kiện', hint:'Trung tính, giữ màu trang phục ổn định.', look:{saturation:0.08, contrast:0.12, exposure:1, lift:[2,2,2], gain:[1.02,1.0,0.98], splitShadow:[7,9,12], splitHighlight:[9,9,9]} },
+    { id:'event-indoor', name:'07_Event_Indoor', group:'Hội trường', hint:'Ấm dưới đèn trong nhà, giảm xanh lá, sáng đều.', look:{saturation:0.1, contrast:0.08, exposure:5, gain:[1.16,0.96,0.82], splitShadow:[15,8,-7], splitHighlight:[17,8,-12]} },
+    { id:'portrait-premium', name:'08_Portrait_Premium', group:'Khách hàng', hint:'Nổi khối vừa phải, da sạch sang trọng.', look:{saturation:0.22, contrast:0.2, exposure:2, lift:[3,2,4], gain:[1.1,1.0,0.94], splitShadow:[20,10,16], splitHighlight:[28,11,-10]} }
   ];
 
   function makeLookFn(L){
@@ -4690,7 +4690,6 @@
       b.title = (p.group ? p.group + ': ' : '') + (p.hint || '');
       b.addEventListener('click', ()=>{
         state.edits.lut = p.id;
-        if(p.id !== 'none' && state.edits.lutStrength > 60){ state.edits.lutStrength = 55; syncSlidersFromEdits(); }
         renderLutGrid();
         renderPreview();
       });
