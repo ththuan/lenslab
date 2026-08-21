@@ -900,6 +900,7 @@
     <button class="secondary" id="btnUpload">Chọn ảnh (JPG / RAW) để thử chỉnh</button>
     <div class="err-box" id="connectErr"></div>
     <input type="file" id="fileInput" accept="image/*,.nef,.cr2,.arw,.dng,.raf,.orf,.rw2,.pef,.srw,.x3f">
+    <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none;">
   </section>
 
   <!-- ============ CAPTURE / LIVE (Evoto AI Layout: 2/3 Stage, 1/3 Sidebar) ============ -->
@@ -921,6 +922,7 @@
 
           <!-- Center Bottom Floating Shutter Trigger -->
           <div class="live-overlay-bar">
+            <button id="btnNativeCamera" title="Chụp ảnh full-res bằng camera gốc iPad (12MP)" style="background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:20px;padding:8px 14px;font-size:12px;backdrop-filter:blur(6px);cursor:pointer;">📷 Full-res</button>
             <div class="live-shutter-wrap">
               <div class="shutter" id="btnShutter" title="Chụp ảnh"><div class="inner"></div></div>
               <span class="shutter-label">CHỤP (Space / Phím cách)</span>
@@ -2295,6 +2297,23 @@
       };
       img.src = URL.createObjectURL(file);
     }
+    e.target.value = '';
+  });
+
+  // Native camera capture (full resolution via iPad Camera app)
+  if($('btnNativeCamera')) $('btnNativeCamera').addEventListener('click', ()=>{
+    const fi = $('nativeCameraInput');
+    if(fi) fi.click();
+  });
+  if($('nativeCameraInput')) $('nativeCameraInput').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const img = new Image();
+    img.onload = ()=>{
+      const idx = addShotFromImage(img);
+      openEditor(idx, {auto:true});
+    };
+    img.src = URL.createObjectURL(file);
     e.target.value = '';
   });
 
