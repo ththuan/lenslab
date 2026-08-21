@@ -3829,7 +3829,7 @@
       const lm = await FaceLandmarker.createFromOptions(fileset, {
         baseOptions: { modelAssetPath: FACE_MODEL_URL, delegate: 'CPU' },
         runningMode: 'IMAGE',
-        numFaces: 3,
+        numFaces: 15,
         outputFaceBlendshapes: false
       });
       state.faceLandmarker = lm;
