@@ -1866,7 +1866,7 @@
   async function dbPutShot(shot){
     if(!shot || !shot.canvas) return;
     try{
-      const blob = await new Promise(res => shot.canvas.toBlob(res, 'image/jpeg', 0.92));
+      const blob = await new Promise(res => shot.canvas.toBlob(res, 'image/jpeg', 0.95));
       const aiBlob = shot.aiRetouchedCanvas ? await canvasToBlob(shot.aiRetouchedCanvas, 'image/jpeg', 0.94) : null;
       const d = await openDB();
       const rec = { id: shot.id, project: shot.project || (state.activeProject ? state.activeProject.name : ''), thumb: shot.thumb, edits: shot.edits, hasFace: !!shot.hasFace, createdAt: shot.createdAt || Date.now(), blob, aiBlob, aiRetouchMeta:shot.aiRetouchMeta || null, aiEngine:shot.aiEngine || '', rating: shot.rating || 0, label: shot.label || '', flag: !!shot.flag };
@@ -2694,7 +2694,7 @@
 
           // 4. Upload to Google Drive if configured
           if(state.activeProject && state.activeProject.driveFolder){
-            const blob = await new Promise(res=> outputCanvas.toBlob(res, 'image/jpeg', 0.92));
+            const blob = await new Promise(res=> outputCanvas.toBlob(res, 'image/jpeg', 0.95));
             await uploadBlobToDrive(blob, state.activeProject.driveFolder.id);
           }
 
@@ -2808,7 +2808,7 @@
   const editCanvas = $('editCanvas');
   const ectx = editCanvas.getContext('2d', {willReadFrequently:true});
   const PREVIEW_MAX = 1440;
-  const EXPORT_MAX = 4096;
+  const EXPORT_MAX = 6000;
   let previewImageData = null;
   let previewOriginalImageData = null;
   let previewRAF = null;
@@ -3739,7 +3739,7 @@
         a.remove();
         setTimeout(()=>URL.revokeObjectURL(url), 4000);
         toast('Đã lưu — kiểm tra Ảnh / Tệp tải xuống');
-      }, exportMime(), 0.92);
+      }, exportMime(), 0.95);
     }, 30);
   });
 
@@ -4775,7 +4775,7 @@
       await loadDcraw();
       const buf = new Uint8Array(await file.arrayBuffer());
       const out = window.dcraw(buf, {
-        setHalfSizeMode: true,
+        setHalfSizeMode: false,
         setInterpolationQuality: 3,
         setColorSpace: 1,
         setHighlightMode: 2,
@@ -4949,7 +4949,7 @@
   async function doDriveUpload(){
     try{
       await new Promise((r)=> setTimeout(r, 30));
-      const blob = await new Promise((res)=> renderOutputCanvas().toBlob(res, exportMime(), 0.92));
+      const blob = await new Promise((res)=> renderOutputCanvas().toBlob(res, exportMime(), 0.95));
       const token = driveToken || await getAccessToken();
       const meta = { name: exportName(), mimeType: exportMime() };
       if(driveFolder.id && driveFolder.id !== 'root'){ meta.parents = [driveFolder.id]; }
