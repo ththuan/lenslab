@@ -349,6 +349,8 @@
   }
   .evoto-panel-title .panel-dot{width:8px; height:8px; border-radius:50%; background:var(--accent);}
   .evoto-panel-title span{font-size:13.5px; font-weight:600; color:#f0f1ee; letter-spacing:0.01em;}
+  .evoto-panel-title .ai-engine-badge{margin-left:auto;font-size:9px;font-weight:600;color:#8d96a0;border:1px solid #3a4047;border-radius:4px;padding:2px 5px;white-space:nowrap;}
+  .evoto-panel-title .ai-engine-badge.ready{color:var(--teal);border-color:rgba(101,217,202,.35);}
   
   .gender-selector{display:flex; gap:5px;}
   .gender-btn{
@@ -1109,7 +1111,7 @@
       <!-- Evoto Panel -->
       <div class="evoto-panel" id="evotoPanel">
         <div class="evoto-panel-header">
-          <div class="evoto-panel-title"><div class="panel-dot"></div><span id="panelTitle">Portrait Retouching</span></div>
+          <div class="evoto-panel-title"><div class="panel-dot"></div><span id="panelTitle">Portrait Retouching</span><span class="ai-engine-badge" id="aiEngineBadge">LOCAL MASK</span></div>
           <div class="gender-selector" id="genderSelector">
             <button class="gender-btn" data-gender="male">Male</button>
             <button class="gender-btn active" data-gender="female">Female</button>
@@ -1343,6 +1345,21 @@
       <label class="settings-label" for="driveClientIdInput">Google OAuth Client ID</label>
       <input type="text" id="driveClientIdInput" class="settings-input" placeholder="xxxxxxxx.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
       <button class="primary" id="btnDriveSave">Lưu Client ID</button>
+      <div style="height:1px;background:#2a2f37;margin:8px 0 2px;"></div>
+      <h3 style="margin:4px 0 0;font-size:14px;color:#e7e8e6;">AI Retouch Engine</h3>
+      <p class="settings-desc" style="margin:0;">Kết nối model GFPGAN/CodeFormer thật qua AI server. Nếu server không có, app sẽ giữ ảnh gốc và không giả mạo AI.</p>
+      <label class="settings-label" for="aiRetouchEndpointInput">AI server endpoint</label>
+      <input type="url" id="aiRetouchEndpointInput" class="settings-input" placeholder="http://127.0.0.1:8000" autocomplete="off" spellcheck="false">
+      <label class="settings-label" for="aiRetouchTokenInput">Access token (nếu server yêu cầu)</label>
+      <input type="password" id="aiRetouchTokenInput" class="settings-input" placeholder="Để trống khi dùng nội bộ" autocomplete="off" spellcheck="false">
+      <label class="settings-label" for="aiRetouchStrengthInput">Cường độ model: <span id="aiRetouchStrengthValue">58%</span></label>
+      <input type="range" id="aiRetouchStrengthInput" min="10" max="100" value="58">
+      <label class="settings-label" for="aiFaceFidelityInput">Giữ nhận dạng khuôn mặt: <span id="aiFaceFidelityValue">78%</span></label>
+      <input type="range" id="aiFaceFidelityInput" min="20" max="100" value="78">
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="secondary" id="btnAiRetouchTest" type="button">Lưu & kiểm tra model</button>
+        <span id="aiRetouchStatus" style="font-size:11px;color:var(--text-faint);">Chưa kiểm tra</span>
+      </div>
       <button class="secondary" id="btnSettingsBack">← Quay lại</button>
       <div style="font-size:12px; color:var(--text-faint); line-height:1.5;">Client ID được lưu cục bộ trên thiết bị của bạn. App chỉ lưu ảnh vào thư mục Drive do bạn chỉ định.</div>
     </div>
@@ -1455,13 +1472,20 @@
     activeShotIndex: -1,
     edits: defaultEdits(),
     beforeAfter: false,
-    settings: { driveClientId: localStorage.getItem('lenslab_drive_client_id') || DEFAULT_GOOGLE_CLIENT_ID },
+    settings: {
+      driveClientId: localStorage.getItem('lenslab_drive_client_id') || DEFAULT_GOOGLE_CLIENT_ID,
+      aiRetouchEndpoint: localStorage.getItem('lenslab_ai_retouch_endpoint') || '',
+      aiRetouchToken: localStorage.getItem('lenslab_ai_retouch_token') || '',
+      aiRetouchStrength: +(localStorage.getItem('lenslab_ai_retouch_strength') || 58),
+      aiFaceFidelity: +(localStorage.getItem('lenslab_ai_face_fidelity') || 78)
+    },
     auth: safeJSON(localStorage.getItem('lenslab_auth'), null),
     googleAccessToken: sessionStorage.getItem('lenslab_google_access_token') || null,
     projects: safeJSON(localStorage.getItem('lenslab_projects'), []),
     faceLandmarker: null,
     mpLoading: null,
     segmenter: null,
+    aiRetouch: { status:'idle', model:'', lastError:'' },
     customLuts: loadCustomLuts(),
     activeProject: null,
     sessionFolderId: null,
@@ -1715,6 +1739,114 @@
     toast._t = setTimeout(()=> $('toast').classList.remove('show'), 2400);
   }
 
+  // ---------------- AI retouch engine (real model service) ----------------
+  // The browser performs face analysis and masking locally. High quality
+  // restoration is delegated to a user-controlled GFPGAN/CodeFormer service.
+  // This keeps the original pixels untouched when the model is unavailable.
+  function getAiRetouchEndpoint(){
+    return String(state.settings.aiRetouchEndpoint || '').trim().replace(/\/$/, '');
+  }
+  function setAiRetouchStatus(status, detail){
+    state.aiRetouch.status = status;
+    state.aiRetouch.lastError = detail || '';
+    const el = $('aiRetouchStatus');
+    if(!el) return;
+    const labels = {idle:'Chưa kiểm tra', checking:'Đang kiểm tra…', ready:'Model sẵn sàng', processing:'Đang retouch bằng model…', offline:'Fallback an toàn (chưa có model)', error:'Model lỗi'};
+    el.textContent = labels[status] || status;
+    el.style.color = status === 'ready' ? 'var(--teal)' : (status === 'error' ? 'var(--danger)' : 'var(--text-faint)');
+    const badge = $('aiEngineBadge');
+    if(badge){
+      badge.textContent = status === 'ready' ? (state.aiRetouch.model || 'AI MODEL') : (status === 'processing' ? 'AI RUNNING' : 'LOCAL MASK');
+      badge.classList.toggle('ready', status === 'ready' || status === 'processing');
+    }
+  }
+  function aiRetouchConfigured(){ return !!getAiRetouchEndpoint(); }
+  function aiRetouchHeaders(extra){
+    const headers = Object.assign({}, extra || {});
+    if(state.settings.aiRetouchToken) headers['X-LensLab-Token'] = state.settings.aiRetouchToken;
+    return headers;
+  }
+
+  async function checkAiRetouchModel(){
+    const endpoint = getAiRetouchEndpoint();
+    if(!endpoint){ setAiRetouchStatus('offline'); return false; }
+    setAiRetouchStatus('checking');
+    const controller = new AbortController();
+    const timeout = setTimeout(()=> controller.abort(), 300000);
+    try{
+      const resp = await fetch(endpoint + '/health', {headers:aiRetouchHeaders({Accept:'application/json'}), signal:controller.signal, cache:'no-store'});
+      if(!resp.ok) throw new Error('HTTP ' + resp.status);
+      const info = await resp.json().catch(()=>({}));
+      state.aiRetouch.model = info.model || info.name || 'GFPGAN/CodeFormer';
+      setAiRetouchStatus('ready');
+      return true;
+    }catch(err){
+      console.warn('AI retouch service unavailable:', err);
+      setAiRetouchStatus('offline', err.message || String(err));
+      return false;
+    }finally{
+      clearTimeout(timeout);
+    }
+  }
+
+  function canvasToBlob(canvas, type, quality){
+    return new Promise((resolve, reject)=> canvas.toBlob(b=>b ? resolve(b) : reject(new Error('Không tạo được ảnh tạm')), type, quality));
+  }
+  async function runAiRetouchModel(sourceCanvas, options){
+    options = options || {};
+    const endpoint = getAiRetouchEndpoint();
+    if(!endpoint) return {ok:false, skipped:true, reason:'not-configured'};
+    const controller = new AbortController();
+    const timeout = setTimeout(()=> controller.abort(), options.timeoutMs || 180000);
+    setAiRetouchStatus('processing');
+    try{
+      const form = new FormData();
+      form.append('image', await canvasToBlob(sourceCanvas, 'image/jpeg', 0.96), 'input.jpg');
+      form.append('strength', String(Math.max(0, Math.min(1, options.strength == null ? 0.55 : options.strength))));
+      form.append('face_fidelity', String(Math.max(0, Math.min(1, options.faceFidelity == null ? 0.72 : options.faceFidelity))));
+      form.append('upscale', String(Math.max(1, Math.min(4, options.upscale || 1))));
+      const resp = await fetch(endpoint + '/v1/retouch', {method:'POST', headers:aiRetouchHeaders(), body:form, signal:controller.signal, cache:'no-store'});
+      if(!resp.ok) throw new Error('HTTP ' + resp.status);
+      state.aiRetouch.model = resp.headers.get('X-LensLab-Model') || state.aiRetouch.model || 'GFPGAN/CodeFormer';
+      const blob = await resp.blob();
+      if(!blob || !blob.size) throw new Error('Model trả về dữ liệu rỗng');
+      const img = await new Promise((resolve,reject)=>{ const im=new Image(); im.onload=()=>resolve(im); im.onerror=()=>reject(new Error('Kết quả model không phải ảnh')); im.src=URL.createObjectURL(blob); });
+      const out = document.createElement('canvas'); out.width=img.naturalWidth||img.width; out.height=img.naturalHeight||img.height;
+      out.getContext('2d').drawImage(img,0,0); URL.revokeObjectURL(img.src);
+      setAiRetouchStatus('ready');
+      return {ok:true, canvas:out, model:state.aiRetouch.model};
+    }catch(err){
+      if(err && err.name === 'AbortError'){
+        setAiRetouchStatus('error', 'AI model timeout');
+        return {ok:false, skipped:true, reason:'timeout'};
+      }
+      console.error('AI retouch model error:', err);
+      setAiRetouchStatus('error', err.message || String(err));
+      return {ok:false, error:err};
+    }finally{
+      clearTimeout(timeout);
+    }
+  }
+
+  async function applyAiRetouchForShot(shot, options){
+    if(!shot || !shot.canvas || !aiRetouchConfigured()) return false;
+    const result = await runAiRetouchModel(shot.canvas, options);
+    if(!result.ok || !result.canvas) return false;
+    // Preserve the original capture for non-destructive editing/history.
+    shot.aiRetouchedCanvas = result.canvas;
+    shot.aiRetouchMeta = {model:result.model, appliedAt:Date.now(), sourceWidth:shot.canvas.width, sourceHeight:shot.canvas.height};
+    const thumb = document.createElement('canvas');
+    thumb.width = 120;
+    thumb.height = Math.max(1, Math.round(120 * result.canvas.height / result.canvas.width));
+    thumb.getContext('2d').drawImage(result.canvas, 0, 0, thumb.width, thumb.height);
+    shot.thumb = thumb.toDataURL('image/jpeg', 0.78);
+    return true;
+  }
+
+  function getRetouchSource(shot){
+    return (shot && shot.aiRetouchedCanvas) ? shot.aiRetouchedCanvas : (shot && shot.canvas ? shot.canvas : null);
+  }
+
   // ---------------- IndexedDB persistence (library) ----------------
   const DB_NAME = 'lenslab';
   const DB_VER = 1;
@@ -1735,8 +1867,9 @@
     if(!shot || !shot.canvas) return;
     try{
       const blob = await new Promise(res => shot.canvas.toBlob(res, 'image/jpeg', 0.92));
+      const aiBlob = shot.aiRetouchedCanvas ? await canvasToBlob(shot.aiRetouchedCanvas, 'image/jpeg', 0.94) : null;
       const d = await openDB();
-      const rec = { id: shot.id, project: shot.project || (state.activeProject ? state.activeProject.name : ''), thumb: shot.thumb, edits: shot.edits, hasFace: !!shot.hasFace, createdAt: shot.createdAt || Date.now(), blob, rating: shot.rating || 0, label: shot.label || '', flag: !!shot.flag };
+      const rec = { id: shot.id, project: shot.project || (state.activeProject ? state.activeProject.name : ''), thumb: shot.thumb, edits: shot.edits, hasFace: !!shot.hasFace, createdAt: shot.createdAt || Date.now(), blob, aiBlob, aiRetouchMeta:shot.aiRetouchMeta || null, aiEngine:shot.aiEngine || '', rating: shot.rating || 0, label: shot.label || '', flag: !!shot.flag };
       const tx = d.transaction('shots','readwrite');
       tx.objectStore('shots').put(rec);
     }catch(e){}
@@ -1833,6 +1966,16 @@
             state.shots[idx].rating = r.rating || 0;
             state.shots[idx].label = r.label || '';
             state.shots[idx].flag = !!r.flag;
+            state.shots[idx].aiEngine = r.aiEngine || '';
+            state.shots[idx].aiRetouchMeta = r.aiRetouchMeta || null;
+            if(r.aiBlob){
+              const aiImg = await loadImageFromBlob(r.aiBlob);
+              const aiCanvas = document.createElement('canvas');
+              aiCanvas.width = aiImg.naturalWidth || aiImg.width;
+              aiCanvas.height = aiImg.naturalHeight || aiImg.height;
+              aiCanvas.getContext('2d').drawImage(aiImg, 0, 0);
+              state.shots[idx].aiRetouchedCanvas = aiCanvas;
+            }
             openEditor(idx);
             if(r.hasFace){ refreshFacesDebounced(); }
           }catch(e){ toast('Không mở được ảnh'); }
@@ -2142,6 +2285,9 @@
       faceMasks: null,
       faceLandmarks: null,
       hasFace: false,
+      aiRetouchedCanvas: null,
+      aiRetouchMeta: null,
+      aiEngine: '',
       autoDone: false,
       createdAt: Date.now(),
       history: [],
@@ -2508,7 +2654,8 @@
 
         try{
           // 1. Run AI analysis
-          const previewCanvas = renderGeometry(shot.canvas, shot.edits, PREVIEW_MAX, false);
+          const modelApplied = await applyAiRetouchForShot(shot, {strength:state.settings.aiRetouchStrength/100, faceFidelity:state.settings.aiFaceFidelity/100});
+          const previewCanvas = renderGeometry(getRetouchSource(shot), shot.edits, PREVIEW_MAX, false);
           const pctx = previewCanvas.getContext('2d', {willReadFrequently:true});
           const pData = pctx.getImageData(0,0,previewCanvas.width,previewCanvas.height);
           const auto = analyzeScene(pData.data, previewCanvas.width, previewCanvas.height);
@@ -2525,11 +2672,11 @@
               shot.faceMasks = buildFaceMasks(faces, previewCanvas.width, previewCanvas.height);
               shot.faceLandmarks = faces.map(f => f.map(p => ({x:p.x, y:p.y})));
               shot.hasFace = true;
-              shot.edits.skin = liveControls.skin;
-              shot.edits.freckleAcne = liveControls.blemish;
+              shot.edits.skin = modelApplied ? Math.min(liveControls.skin, 8) : liveControls.skin;
+              shot.edits.freckleAcne = modelApplied ? Math.min(liveControls.blemish, 6) : liveControls.blemish;
               shot.edits.eye = liveControls.eye;
               shot.edits.faceShine = 8;
-              shot.edits.sharpen = 24;
+              shot.edits.sharpen = modelApplied ? 10 : 24;
             }
           }catch(e){ /* face detector fallback */ }
 
@@ -2537,7 +2684,10 @@
             shot.edits.exposure = clampAbs((shot.edits.exposure || 0) + liveControls.exp, 30);
           }
 
+          shot.aiEngine = modelApplied ? 'model' : 'fallback';
+
           shot.autoDone = true;
+          await dbPutShot(shot);
 
           // 3. Render Output Hi-Res Canvas
           const outputCanvas = renderOutputForShot(item.shotIndex);
@@ -2563,7 +2713,7 @@
 
   function renderOutputForShot(shotIndex){
     const shot = state.shots[shotIndex];
-    const c = renderGeometry(shot.canvas, shot.edits, EXPORT_MAX, false);
+    const c = renderGeometry(getRetouchSource(shot), shot.edits, EXPORT_MAX, false);
     const ctx = c.getContext('2d', {willReadFrequently:true});
     const id = ctx.getImageData(0,0,c.width,c.height);
     const w = c.width, h = c.height;
@@ -2660,6 +2810,7 @@
   const PREVIEW_MAX = 1440;
   const EXPORT_MAX = 4096;
   let previewImageData = null;
+  let previewOriginalImageData = null;
   let previewRAF = null;
   let geomRAF = null;
   let cropMode = false;
@@ -2674,6 +2825,12 @@
     state.activeShotIndex = index;
     const shot = state.shots[index];
     state.edits = shot.edits;
+    const engineBadge = $('aiEngineBadge');
+    if(engineBadge){
+      const usedModel = shot.aiEngine === 'model';
+      engineBadge.textContent = usedModel ? ((shot.aiRetouchMeta && shot.aiRetouchMeta.model) || 'AI MODEL') : 'LOCAL MASK';
+      engineBadge.classList.toggle('ready', usedModel);
+    }
     $('activeFileName').textContent = 'Ảnh ' + (index + 1) + ' / ' + state.shots.length;
     syncSlidersFromEdits();
     renderLutGrid();
@@ -2978,7 +3135,7 @@
   $('btnBeforeAfter').addEventListener('mouseup', hideOriginal);
   $('btnBeforeAfter').addEventListener('mouseleave', hideOriginal);
   $('btnBeforeAfter').addEventListener('touchend', hideOriginal);
-  function showOriginal(){ if(previewImageData){ ectx.putImageData(previewImageData,0,0); } }
+  function showOriginal(){ if(previewOriginalImageData){ ectx.putImageData(previewOriginalImageData,0,0); } }
   function hideOriginal(){ renderPreview(true); }
 
   function schedulePreview(){
@@ -3081,11 +3238,14 @@
   function preparePreview(showFull){
     const shot = state.shots[state.activeShotIndex];
     if(!shot) return;
-    const c = renderGeometry(shot.canvas, state.edits, PREVIEW_MAX, showFull);
+    const c = renderGeometry(getRetouchSource(shot), state.edits, PREVIEW_MAX, showFull);
+    const original = renderGeometry(shot.canvas, state.edits, PREVIEW_MAX, showFull);
     editCanvas.width = c.width;
     editCanvas.height = c.height;
     ectx.drawImage(c, 0, 0);
     previewImageData = ectx.getImageData(0,0,c.width,c.height);
+    const originalCtx = original.getContext('2d', {willReadFrequently:true});
+    previewOriginalImageData = originalCtx.getImageData(0,0,original.width,original.height);
   }
 
   function renderOutputCanvas(){
@@ -4263,19 +4423,23 @@
     syncSlidersFromEdits();
     renderLutGrid();
     renderPreview();
-    toast('AI đang phân tích khuôn mặt…');
+    toast(aiRetouchConfigured() ? 'AI model đang retouch + phân tích khuôn mặt…' : 'AI đang phân tích khuôn mặt…');
+    const modelApplied = await applyAiRetouchForShot(shot, {strength:state.settings.aiRetouchStrength/100, faceFidelity:state.settings.aiFaceFidelity/100});
+    shot.aiEngine = modelApplied ? 'model' : 'fallback';
+    if(modelApplied) preparePreview(false);
     try{
       const faces = await detectFaces(editCanvas);
       if(faces && faces.length){
         shot.faceMasks = buildFaceMasks(faces, w, h);
         shot.faceLandmarks = faces.map(f => f.map(p => ({x:p.x, y:p.y})));
         shot.hasFace = true;
-        state.edits.skin = 12;
-        state.edits.freckleAcne = 10;
+        state.edits.skin = modelApplied ? 6 : 12;
+        state.edits.freckleAcne = modelApplied ? 5 : 10;
         state.edits.eye = 14;
         state.edits.faceShine = 8;
-        state.edits.sharpen = 24;
-        toast('Đã nhận diện ' + faces.length + ' khuôn mặt (Retouch tự nhiên & siêu nét) ✓');
+        state.edits.sharpen = modelApplied ? 10 : 24;
+        shot.aiEngine = modelApplied ? 'model' : 'fallback';
+        toast('Đã nhận diện ' + faces.length + ' khuôn mặt (' + (modelApplied ? 'AI model retouch' : 'fallback an toàn') + ') ✓');
       } else {
         shot.faceMasks = null;
         shot.hasFace = false;
@@ -4288,11 +4452,13 @@
       shot.hasFace = false;
       state.edits.skin = 0;
       state.edits.eye = 0;
-      toast('Đã áp dụng Auto cân sáng');
+      shot.aiEngine = modelApplied ? 'model' : 'fallback';
+      toast(modelApplied ? 'Đã retouch bằng model AI ✓' : 'Đã áp dụng Auto cân sáng (fallback)');
     }
     syncSlidersFromEdits();
     renderPreview();
     shot.autoDone = true;
+    await dbPutShot(shot);
   }
 
   // ---------------- LUT / color grade presets ----------------
@@ -4817,6 +4983,13 @@
   // ---------------- settings ----------------
   $('btnSettings').addEventListener('click', ()=>{
     $('driveClientIdInput').value = state.settings.driveClientId;
+    $('aiRetouchEndpointInput').value = state.settings.aiRetouchEndpoint;
+    $('aiRetouchTokenInput').value = state.settings.aiRetouchToken;
+    $('aiRetouchStrengthInput').value = state.settings.aiRetouchStrength;
+    $('aiFaceFidelityInput').value = state.settings.aiFaceFidelity;
+    $('aiRetouchStrengthValue').textContent = state.settings.aiRetouchStrength + '%';
+    $('aiFaceFidelityValue').textContent = state.settings.aiFaceFidelity + '%';
+    setAiRetouchStatus(state.aiRetouch.status || 'idle', state.aiRetouch.lastError);
     showScreen('settings');
   });
   $('btnSettingsBack').addEventListener('click', ()=> showScreen(prevScreen));
@@ -4826,6 +4999,24 @@
     localStorage.setItem('lenslab_drive_client_id', v);
     toast(v ? 'Đã lưu Client ID ✓' : 'Đã xoá Client ID');
   });
+  $('btnAiRetouchTest').addEventListener('click', async ()=>{
+    const v = $('aiRetouchEndpointInput').value.trim().replace(/\/$/, '');
+    const token = $('aiRetouchTokenInput').value.trim();
+    const strength = +$('aiRetouchStrengthInput').value;
+    const fidelity = +$('aiFaceFidelityInput').value;
+    state.settings.aiRetouchEndpoint = v;
+    state.settings.aiRetouchToken = token;
+    state.settings.aiRetouchStrength = strength;
+    state.settings.aiFaceFidelity = fidelity;
+    localStorage.setItem('lenslab_ai_retouch_endpoint', v);
+    localStorage.setItem('lenslab_ai_retouch_token', token);
+    localStorage.setItem('lenslab_ai_retouch_strength', String(strength));
+    localStorage.setItem('lenslab_ai_face_fidelity', String(fidelity));
+    const ready = await checkAiRetouchModel();
+    toast(ready ? 'Model AI retouch đã sẵn sàng ✓' : 'Không kết nối được AI server');
+  });
+  $('aiRetouchStrengthInput').addEventListener('input', e=> $('aiRetouchStrengthValue').textContent = e.target.value + '%');
+  $('aiFaceFidelityInput').addEventListener('input', e=> $('aiFaceFidelityValue').textContent = e.target.value + '%');
 
   // ---------------- pwa install ----------------
   if('serviceWorker' in navigator){

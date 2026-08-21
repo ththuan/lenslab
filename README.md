@@ -2,6 +2,10 @@
 
 App web (PWA) kết nối máy ảnh qua capture card HDMI→USB-C, chụp rồi **tự động chỉnh ảnh bằng AI** (nhận diện khuôn mặt, làm mịn da, sáng mắt, cân sáng/white balance), thêm **bộ lọc màu (LUT)**, **cắt/xoay/nắn thẳng** và **mở ảnh RAW** ngay trên iPad. Xuất ảnh về iPad hoặc tải thẳng lên **Google Drive**. Không cần Mac, Xcode hay tài khoản Apple Developer.
 
+## Bản native cho Swift Playgrounds
+
+Thư mục `LensLab.swiftpm` và file [LensLab-Playgrounds-ready-v2.zip](./LensLab-Playgrounds-ready-v2.zip) là bản SwiftUI native dành cho iPad. Bản này đọc camera tích hợp hoặc capture card UVC bằng AVFoundation, lấy khung hình trực tiếp, chỉnh ảnh bằng Core Image/Vision và lưu vào Photos. Cách mở trên iPad được ghi ở [SWIFT-PLAYGROUNDS.md](./SWIFT-PLAYGROUNDS.md).
+
 ## Vì sao phải "host" lên mạng thay vì mở file trực tiếp?
 
 Trình duyệt chỉ cho phép truy cập camera khi trang được tải qua **https://**. Mở file HTML trực tiếp từ Files app (địa chỉ `file://`) sẽ **không** xin được quyền camera. Vì vậy cần đưa các file này lên một địa chỉ https:// — cách miễn phí, dễ nhất và làm được hoàn toàn từ iPad là **GitHub Pages**.
@@ -33,6 +37,16 @@ Trình duyệt chỉ cho phép truy cập camera khi trang được tải qua **
 4. Bấm nút chụp (nút tròn) để chụp khung hình hiện tại.
 5. App **tự động chỉnh ảnh bằng AI** ngay sau khi chụp: cân phơi sáng/tương phản/white balance, nhận diện khuôn mặt để retouch theo vùng. Bạn chỉnh tay thêm ở các tab: **Ánh sáng** (phơi sáng, tương phản, highlights/shadows, độ rõ, vignette), **Màu sắc** (bão hoà, ấm/lạnh, tint, hạt film, **Curves**, **Color Grading**), **Làm mịn** (da, sáng mắt, tẩy trắng răng, xoá mắt đỏ, giảm quầng thâm, má hồng, làm nét, **thon gọn mặt/cơ thể**, **mở to mắt**), **LUT** (8 bộ lọc có sẵn + nhập nhiều file .cube), **Background AI** (xoá nền / làm mờ nền), **Cắt** (crop/xoay/nắn thẳng). Panel trái có **Presets** và **History**. Hoặc nhấn "Tự động" để chạy lại AI.
 6. Xuất ảnh: **Lưu về iPad** (JPG hoặc PNG nếu xoá nền) hoặc **⬆ Drive** (tải lên Google Drive — cần cài Client ID ở ⚙ Cài đặt, xem bên dưới). Ảnh được tự động lưu vào **Thư viện ảnh** (IndexedDB) trên thiết bị.
+
+## Bật AI retouch model thật
+
+1. Cài Python 3.11 trên máy chạy AI server.
+2. Mở PowerShell tại thư mục `ai-server` và chạy `./start.ps1`.
+3. Lần retouch đầu tiên server sẽ tải model GFPGANv1.4.
+4. Trong LensLab, mở **Cài đặt → AI Retouch Engine**, nhập URL server và nhấn **Kiểm tra model**.
+5. Khi editor hiển thị `GFPGANv1.4`, Auto AI, xử lý hàng loạt và xuất ảnh đều dùng kết quả inference thật. Khi hiển thị `LOCAL MASK`, app đang chạy fallback cục bộ.
+
+Xem cấu hình HTTPS, token và triển khai GPU tại `ai-server/README.md`.
 
 ## Mở ảnh RAW (NEF, ARW, CR2, DNG…)
 
@@ -67,7 +81,9 @@ Từ giờ, khi nhấn **⬆ Drive**, lần đầu Google sẽ hỏi bạn cho p
 ## Giới hạn hiện tại (và hướng nâng cấp)
 
 - **Mượt (không giật):** khi chỉnh sửa, app xử lý ảnh ở bản xem trước (≤1440px) nên cắt/xoay/thanh trượt chạy mượt; khi xuất, ảnh được render lại ở độ phân giải đầy đủ (đến 4096px). Do đó thao tác không bị trễ, chỉ lúc xuất mới mất vài giây.
-- **AI nhận diện khuôn mặt** chạy ngay trong trình duyệt bằng MediaPipe Face Landmarker (478 điểm landmark). Nó làm mịn da + sáng mắt theo từng vùng mặt. Model tải từ CDN (~vài MB) ở **lần đầu tiên** và cần mạng; sau đó dùng offline được. Khi ảnh không có mặt, app tự chuyển về chế độ cân sáng/white balance.
+- **AI nhận diện khuôn mặt** chạy ngay trong trình duyệt bằng MediaPipe Face Landmarker (478 điểm landmark) để tạo mask da, mắt, răng và các vùng cần bảo vệ.
+- **AI retouch model thật** dùng GFPGAN qua service trong thư mục `ai-server/`. Ảnh gốc luôn được giữ riêng; kết quả model được lưu không phá huỷ và dùng nhất quán cho preview, batch và export. Khi service không khả dụng, app báo `LOCAL MASK` và chuyển sang pipeline fallback thay vì giả vờ model đã chạy.
+- Trên iPad, LensLab thường được mở bằng HTTPS nên AI server cũng phải có HTTPS tin cậy. Xem `ai-server/README.md` để chạy local hoặc đặt service sau reverse proxy HTTPS.
 - **LUT** gồm 8 bộ lọc có sẵn (được tạo ngay trong app, dùng offline) + nhập **nhiều file `.cube`** bên ngoài (mỗi file được lưu riêng, có thể xoá). Cường độ điều chỉnh bằng thanh trượt.
 - **RAW** giải mã bằng dcraw.js (WASM/asm.js) ở nửa độ phân giải để mượt; hỗ trợ NEF/ARW/CR2/DNG… nhưng chưa hỗ trợ CR3. Có thể nâng cấp lên thư viện mới hơn (libraw wasm) để full-res + CR3.
 - Ảnh chụp được **tự động lưu vào thư viện** (IndexedDB) trên thiết bị, giữ qua các lần mở app. Mở màn **Thư viện ảnh** ở thanh bên để xem, mở lại chỉnh sửa hoặc xoá. Ảnh trong một buổi chụp (session) vẫn nằm tạm trong RAM khi đang thao tác.
