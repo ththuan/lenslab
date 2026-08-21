@@ -50,7 +50,21 @@ final class CameraController: NSObject, ObservableObject, AVCapturePhotoCaptureD
     }
 
     func start() {
-        queue.async { self.configure() }
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        if status == .authorized {
+            queue.async { self.configure() }
+        } else if status == .notDetermined {
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                if granted {
+                    self.discoverDevices()
+                    self.queue.async { self.configure() }
+                } else {
+                    DispatchQueue.main.async { self.message = "Chưa cấp quyền Camera. Vào Cài đặt → Quyền riêng tư → Camera." }
+                }
+            }
+        } else {
+            DispatchQueue.main.async { self.message = "Camera bị từ chối. Vào Cài đặt iPad → Quyền riêng tư → Camera." }
+        }
     }
 
     func stop() {
@@ -64,6 +78,13 @@ final class CameraController: NSObject, ObservableObject, AVCapturePhotoCaptureD
     }
 
     private func configure() {
+        if activeDevice == nil { discoverDevices() }
+        var device = activeDevice
+        if device == nil {
+            device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
+                ?? AVCaptureDevice.default(for: .video)
+        }
+
         session.beginConfiguration()
         session.sessionPreset = .high
 
@@ -72,7 +93,7 @@ final class CameraController: NSObject, ObservableObject, AVCapturePhotoCaptureD
             self.input = nil
         }
 
-        if let device = activeDevice,
+        if let device = device,
            let newInput = try? AVCaptureDeviceInput(device: device),
            session.canAddInput(newInput) {
             session.addInput(newInput)
@@ -553,6 +574,17 @@ struct ContentView: View {
                 shutter.padding(.bottom, 40)
             }
             .padding(.horizontal, 16)
+
+            if let msg = camera.message {
+                VStack {
+                    Text(msg)
+                        .font(.footnote)
+                        .multilineTextAlignment(.center)
+                        .padding(14)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+                .padding(.horizontal, 32)
+            }
         }
     }
 
