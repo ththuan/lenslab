@@ -2724,11 +2724,11 @@
               shot.faceMasks = buildFaceMasks(faces, previewCanvas.width, previewCanvas.height);
               shot.faceLandmarks = faces.map(f => f.map(p => ({x:p.x, y:p.y})));
               shot.hasFace = true;
-              shot.edits.skin = modelApplied ? Math.min(liveControls.skin, 8) : liveControls.skin;
-              shot.edits.freckleAcne = modelApplied ? Math.min(liveControls.blemish, 6) : liveControls.blemish;
+              shot.edits.skin = modelApplied ? Math.min(liveControls.skin, 6) : 0;
+              shot.edits.freckleAcne = modelApplied ? Math.min(liveControls.blemish, 4) : 0;
               shot.edits.eye = liveControls.eye;
               shot.edits.faceShine = 8;
-              shot.edits.sharpen = modelApplied ? 10 : 24;
+              shot.edits.sharpen = modelApplied ? 12 : 30;
             }
           }catch(e){ /* face detector fallback */ }
 
@@ -3966,22 +3966,22 @@
     const p1=pct(0.01), p99=pct(0.99);
     const e = defaultEdits();
     let exposure = 0;
-    if(p99 < 178){ exposure = Math.round((178 - p99) * 0.35); }
-    else if(p1 > 68){ exposure = -Math.round((p1 - 68) * 0.3); }
-    e.exposure = clampAbs(exposure, 18);
+    if(p99 < 178){ exposure = Math.round((178 - p99) * 0.3); }
+    else if(p1 > 68){ exposure = -Math.round((p1 - 68) * 0.25); }
+    e.exposure = clampAbs(exposure, 14);
     const spread = p99 - p1;
-    e.contrast = clampAbs(Math.round((140 - spread) * 0.18), 16);
-    e.highlights = clampAbs(Math.round((232 - p99) * 0.35), 16);
-    e.shadows = clampAbs(Math.round((26 - p1) * 0.6), 20);
+    e.contrast = clampAbs(Math.round((140 - spread) * 0.14), 12);
+    e.highlights = clampAbs(Math.round((232 - p99) * 0.28), 12);
+    e.shadows = clampAbs(Math.round((26 - p1) * 0.45), 14);
     e.warmth = 0; e.tint = 0;
     if(wcnt > 300){
       const ar=wr/wcnt, ag=wg/wcnt, ab=wb/wcnt;
       const dr = ab - ar;
       const dg = ar + ab - 2*ag;
-      if(Math.abs(dr) > 6) e.warmth = clampAbs(Math.round(dr * 0.45), 22);
-      if(Math.abs(dg) > 6) e.tint = clampAbs(Math.round(dg * 0.35), 16);
+      if(Math.abs(dr) > 12) e.warmth = clampAbs(Math.round(dr * 0.3), 12);
+      if(Math.abs(dg) > 12) e.tint = clampAbs(Math.round(dg * 0.25), 10);
     }
-    e.saturation = 2;
+    e.saturation = 0;
     e.vignette = 0;
     return e;
   }
@@ -4485,11 +4485,11 @@
         shot.faceMasks = buildFaceMasks(faces, w, h);
         shot.faceLandmarks = faces.map(f => f.map(p => ({x:p.x, y:p.y})));
         shot.hasFace = true;
-        state.edits.skin = modelApplied ? 6 : 12;
-        state.edits.freckleAcne = modelApplied ? 5 : 10;
-        state.edits.eye = 14;
+        state.edits.skin = modelApplied ? 4 : 0;
+        state.edits.freckleAcne = modelApplied ? 3 : 0;
+        state.edits.eye = 10;
         state.edits.faceShine = 8;
-        state.edits.sharpen = modelApplied ? 10 : 24;
+        state.edits.sharpen = modelApplied ? 12 : 30;
         shot.aiEngine = modelApplied ? 'model' : 'fallback';
         toast('Đã nhận diện ' + faces.length + ' khuôn mặt (' + (modelApplied ? 'AI model retouch' : 'fallback an toàn') + ') ✓');
       } else {
