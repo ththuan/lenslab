@@ -1438,6 +1438,18 @@
 (function(){
   "use strict";
 
+  // Surface any runtime error so it is visible for debugging
+  window.addEventListener('error', function(e){
+    var msg = (e && e.message) ? e.message : String(e && e.error);
+    if(!msg) return;
+    try{
+      var d = document.getElementById('lenslabErrBar');
+      if(!d){ d = document.createElement('div'); d.id = 'lenslabErrBar'; document.body.appendChild(d); }
+      d.textContent = 'LỖI: ' + String(msg).slice(0, 400);
+      d.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#c0392b;color:#fff;padding:10px 12px;font-size:12px;z-index:2147483647;line-height:1.4;word-break:break-word;';
+    }catch(_){}
+  });
+
   // Google OAuth Client ID mặc định gắn trực tiếp vào app
   const DEFAULT_GOOGLE_CLIENT_ID = '143172360902-2i46fvos8fr2i22l1mm9qot25lc19eht.apps.googleusercontent.com';
 

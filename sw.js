@@ -1,4 +1,4 @@
-const CACHE = 'lenslab-v5';
+const CACHE = 'lenslab-v6';
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -23,15 +23,16 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
+// Always network-first so updates land immediately; fall back to cache when offline.
 self.addEventListener('fetch', (e) => {
-  // network-first for the html so updates land quickly; cache-first for everything else
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match('./index.html'))
-    );
-    return;
-  }
+  if (e.request.method !== 'GET') return;
   e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request))
+    fetch(e.request).then((res) => {
+      const copy = res.clone();
+      if (e.request.mode === 'navigate') {
+        caches.open(CACHE).then((c) => c.put('./index.html', copy)).catch(()=>{});
+      }
+      return res;
+    }).catch(() => caches.match(e.request).then((cached) => cached || caches.match('./index.html')))
   );
 });
