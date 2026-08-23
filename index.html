@@ -646,8 +646,11 @@
   .project-thumb .thumb-orbit{position:absolute;width:130px;height:130px;border:2px solid rgba(130,218,255,.4);border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%) rotate(28deg);box-shadow:0 0 30px rgba(62,170,255,.35);}
   .project-card-body{padding:12px 13px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
   .project-card h3{font:600 14px 'Inter',sans-serif;margin:0 0 4px;}
-  .project-meta{font-size:11px;color:#7f8790;}
-  .project-open{border:1px solid #3b4148;background:#24282d;color:#dfe1e3;border-radius:6px;padding:7px 11px;font-size:11px;cursor:pointer;}
+  .project-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .project-open{border:1px solid #3b4148;background:#24282d;color:#dfe1e3;border-radius:6px;padding:7px 11px;font-size:11px;cursor:pointer;transition:background .15s,color .15s;}
+  .project-open:hover{background:#32383f;color:#fff;}
+  .project-delete{border:1px solid #5a3a36;background:#241d1e;color:#ef8f86;border-radius:6px;padding:7px 9px;font-size:11px;cursor:pointer;transition:background .15s,color .15s;}
+  .project-delete:hover{background:#3a2527;color:#ff9e96;border-color:#784742;}
   .empty-project{grid-column:1/-1;border:1px dashed #3a4047;border-radius:8px;padding:42px 20px;text-align:center;color:#858c94;background:#17191c;}
   .empty-project strong{display:block;color:#d6d9dc;font-size:14px;margin-bottom:7px;}
   
@@ -902,8 +905,8 @@
     <button class="primary" id="btnConnect">Kết nối máy ảnh</button>
     <button class="secondary" id="btnUpload">Chọn ảnh (JPG / RAW) để thử chỉnh</button>
     <div class="err-box" id="connectErr"></div>
-    <input type="file" id="fileInput" accept="image/*,.nef,.cr2,.arw,.dng,.raf,.orf,.rw2,.pef,.srw,.x3f">
-    <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none;">
+    <input type="file" id="fileInput" accept="image/*,.nef,.cr2,.arw,.dng,.raf,.orf,.rw2,.pef,.srw,.x3f" multiple>
+    <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" multiple style="display:none;">
   </section>
 
   <!-- ============ CAPTURE / LIVE (Evoto AI Layout: 2/3 Stage, 1/3 Sidebar) ============ -->
@@ -919,17 +922,18 @@
             <span class="mono" style="font-size:11px;letter-spacing:0.1em;">ĐANG CHỜ TÍN HIỆU…</span>
             <span style="max-width:260px;text-align:center;">Kiểm tra máy ảnh đã bật Live View và dây HDMI đã cắm chắc chưa.</span>
           </div>
-          <div class="rec-pill" style="left:auto; right:14px;"><div class="rdot"></div><span class="mono">LIVE TETHER</span></div>
-          <div class="device-chip" id="deviceChip" style="top:52px; right:14px;">—</div>
-          <div class="af-status-chip" id="afStatusChip" style="top:90px; right:14px;">AF-C • EYE TRACKING</div>
+          <div class="rec-pill" style="left:auto; right:14px; display:none;"><div class="rdot"></div><span class="mono">LIVE TETHER</span></div>
+          <div class="device-chip" id="deviceChip" style="top:52px; right:14px; display:none;">—</div>
+          <div class="af-status-chip" id="afStatusChip" style="top:90px; right:14px; display:none;">AF-C • EYE TRACKING</div>
 
           <!-- Center Bottom Floating Shutter Trigger -->
           <div class="live-overlay-bar">
-            <button id="btnNativeCamera" title="Chụp ảnh full-res bằng camera gốc iPad (12MP)" style="background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:20px;padding:8px 14px;font-size:12px;backdrop-filter:blur(6px);cursor:pointer;">📷 Full-res</button>
+            <button id="btnSwitchCam" title="Đổi nhanh camera (DSLR / iPad) [Phím C]" style="background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:20px;padding:8px 14px;font-size:12px;backdrop-filter:blur(6px);cursor:pointer;display:flex;align-items:center;gap:4px;">🔄 Đổi Cam</button>
             <div class="live-shutter-wrap">
-              <div class="shutter" id="btnShutter" title="Chụp ảnh"><div class="inner"></div></div>
-              <span class="shutter-label">CHỤP (Space / Phím cách)</span>
+              <div class="shutter" id="btnShutter" title="Chụp ảnh (Phím cách / Shutter Remote)"><div class="inner"></div></div>
+              <span class="shutter-label">CHỤP (Space / Remote)</span>
             </div>
+            <button id="btnNativeCamera" title="Chụp ảnh gốc 12MP bằng Camera iPad [Phím F]" style="background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:20px;padding:8px 14px;font-size:12px;backdrop-filter:blur(6px);cursor:pointer;display:flex;align-items:center;gap:4px;">📷 12MP Gốc</button>
           </div>
         </div>
 
@@ -980,7 +984,7 @@
               <strong>Khung lấy nét AI (Eye / Face AF)</strong>
               <small>Vẽ khung bắt nét khuôn mặt & con mắt</small>
             </div>
-            <label class="switch"><input type="checkbox" id="liveAfToggle" checked><span class="slider round"></span></label>
+            <label class="switch"><input type="checkbox" id="liveAfToggle"><span class="slider round"></span></label>
           </div>
 
           <div class="tether-switch-row">
@@ -988,7 +992,7 @@
               <strong>Lưới bố cục 1/3 (Rule of Thirds)</strong>
               <small>Đường gióng canh góc chụp chuẩn Studio</small>
             </div>
-            <label class="switch"><input type="checkbox" id="liveGridToggle" checked><span class="slider round"></span></label>
+            <label class="switch"><input type="checkbox" id="liveGridToggle"><span class="slider round"></span></label>
           </div>
         </div>
 
@@ -1583,10 +1587,30 @@
     state.projects.forEach((p, i)=>{
       const card = document.createElement('article'); card.className='project-card';
       const driveInfo = p.driveFolder ? '<br>📁 ' + esc(p.driveFolder.name) : '';
-      card.innerHTML = '<div class="project-thumb"><div class="thumb-orbit"></div></div><div class="project-card-body"><div><h3>'+esc(p.name)+'</h3><div class="project-meta">'+esc(p.source)+' · '+esc(p.format)+driveInfo+'<br>'+esc(p.created)+'</div></div><button class="project-open" data-project="'+i+'">Mở</button></div>';
+      card.innerHTML = '<div class="project-thumb"><div class="thumb-orbit"></div></div><div class="project-card-body"><div><h3>'+esc(p.name)+'</h3><div class="project-meta">'+esc(p.source)+' · '+esc(p.format)+driveInfo+'<br>'+esc(p.created)+'</div></div><div class="project-actions"><button class="project-open" data-project="'+i+'">Mở</button><button class="project-delete" data-delete="'+i+'" title="Xóa dự án này">Xóa</button></div></div>';
       card.querySelector('.project-open').addEventListener('click', ()=> startProject(p));
+      card.querySelector('.project-delete').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        deleteProject(i);
+      });
       grid.appendChild(card);
     });
+  }
+
+  function deleteProject(index){
+    const p = state.projects[index];
+    if(!p) return;
+    if(confirm(`Bạn có chắc chắn muốn xóa dự án "${p.name}" không?`)){
+      state.projects.splice(index, 1);
+      localStorage.setItem('lenslab_projects', JSON.stringify(state.projects));
+      if(state.activeProject && state.activeProject.name === p.name){
+        state.activeProject = null;
+        const badge = $('activeProjectBadge');
+        if(badge) badge.style.display = 'none';
+      }
+      renderProjects();
+      toast(`Đã xóa dự án: ${p.name}`);
+    }
   }
 
   function startProject(project){
@@ -2309,21 +2333,74 @@
     if(fi) fi.click();
   });
   if($('fileInput')) $('fileInput').addEventListener('change', async (e)=>{
-    const file = e.target.files[0];
-    if(!file) return;
-    const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if(RAW_EXTS.indexOf(ext) >= 0){
-      await handleRawFile(file);
-    } else {
-      const img = new Image();
-      img.onload = ()=>{
-        const idx = addShotFromImage(img);
-        openEditor(idx, {auto:true});
-      };
-      img.src = URL.createObjectURL(file);
-    }
+    const files = Array.from(e.target.files || []);
+    if(!files.length) return;
     e.target.value = '';
+    await importFiles(files);
   });
+
+  function loadImageFromFile(file){
+    return new Promise((resolve, reject)=>{
+      const img = new Image();
+      img.onload = ()=> resolve(img);
+      img.onerror = ()=> reject(new Error('Không đọc được ảnh'));
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  async function importFiles(files){
+    if(!files || !files.length) return;
+    toast('Đang nhập ' + files.length + ' ảnh…');
+    const indices = [];
+    for(let i=0;i<files.length;i++){
+      const file = files[i];
+      const ext = (file.name.split('.').pop() || '').toLowerCase();
+      try{
+        let idx;
+        if(RAW_EXTS.indexOf(ext) >= 0){
+          const c = await decodeRawFileToCanvas(file);
+          idx = addShotFromImage(c);
+        } else {
+          const img = await loadImageFromFile(file);
+          idx = addShotFromImage(img);
+        }
+        indices.push(idx);
+      }catch(err){
+        console.error('Import failed:', file.name, err);
+        toast('Không nhập được ' + file.name + ': ' + (err && err.message ? err.message : err));
+      }
+    }
+    if(!indices.length) return;
+    if(state.batchAutoMode){
+      indices.forEach(idx => state.batchQueue.push({shotIndex: idx, status: 'pending'}));
+      updateBatchUI();
+      toast('Đã nhập ' + indices.length + ' ảnh — đang AI xử lý & upload Drive');
+      processBatchNext();
+    } else {
+      toast('Đã nhập xong ' + indices.length + ' ảnh ✓');
+      openEditor(indices[indices.length-1], {auto:true});
+    }
+  }
+
+  // Quick camera switcher (DSLR <-> iPad Camera)
+  async function cycleNextCamera(){
+    try{
+      const list = await navigator.mediaDevices.enumerateDevices();
+      state.devices = list.filter(d=>d.kind==='videoinput');
+      if(!state.devices || state.devices.length <= 1){
+        toast('Chỉ phát hiện 1 camera');
+        return;
+      }
+      const curIdx = state.devices.findIndex(d=>d.deviceId === state.activeDeviceId);
+      const nextIdx = (curIdx + 1) % state.devices.length;
+      const targetDev = state.devices[nextIdx];
+      toast(`Đang đổi: ${targetDev.label || ('Camera ' + (nextIdx+1))}`);
+      await connectCamera(targetDev.deviceId);
+    }catch(e){
+      console.warn('Switch camera error:', e);
+    }
+  }
+  if($('btnSwitchCam')) $('btnSwitchCam').addEventListener('click', cycleNextCamera);
 
   // Native camera capture (full resolution via iPad Camera app)
   if($('btnNativeCamera')) $('btnNativeCamera').addEventListener('click', ()=>{
@@ -2331,14 +2408,26 @@
     if(fi) fi.click();
   });
   if($('nativeCameraInput')) $('nativeCameraInput').addEventListener('change', (e)=>{
-    const file = e.target.files[0];
-    if(!file) return;
-    const img = new Image();
-    img.onload = ()=>{
-      const idx = addShotFromImage(img);
-      openEditor(idx, {auto:true});
-    };
-    img.src = URL.createObjectURL(file);
+    const files = Array.from(e.target.files || []);
+    if(!files.length) return;
+    toast(`Đang nhập ${files.length} ảnh chất lượng cao…`);
+    let loaded = 0;
+    let lastIdx = -1;
+    files.forEach((file)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const idx = addShotFromImage(img);
+        lastIdx = idx;
+        loaded++;
+        if(loaded === files.length){
+          toast(`Đã nhập xong ${files.length} ảnh ✓`);
+          if(!state.batchAutoMode && lastIdx >= 0){
+            openEditor(lastIdx, {auto:true});
+          }
+        }
+      };
+      img.src = URL.createObjectURL(file);
+    });
     e.target.value = '';
   });
 
@@ -2623,12 +2712,21 @@
     });
   }
 
-  // Spacebar to shoot on Live Capture screen
+  // Keyboard & Bluetooth Remote Shutter Triggers
   window.addEventListener('keydown', (e)=>{
-    if(e.code === 'Space' && !e.target.matches('input,select,textarea')){
-      if($('screen-capture') && $('screen-capture').classList.contains('active')){
+    if(e.target.matches('input,select,textarea')) return;
+    if($('screen-capture') && $('screen-capture').classList.contains('active')){
+      const isShutterKey = e.code === 'Space' || e.code === 'Enter' || e.key === ' ' || e.key === 'Enter' ||
+                           e.key === 'VolumeUp' || e.key === 'VolumeDown' || e.key === 'AudioVolumeUp' || e.key === 'AudioVolumeDown';
+      if(isShutterKey){
         e.preventDefault();
         $('btnShutter').click();
+      } else if(e.code === 'KeyF' || e.key === 'f' || e.key === 'F'){
+        e.preventDefault();
+        if($('btnNativeCamera')) $('btnNativeCamera').click();
+      } else if(e.code === 'KeyC' || e.key === 'c' || e.key === 'C'){
+        e.preventDefault();
+        cycleNextCamera();
       }
     }
   });
@@ -4866,26 +4964,31 @@
     return {imageData: img, width: w, height: h};
   }
 
+  async function decodeRawFileToCanvas(file){
+    await loadDcraw();
+    const buf = new Uint8Array(await file.arrayBuffer());
+    const out = window.dcraw(buf, {
+      setHalfSizeMode: false,
+      setInterpolationQuality: 3,
+      setColorSpace: 1,
+      setHighlightMode: 2,
+      useCameraWhiteBalance: true
+    });
+    const parsed = ppmToImageData(out);
+    if(!parsed){ throw new Error('không giải mã được'); }
+    const c = document.createElement('canvas');
+    c.width = parsed.width; c.height = parsed.height;
+    c.getContext('2d').putImageData(parsed.imageData, 0, 0);
+    return c;
+  }
+
   async function handleRawFile(file){
     toast('Đang giải mã RAW… (lần đầu tải thư viện)');
     try{
-      await loadDcraw();
-      const buf = new Uint8Array(await file.arrayBuffer());
-      const out = window.dcraw(buf, {
-        setHalfSizeMode: false,
-        setInterpolationQuality: 3,
-        setColorSpace: 1,
-        setHighlightMode: 2,
-        useCameraWhiteBalance: true
-      });
-      const parsed = ppmToImageData(out);
-      if(!parsed){ throw new Error('không giải mã được'); }
-      const c = document.createElement('canvas');
-      c.width = parsed.width; c.height = parsed.height;
-      c.getContext('2d').putImageData(parsed.imageData, 0, 0);
+      const c = await decodeRawFileToCanvas(file);
       const idx = addShotFromImage(c);
       openEditor(idx, {auto:true});
-      toast('Đã mở RAW ' + parsed.width + '×' + parsed.height);
+      toast('Đã mở RAW ' + c.width + '×' + c.height);
     }catch(err){
       console.error(err);
       toast('Không mở được RAW: ' + (err && err.message ? err.message : err));
