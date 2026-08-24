@@ -996,24 +996,16 @@
           </div>
         </div>
 
-        <!-- 3. AI Auto Workflow Controls -->
+        <!-- 3. Auto Upload Workflow Controls -->
         <div class="sidebar-block">
           <div class="block-title">
-            <span>⚡ Tự động hóa AI khi chụp</span>
-          </div>
-
-          <div class="tether-switch-row">
-            <div class="ts-info">
-              <strong>Tự động AI Retouch</strong>
-              <small>Nhận diện khuôn mặt & làm đẹp tức thì</small>
-            </div>
-            <label class="switch"><input type="checkbox" id="liveAiToggle" checked><span class="slider round"></span></label>
+            <span>⚡ Tự động hóa khi chụp</span>
           </div>
 
           <div class="tether-switch-row">
             <div class="ts-info">
               <strong>Tự động Upload Google Drive</strong>
-              <small>Lưu ảnh vào thư mục dự án sau khi chụp</small>
+              <small>Upload ảnh gốc vào thư mục dự án sau khi chụp</small>
             </div>
             <label class="switch"><input type="checkbox" id="liveDriveToggle" checked><span class="slider round"></span></label>
           </div>
@@ -1405,7 +1397,6 @@
     <div class="project-form">
       <div class="form-field"><label for="projectNameInput">Tên dự án</label><input id="projectNameInput" value="Buổi chụp mới" autocomplete="off"></div>
       <div class="form-row"><div class="form-field"><label for="cameraSourceSelect">Nguồn máy ảnh</label><select id="cameraSourceSelect"><option>Capture card / Webcam</option><option>Nikon DSLR</option><option>Canon DSLR</option><option>Sony Alpha</option></select></div><div class="form-field"><label for="projectFormatSelect">Định dạng xem trước</label><select id="projectFormatSelect"><option>RAW + JPEG</option><option>JPEG</option><option>RAW</option></select></div></div>
-      <div class="toggle-row"><span>Áp dụng chỉnh màu & làm đẹp AI theo thời gian thực</span><label class="toggle"><input id="realtimeAiToggle" type="checkbox" checked><i></i></label></div>
       <div class="toggle-row"><span>Tự động lưu ảnh vào thư viện dự án</span><label class="toggle"><input id="autoSaveToggle" type="checkbox" checked><i></i></label></div>
       <div class="toggle-row"><span>Tự động upload lên Google Drive khi chụp</span><label class="toggle"><input id="autoDriveToggle" type="checkbox" checked><i></i></label></div>
       <div class="form-field" id="driveFolderField">
@@ -1531,7 +1522,6 @@
     aiRetouch: { status:'idle', model:'', lastError:'' },
     customLuts: loadCustomLuts(),
     activeProject: null,
-    sessionFolderId: null,
     batchQueue: [],        // [{shotIndex, status: 'pending'|'processing'|'done'|'error'}]
     batchAutoMode: false,
     batchProcessing: false,
@@ -1615,10 +1605,9 @@
 
   function startProject(project){
     state.activeProject = project;
-    state.batchAutoMode = !!(project.autoUpload && project.aiRealtime);
+    state.batchAutoMode = !!project.autoUpload;
     state.batchQueue = [];
     state.shots = [];
-    state.sessionFolderId = null;
     const badge = $('activeProjectBadge');
     if(badge){
       badge.textContent = project.name;
@@ -1626,10 +1615,9 @@
     }
     if($('liveProjectName')) $('liveProjectName').textContent = project.name;
     if($('liveDriveFolder')) $('liveDriveFolder').textContent = project.driveFolder ? project.driveFolder.name : 'Không đồng bộ';
-    if($('liveAiToggle')) $('liveAiToggle').checked = !!project.aiRealtime;
     if($('liveDriveToggle')) $('liveDriveToggle').checked = !!project.autoUpload;
     if($('livePhotoCount')) $('livePhotoCount').textContent = '0';
-    toast('Đang mở dự án: ' + project.name + (state.batchAutoMode ? ' (Tự động AI + Upload)' : ''));
+    toast('Đang mở dự án: ' + project.name + (state.batchAutoMode ? ' (Tự động upload Drive)' : ''));
     updateBatchShutter();
     showScreen('welcome');
     connectCamera(state.activeDeviceId);
@@ -1758,14 +1746,12 @@
   $('projectCreateSubmit').addEventListener('click', ()=>{
     const name = $('projectNameInput').value.trim() || 'Buổi chụp mới';
     const autoUpload = $('autoDriveToggle').checked;
-    const aiRealtime = $('realtimeAiToggle').checked;
     const project = {
       name,
       source: $('cameraSourceSelect').value,
       format: $('projectFormatSelect').value,
       created: new Date().toLocaleDateString('vi-VN'),
       autoUpload: autoUpload,
-      aiRealtime: aiRealtime,
       driveFolder: autoUpload ? (state.projectDriveFolder || {id:'root', name:'My Drive'}) : null
     };
     state.projects.unshift(project); localStorage.setItem('lenslab_projects', JSON.stringify(state.projects));
@@ -2695,18 +2681,10 @@
     });
   }
 
-  if($('liveAiToggle')){
-    $('liveAiToggle').addEventListener('change', (e)=>{
-      if(state.activeProject) state.activeProject.aiRealtime = e.target.checked;
-      state.batchAutoMode = !!(e.target.checked && ($('liveDriveToggle') ? $('liveDriveToggle').checked : true));
-      updateBatchShutter();
-      toast(e.target.checked ? 'Đã bật AI Retouch tự động khi chụp' : 'Đã tắt AI Retouch tự động');
-    });
-  }
   if($('liveDriveToggle')){
     $('liveDriveToggle').addEventListener('change', (e)=>{
       if(state.activeProject) state.activeProject.autoUpload = e.target.checked;
-      state.batchAutoMode = !!(e.target.checked && ($('liveAiToggle') ? $('liveAiToggle').checked : true));
+      state.batchAutoMode = !!e.target.checked;
       updateBatchShutter();
       toast(e.target.checked ? 'Đã bật tự động Upload Google Drive' : 'Đã tắt tự động Upload Drive');
     });
@@ -2741,13 +2719,13 @@
     flashScreen();
 
     if(state.batchAutoMode){
-      // Continuous shooting mode: stay on capture screen, queue for auto AI + Drive upload
+      // Continuous shooting mode: stay on capture screen, queue for original upload to Drive
       state.batchQueue.push({shotIndex: idx, status: 'pending'});
       updateBatchUI();
-      toast('Đã chụp ảnh #' + (idx+1) + ' — AI đang xử lý & upload Drive');
+      toast('Đã chụp ảnh #' + (idx+1) + ' — đang upload ảnh gốc lên Drive');
       processBatchNext();
     } else {
-      openEditor(idx, {auto:true});
+      openEditor(idx);
     }
   });
 
@@ -2846,57 +2824,18 @@
         if(!shot){ item.status = 'error'; updateBatchUI(); continue; }
 
         try{
-          // 1. Run AI analysis
-          const modelApplied = await applyAiRetouchForShot(shot, {strength:state.settings.aiRetouchStrength/100, faceFidelity:state.settings.aiFaceFidelity/100});
-          const previewCanvas = renderGeometry(getRetouchSource(shot), shot.edits, PREVIEW_MAX, false);
-          const pctx = previewCanvas.getContext('2d', {willReadFrequently:true});
-          const pData = pctx.getImageData(0,0,previewCanvas.width,previewCanvas.height);
-          const auto = analyzeScene(pData.data, previewCanvas.width, previewCanvas.height);
-          shot.edits = Object.assign(auto, {
-            rotation:0, flipH:0, flipV:0, straighten:0,
-            cropX:0, cropY:0, cropW:1, cropH:1, cropAspect:'',
-            lut:shot.edits.lut, lutStrength:shot.edits.lutStrength
-          });
-
-          // 2. Detect faces & apply skin retouching
-          try{
-            const faces = await detectFaces(previewCanvas);
-            if(faces && faces.length){
-              shot.faceMasks = buildFaceMasks(faces, previewCanvas.width, previewCanvas.height);
-              shot.faceLandmarks = faces.map(f => f.map(p => ({x:p.x, y:p.y})));
-              shot.hasFace = true;
-              shot.edits.skin = modelApplied ? Math.min(liveControls.skin, 6) : 0;
-              shot.edits.freckleAcne = modelApplied ? Math.min(liveControls.blemish, 4) : 0;
-              shot.edits.eye = liveControls.eye;
-              shot.edits.faceShine = 8;
-              shot.edits.sharpen = modelApplied ? 12 : 30;
-            }
-          }catch(e){ /* face detector fallback */ }
-
-          if(liveControls.exp !== 0){
-            shot.edits.exposure = clampAbs((shot.edits.exposure || 0) + liveControls.exp, 30);
-          }
-          if(liveControls.warmth !== 0){
-            shot.edits.warmth = clampAbs((shot.edits.warmth || 0) + liveControls.warmth, 60);
-          }
-
-          shot.aiEngine = modelApplied ? 'model' : 'fallback';
-
           shot.autoDone = true;
           await dbPutShot(shot);
 
-          // 3. Render Output Hi-Res Canvas
-          const outputCanvas = renderOutputForShot(item.shotIndex);
-
-          // 4. Upload to Google Drive if configured
+          // Upload the ORIGINAL frame straight to the project's Drive folder
           if(state.activeProject && state.activeProject.driveFolder){
-            const blob = await new Promise(res=> outputCanvas.toBlob(res, 'image/jpeg', 0.95));
+            const blob = await new Promise(res=> shot.canvas.toBlob(res, 'image/jpeg', 0.95));
             await uploadBlobToDrive(blob, state.activeProject.driveFolder.id);
           }
 
           item.status = 'done';
         }catch(err){
-          console.error('Batch processing error:', err);
+          console.error('Upload error:', err);
           item.status = 'error';
         }
         updateBatchUI();
@@ -2953,33 +2892,10 @@
     return (slug || 'lenslab') + '-' + ts + '.' + exportExt();
   }
 
-  async function ensureSessionFolder(){
-    if(state.sessionFolderId) return state.sessionFolderId;
-    const parentId = state.activeProject && state.activeProject.driveFolder ? state.activeProject.driveFolder.id : 'root';
-    if(parentId === 'root' || !parentId){ state.sessionFolderId = 'root'; return 'root'; }
-    const token = state.googleAccessToken || await getAccessToken();
-    const d = new Date();
-    const p2 = n => ('0'+n).slice(-2);
-    const dateStr = d.getFullYear() + '-' + p2(d.getMonth()+1) + '-' + p2(d.getDate());
-    const name = ((state.activeProject && state.activeProject.name) || 'Buổi chụp') + ' - ' + dateStr;
-    const resp = await fetch('https://www.googleapis.com/drive/v3/files', {
-      method: 'POST',
-      headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] })
-    });
-    if(resp.status === 401){ clearGoogleToken(); throw new Error('Phiên Google đã hết hạn'); }
-    if(!resp.ok){ state.sessionFolderId = parentId; return parentId; }
-    const j = await resp.json();
-    state.sessionFolderId = j.id || parentId;
-    return state.sessionFolderId;
-  }
-
   async function uploadBlobToDrive(blob, folderId, _retried){
     let token = state.googleAccessToken || await getAccessToken();
-    let target = folderId;
-    if(folderId && folderId !== 'root'){ target = await ensureSessionFolder(); }
     const meta = { name: exportName(), mimeType: 'image/jpeg' };
-    if(target && target !== 'root'){ meta.parents = [target]; }
+    if(folderId && folderId !== 'root'){ meta.parents = [folderId]; }
     const form = new FormData();
     form.append('metadata', new Blob([JSON.stringify(meta)], {type:'application/json'}));
     form.append('file', blob, meta.name);
@@ -3037,7 +2953,6 @@
     renderPreview();
     renderFilmstrip();
     showScreen('edit');
-    if(opts.auto && !shot.autoDone){ runAuto(); }
   }
 
   $('btnBackToCapture').addEventListener('click', ()=>{
