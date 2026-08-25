@@ -1483,6 +1483,9 @@
   window.addEventListener('error', function(e){
     var msg = (e && e.message) ? e.message : String(e && e.error);
     if(!msg) return;
+    // Cross-origin scripts (Google/MediaPipe/CDN) surface as generic "Script error"
+    // with no actionable detail — hide them to avoid alarming noise.
+    if(msg === 'Script error.' || msg === 'Script error') return;
     try{
       var d = document.getElementById('lenslabErrBar');
       if(!d){ d = document.createElement('div'); d.id = 'lenslabErrBar'; document.body.appendChild(d); }
