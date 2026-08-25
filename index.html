@@ -1607,6 +1607,14 @@
       arr = Array.isArray(legacy) ? legacy : [];
       if(legacy){ try{ localStorage.setItem(key, JSON.stringify(legacy)); localStorage.removeItem('lenslab_projects'); }catch(e){} }
     }
+    // A Google user with no projects under their email key: adopt guest projects if any
+    if((!arr || arr.length === 0) && state.auth && state.auth.email){
+      const guest = safeJSON(localStorage.getItem('lenslab_projects_guest'), null);
+      if(Array.isArray(guest) && guest.length){
+        arr = guest;
+        try{ localStorage.setItem(key, JSON.stringify(guest)); localStorage.removeItem('lenslab_projects_guest'); }catch(e){}
+      }
+    }
     state.projects = Array.isArray(arr) ? arr : [];
   }
   function saveProjects(){
@@ -1674,9 +1682,13 @@
         state.projects = remote;
         try{ localStorage.setItem(projectsStorageKey(), JSON.stringify(remote)); }catch(e){}
         renderProjects();
+        toast('Đã tải ' + state.projects.length + ' dự án từ Drive');
       } else if(state.projects.length){
         // Nothing stored on Drive yet — push the local cache up so it's backed up
         await driveWriteProjects(state.projects);
+        toast('Đã đồng bộ ' + state.projects.length + ' dự án lên Drive');
+      } else {
+        console.warn('No projects found on Drive or local');
       }
     }catch(err){
       console.warn('Drive project sync failed:', err);
