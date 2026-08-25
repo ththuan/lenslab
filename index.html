@@ -1675,7 +1675,7 @@
   async function syncProjectsFromDrive(){
     if(!(state.auth && state.auth.email)) return;
     const hasRefresh = !!localStorage.getItem('lenslab_google_refresh_token');
-    if(!state.googleAccessToken && !hasRefresh) return;
+    if(!state.googleAccessToken && !hasRefresh){ console.warn('sync: no token'); return; }
     try{
       const remote = await driveReadProjects();
       if(remote && Array.isArray(remote)){
@@ -1685,13 +1685,15 @@
         toast('Đã tải ' + state.projects.length + ' dự án từ Drive');
       } else if(state.projects.length){
         // Nothing stored on Drive yet — push the local cache up so it's backed up
-        await driveWriteProjects(state.projects);
-        toast('Đã đồng bộ ' + state.projects.length + ' dự án lên Drive');
+        const ok = await driveWriteProjects(state.projects);
+        toast(ok ? ('Đã đồng bộ ' + state.projects.length + ' dự án lên Drive') : 'Không đồng bộ được dự án lên Drive');
       } else {
         console.warn('No projects found on Drive or local');
+        toast('Chưa có dự án trên Drive hoặc trên máy');
       }
     }catch(err){
       console.warn('Drive project sync failed:', err);
+      toast('Lỗi đồng bộ dự án: ' + (err && err.message ? err.message : err));
     }
   }
 
