@@ -183,12 +183,13 @@
   
   .filmstrip .thumb .batch-dot{
     position:absolute; bottom:3px; right:3px; width:9px; height:9px; border-radius:50%;
-    border:1.5px solid #17191c; z-index:2;
+    border:1.5px solid #17191c; z-index:2; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; font-size:0; line-height:1;
   }
   .filmstrip .thumb .batch-dot.pending{background:#9ba1a8;}
   .filmstrip .thumb .batch-dot.processing{background:#f59e0b; animation:pulse 0.9s infinite;}
-  .filmstrip .thumb .batch-dot.done{background:#10b981;}
-  .filmstrip .thumb .batch-dot.error{background:var(--danger);}
+  .filmstrip .thumb .batch-dot.done{background:#10b981; width:14px; height:14px; font-size:9px;}
+  .filmstrip .thumb .batch-dot.error{background:var(--danger); width:14px; height:14px; font-size:8px;}
   
   .shutter{
     width:66px;height:66px;border-radius:50%; background:#101112; border:3px solid var(--accent);
@@ -1600,8 +1601,8 @@
   const PROJECTS_FILE_NAME = 'lenslab-projects.json';
 
   async function driveProjectsFileId(token){
-    const q = "name='" + PROJECTS_FILE_NAME + "' and trashed=false";
-    const resp = await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name)&pageSize=20&q=' + encodeURIComponent(q), {
+    const q = "name='" + PROJECTS_FILE_NAME + "' and trashed=false and mimeType='application/json' and 'root' in parents";
+    const resp = await fetch('https://www.googleapis.com/drive/v3/files?spaces=drive&fields=files(id,name)&pageSize=20&q=' + encodeURIComponent(q), {
       headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' }
     });
     if(!resp.ok) return null;
@@ -1633,7 +1634,7 @@
       return resp.ok;
     }
     const form = new FormData();
-    form.append('metadata', new Blob([JSON.stringify({ name: PROJECTS_FILE_NAME, mimeType: 'application/json', parents: ['appDataFolder'] })], {type:'application/json'}));
+    form.append('metadata', new Blob([JSON.stringify({ name: PROJECTS_FILE_NAME, mimeType: 'application/json', parents: ['root'] })], {type:'application/json'}));
     form.append('file', new Blob([content], {type:'application/json'}), PROJECTS_FILE_NAME);
     const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
       method: 'POST',
@@ -2903,7 +2904,13 @@
 
   if($('liveDriveToggle')){
     $('liveDriveToggle').addEventListener('change', (e)=>{
-      if(state.activeProject) state.activeProject.autoUpload = e.target.checked;
+      if(state.activeProject){
+        state.activeProject.autoUpload = e.target.checked;
+        if(e.target.checked && !state.activeProject.driveFolder){
+          state.activeProject.driveFolder = { id:'root', name:'My Drive' };
+        }
+        saveProjects();
+      }
       state.batchAutoMode = !!e.target.checked;
       updateBatchShutter();
       toast(e.target.checked ? 'Đã bật tự động Upload Google Drive' : 'Đã tắt tự động Upload Drive');
@@ -2982,6 +2989,9 @@
           if(bItem){
             const dot = document.createElement('div');
             dot.className = 'batch-dot ' + bItem.status;
+            if(bItem.status === 'done'){ dot.textContent = '✓'; }
+            else if(bItem.status === 'error'){ dot.textContent = '!'; }
+            dot.title = {pending:'Chờ tải lên Drive', processing:'Đang tải lên Drive…', done:'Đã tải lên Drive', error:'Lỗi tải lên Drive'}[bItem.status] || '';
             t.appendChild(dot);
           }
           t.addEventListener('click', ()=> openEditor(i));
@@ -3049,13 +3059,14 @@
           await dbPutShot(shot);
 
           // iPad native camera shots keep the untouched original; HDMI/capture-card shots get live color applied
-          if(state.activeProject && state.activeProject.driveFolder){
+          if(state.activeProject){
+            const folderId = (state.activeProject.driveFolder && state.activeProject.driveFolder.id) ? state.activeProject.driveFolder.id : 'root';
             if(shot.keepOriginal && shot.originalFile){
-              await uploadOriginalFileToDrive(shot.originalFile, state.activeProject.driveFolder.id);
+              await uploadOriginalFileToDrive(shot.originalFile, folderId);
             } else {
               const outputCanvas = renderOutputForShot(item.shotIndex);
               const blob = await new Promise(res=> outputCanvas.toBlob(res, 'image/jpeg', 0.95));
-              await uploadBlobToDrive(blob, state.activeProject.driveFolder.id);
+              await uploadBlobToDrive(blob, folderId);
             }
           }
 
@@ -3063,6 +3074,8 @@
         }catch(err){
           console.error('Upload error:', err);
           item.status = 'error';
+          item.error = (err && err.message) ? err.message : String(err);
+          toast('Lỗi upload ảnh #' + (item.shotIndex + 1) + ': ' + item.error);
         }
         updateBatchUI();
         await new Promise(r=>setTimeout(r, 0));
@@ -5164,7 +5177,7 @@
 
   // ---------------- Google Drive export ----------------
   const GSI_URL = 'https://accounts.google.com/gsi/client';
-  const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata';
+  const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
 
   function loadGsi(){
     if(window.google && window.google.accounts && window.google.accounts.oauth2){
@@ -5182,7 +5195,7 @@
 
   function getAccessToken(){
     const cid = state.settings.driveClientId;
-    if(!cid) return Promise.reject(new Error('NO_CLIENT_ID'));
+    if(!cid) return Promise.reject(new Error('Chưa cài Google Client ID (vào ⚙ Cài đặt)'));
     if(state.googleAccessToken){ return Promise.resolve(state.googleAccessToken); }
     return loadGsi().then(()=> new Promise((resolve, reject)=>{
       const client = google.accounts.oauth2.initTokenClient({
