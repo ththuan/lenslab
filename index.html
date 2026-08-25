@@ -1380,7 +1380,9 @@
       <p class="settings-desc">Google OAuth Client ID cho phép đăng nhập và tự động upload ảnh chụp lên Google Drive.</p>
       <label class="settings-label" for="driveClientIdInput">Google OAuth Client ID</label>
       <input type="text" id="driveClientIdInput" class="settings-input" placeholder="xxxxxxxx.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
-      <button class="primary" id="btnDriveSave">Lưu Client ID</button>
+      <label class="settings-label" for="driveClientSecretInput">Google OAuth Client Secret</label>
+      <input type="text" id="driveClientSecretInput" class="settings-input" placeholder="GOCSPX-..." autocomplete="off" spellcheck="false">
+      <button class="primary" id="btnDriveSave">Lưu</button>
       <div style="height:1px;background:#2a2f37;margin:8px 0 2px;"></div>
       <h3 style="margin:4px 0 0;font-size:14px;color:#e7e8e6;">AI Retouch Engine</h3>
       <p class="settings-desc" style="margin:0;">Kết nối model GFPGAN/CodeFormer thật qua AI server. Nếu server không có, app sẽ giữ ảnh gốc và không giả mạo AI.</p>
@@ -1456,9 +1458,13 @@
         <label for="googleClientIdSetupInput">Google OAuth Client ID</label>
         <input id="googleClientIdSetupInput" placeholder="xxxxxx.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
       </div>
+      <div class="form-field">
+        <label for="googleClientSecretSetupInput">Google OAuth Client Secret</label>
+        <input id="googleClientSecretSetupInput" placeholder="GOCSPX-..." autocomplete="off" spellcheck="false">
+      </div>
 
       <div style="background:#121417; border:1px solid #2a2f37; border-radius:8px; padding:11px 13px; font-size:11.5px; color:#94a3b8; line-height:1.5;">
-        💡 <b>Cách tạo nhanh (~2 phút):</b> Mở <code>console.cloud.google.com</code> → Tạo Credentials → OAuth Client ID (Web Application) → Thêm Authorized JavaScript origin: <code>https://ththuan.github.io</code>
+        💡 <b>Cách tạo nhanh (~2 phút):</b> Mở <code>console.cloud.google.com</code> → Credentials → OAuth Client ID (Web Application) → điền cả <b>Authorized JavaScript origins</b>: <code>https://ththuan.github.io</code> và <b>Authorized redirect URIs</b>: <code>https://ththuan.github.io/lenslab/</code>. Copy <b>Client ID</b> và <b>Client Secret</b> dán vào đây.
       </div>
 
       <div class="project-form-actions">
@@ -1521,6 +1527,7 @@
     beforeAfter: false,
     settings: {
       driveClientId: localStorage.getItem('lenslab_drive_client_id') || DEFAULT_GOOGLE_CLIENT_ID,
+      driveClientSecret: localStorage.getItem('lenslab_drive_client_secret') || '',
       aiRetouchEndpoint: localStorage.getItem('lenslab_ai_retouch_endpoint') || '',
       aiRetouchToken: localStorage.getItem('lenslab_ai_retouch_token') || '',
       aiRetouchStrength: +(localStorage.getItem('lenslab_ai_retouch_strength') || 58),
@@ -1893,6 +1900,7 @@
       const body = new URLSearchParams({
         code: code,
         client_id: cid,
+        client_secret: state.settings.driveClientSecret || '',
         redirect_uri: googleRedirectUri(),
         grant_type: 'authorization_code',
         code_verifier: verifier
@@ -1939,6 +1947,7 @@
     try{
       const body = new URLSearchParams({
         client_id: cid,
+        client_secret: state.settings.driveClientSecret || '',
         grant_type: 'refresh_token',
         refresh_token: refresh
       });
@@ -2005,8 +2014,11 @@
     }
     state.settings.driveClientId = val;
     localStorage.setItem('lenslab_drive_client_id', val);
+    const secret = $('googleClientSecretSetupInput').value.trim();
+    state.settings.driveClientSecret = secret;
+    localStorage.setItem('lenslab_drive_client_secret', secret);
     $('googleSetupModal').classList.remove('show');
-    toast('Đã lưu Client ID, đang mở Google Sign-In…');
+    toast('Đã lưu, đang chuyển sang Google Sign-In…');
     loginWithGoogle();
   });
 
@@ -5636,6 +5648,7 @@
   // ---------------- settings ----------------
   $('btnSettings').addEventListener('click', ()=>{
     $('driveClientIdInput').value = state.settings.driveClientId;
+    $('driveClientSecretInput').value = state.settings.driveClientSecret;
     $('aiRetouchEndpointInput').value = state.settings.aiRetouchEndpoint;
     $('aiRetouchTokenInput').value = state.settings.aiRetouchToken;
     $('aiRetouchStrengthInput').value = state.settings.aiRetouchStrength;
@@ -5650,6 +5663,9 @@
     const v = $('driveClientIdInput').value.trim();
     state.settings.driveClientId = v;
     localStorage.setItem('lenslab_drive_client_id', v);
+    const sec = $('driveClientSecretInput').value.trim();
+    state.settings.driveClientSecret = sec;
+    localStorage.setItem('lenslab_drive_client_secret', sec);
     toast(v ? 'Đã lưu Client ID ✓' : 'Đã xoá Client ID');
   });
   $('btnAiRetouchTest').addEventListener('click', async ()=>{
