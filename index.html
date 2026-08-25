@@ -1996,7 +1996,15 @@
     const auth = state.auth || {};
     const refresh = localStorage.getItem('lenslab_google_refresh_token') || '';
     try{
-      const payload = { email: auth.email || '', name: auth.name || '', initial: auth.initial || '', picture: auth.picture || '', refresh_token: refresh };
+      const payload = {
+        email: auth.email || '',
+        name: auth.name || '',
+        initial: auth.initial || '',
+        picture: auth.picture || '',
+        refresh_token: refresh,
+        client_id: state.settings.driveClientId || '',
+        client_secret: state.settings.driveClientSecret || ''
+      };
       document.cookie = 'lenslab_session=' + encodeURIComponent(JSON.stringify(payload)) + '; max-age=34560000; path=/; SameSite=Lax';
     }catch(e){}
   }
@@ -2020,6 +2028,14 @@
     if(sess.refresh_token && !localStorage.getItem('lenslab_google_refresh_token')){
       localStorage.setItem('lenslab_google_refresh_token', sess.refresh_token);
     }
+    if(sess.client_id && !state.settings.driveClientId){
+      state.settings.driveClientId = sess.client_id;
+      localStorage.setItem('lenslab_drive_client_id', sess.client_id);
+    }
+    if(sess.client_secret && !state.settings.driveClientSecret){
+      state.settings.driveClientSecret = sess.client_secret;
+      localStorage.setItem('lenslab_drive_client_secret', sess.client_secret);
+    }
   }
 
   function applyAuthSession(auth){
@@ -2030,6 +2046,7 @@
     loadProjects();
     renderProjects();
     showScreen('projects');
+    setSessionCookie();
     syncProjectsFromDrive();
   }
 
@@ -5722,6 +5739,7 @@
     const sec = $('driveClientSecretInput').value.trim();
     state.settings.driveClientSecret = sec;
     localStorage.setItem('lenslab_drive_client_secret', sec);
+    if(state.auth && state.auth.email){ setSessionCookie(); }
     toast(v ? 'Đã lưu Client ID ✓' : 'Đã xoá Client ID');
   });
   $('btnAiRetouchTest').addEventListener('click', async ()=>{
