@@ -1673,36 +1673,47 @@
   }
 
   async function syncProjectsFromDrive(){
-    if(!(state.auth && state.auth.email)) return;
+    if(!(state.auth && state.auth.email)){ syncStatus = 'chưa có tài khoản'; return; }
     const hasRefresh = !!localStorage.getItem('lenslab_google_refresh_token');
-    if(!state.googleAccessToken && !hasRefresh){ console.warn('sync: no token'); return; }
+    if(!state.googleAccessToken && !hasRefresh){ syncStatus = 'không có token/refresh'; return; }
+    syncStatus = 'đang đồng bộ…';
     try{
       const remote = await driveReadProjects();
       if(remote && Array.isArray(remote)){
         state.projects = remote;
         try{ localStorage.setItem(projectsStorageKey(), JSON.stringify(remote)); }catch(e){}
+        syncStatus = 'đã tải ' + state.projects.length + ' dự án từ Drive';
         renderProjects();
         toast('Đã tải ' + state.projects.length + ' dự án từ Drive');
       } else if(state.projects.length){
-        // Nothing stored on Drive yet — push the local cache up so it's backed up
         const ok = await driveWriteProjects(state.projects);
+        syncStatus = ok ? ('đã đồng bộ ' + state.projects.length + ' dự án lên Drive') : 'không đồng bộ được lên Drive';
         toast(ok ? ('Đã đồng bộ ' + state.projects.length + ' dự án lên Drive') : 'Không đồng bộ được dự án lên Drive');
       } else {
-        console.warn('No projects found on Drive or local');
+        syncStatus = 'không có dự án trên Drive và trên máy';
         toast('Chưa có dự án trên Drive hoặc trên máy');
+        renderProjects();
       }
     }catch(err){
       console.warn('Drive project sync failed:', err);
+      syncStatus = 'lỗi: ' + (err && err.message ? err.message : err);
       toast('Lỗi đồng bộ dự án: ' + (err && err.message ? err.message : err));
+      renderProjects();
     }
   }
+
+  let syncStatus = '';
 
   function renderProjects(){
     const grid = $('projectGrid');
     if(!grid) return;
     grid.innerHTML = '';
     if(!state.projects.length){
-      grid.innerHTML = '<div class="empty-project" id="emptyProject"><strong>Chưa có dự án nào</strong><span>Tạo dự án đầu tiên để kết nối máy ảnh và bắt đầu buổi chụp.</span></div>';
+      const hasRefresh = !!localStorage.getItem('lenslab_google_refresh_token');
+      const hasSecret = !!(state.settings && state.settings.driveClientSecret);
+      const hasToken = !!state.googleAccessToken;
+      const diag = 'Trạng thái: refresh=' + (hasRefresh?'✓':'✗') + ' · secret=' + (hasSecret?'✓':'✗') + ' · token=' + (hasToken?'✓':'✗') + (syncStatus ? (' · ' + syncStatus) : '');
+      grid.innerHTML = '<div class="empty-project" id="emptyProject"><strong>Chưa có dự án nào</strong><span>Tạo dự án đầu tiên để kết nối máy ảnh và bắt đầu buổi chụp.</span><span style="opacity:.65;font-size:11px;margin-top:8px;">' + esc(diag) + '</span></div>';
       return;
     }
     state.projects.forEach((p, i)=>{
