@@ -1677,8 +1677,7 @@
     }
     state.projects.forEach((p, i)=>{
       const card = document.createElement('article'); card.className='project-card';
-      const driveInfo = p.driveFolder ? '<br>📁 ' + esc(p.driveFolder.name) : '';
-      card.innerHTML = '<div class="project-thumb"><div class="thumb-orbit"></div></div><div class="project-card-body"><div><h3>'+esc(p.name)+'</h3><div class="project-meta">'+esc(p.source)+' · '+esc(p.format)+driveInfo+'<br>'+esc(p.created)+'</div></div><div class="project-actions"><button class="project-open" data-project="'+i+'">Mở</button><button class="project-edit" data-edit="'+i+'" title="Sửa dự án này">Sửa</button><button class="project-delete" data-delete="'+i+'" title="Xóa dự án này">Xóa</button></div></div>';
+      card.innerHTML = '<div class="project-thumb"><div class="thumb-orbit"></div></div><div class="project-card-body"><div><h3>'+esc(p.name)+'</h3></div><div class="project-actions"><button class="project-open" data-project="'+i+'">Mở</button><button class="project-edit" data-edit="'+i+'" title="Sửa dự án này">Sửa</button><button class="project-delete" data-delete="'+i+'" title="Xóa dự án này">Xóa</button></div></div>';
       card.querySelector('.project-open').addEventListener('click', ()=> startProject(p));
       card.querySelector('.project-edit').addEventListener('click', (e)=>{
         e.stopPropagation();
