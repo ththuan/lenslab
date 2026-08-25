@@ -918,6 +918,7 @@
       <div class="capture-left-stage">
         <div class="viewport-wrap" id="viewportWrap">
           <video id="liveVideo" autoplay playsinline muted></video>
+          <canvas id="livePreviewCanvas" style="position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; z-index:6; display:none;"></canvas>
           <canvas id="liveAfCanvas" class="live-af-canvas"></canvas>
           <button class="home-pill" id="btnCaptureHome" title="Về danh sách dự án">‹ 🏠 Dự án</button>
           <div class="no-signal" id="noSignal">
@@ -925,7 +926,7 @@
             <span style="max-width:260px;text-align:center;">Kiểm tra máy ảnh đã bật Live View và dây HDMI đã cắm chắc chưa.</span>
           </div>
           <div class="rec-pill" style="left:auto; right:14px; display:none;"><div class="rdot"></div><span class="mono">LIVE TETHER</span></div>
-          <div class="device-chip" id="deviceChip" style="top:52px; right:14px; display:none;">—</div>
+          <div class="device-chip" id="deviceChip" style="top:52px; right:14px;">—</div>
           <div class="af-status-chip" id="afStatusChip" style="top:90px; right:14px; display:none;">AF-C • EYE TRACKING</div>
 
           <!-- Center Bottom Floating Shutter Trigger -->
@@ -1554,6 +1555,7 @@
   };
   let prevScreen = 'projects';
   let histRAF = null;
+  let liveColorRAF = null;
   function showScreen(name){
     if(name !== 'settings') prevScreen = name;
     Object.values(screens).forEach(s=>s.classList.remove('active'));
@@ -1563,8 +1565,10 @@
     if(name === 'capture'){
       startLiveHistogram();
       renderFilmstrip();
+      startLiveColorPreview();
     } else {
       stopLiveHistogram();
+      stopLiveColorPreview();
     }
   }
 
@@ -2548,19 +2552,28 @@
   if($('nativeCameraInput')) $('nativeCameraInput').addEventListener('change', (e)=>{
     const files = Array.from(e.target.files || []);
     if(!files.length) return;
-    toast(`Đang nhập ${files.length} ảnh chất lượng cao…`);
+    toast(`Đang nhập ${files.length} ảnh gốc…`);
     let loaded = 0;
     let lastIdx = -1;
+    const indices = [];
     files.forEach((file)=>{
       const img = new Image();
       img.onload = ()=>{
         const idx = addShotFromImage(img);
+        const shot = state.shots[idx];
+        if(shot){ shot.keepOriginal = true; shot.originalFile = file; }
+        indices.push(idx);
         lastIdx = idx;
         loaded++;
         if(loaded === files.length){
-          toast(`Đã nhập xong ${files.length} ảnh ✓`);
-          if(!state.batchAutoMode && lastIdx >= 0){
-            openEditor(lastIdx, {auto:true});
+          if(state.batchAutoMode){
+            indices.forEach(idx => state.batchQueue.push({shotIndex: idx, status: 'pending'}));
+            updateBatchUI();
+            toast(`Đã chụp ${files.length} ảnh gốc — đang upload lên Drive`);
+            processBatchNext();
+          } else {
+            toast(`Đã chụp ${files.length} ảnh gốc ✓`);
+            if(lastIdx >= 0){ openEditor(lastIdx); }
           }
         }
       };
@@ -2700,6 +2713,58 @@
     histRAF = requestAnimationFrame(updateLiveHistogram);
   }
 
+  // ---------------- Live Color Preview (LUT / temp / exposure on the live view) ----------------
+  const LIVE_PREVIEW_MAX = 480;
+
+  function liveColorActive(){
+    return (liveControls.lut && liveControls.lut !== 'none') || liveControls.warmth !== 0 || liveControls.exp !== 0;
+  }
+
+  function drawLiveColorPreview(){
+    const canvas = $('livePreviewCanvas');
+    if(!canvas){ liveColorRAF = null; return; }
+    if(!video || video.readyState < 2 || !video.videoWidth){
+      liveColorRAF = requestAnimationFrame(drawLiveColorPreview);
+      return;
+    }
+    if(!liveColorActive()){
+      canvas.style.display = 'none';
+      liveColorRAF = null;
+      return;
+    }
+    canvas.style.display = 'block';
+    const vw = video.videoWidth, vh = video.videoHeight;
+    const scale = Math.min(1, LIVE_PREVIEW_MAX / vw);
+    const w = Math.max(1, Math.round(vw * scale));
+    const h = Math.max(1, Math.round(vh * scale));
+    if(canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; }
+    try{
+      const ctx = canvas.getContext('2d', {willReadFrequently:true});
+      ctx.drawImage(video, 0, 0, w, h);
+      const img = ctx.getImageData(0, 0, w, h);
+      applyToneAndColor(img.data, w, h, {
+        exposure: liveControls.exp || 0,
+        contrast: 0, saturation: 0, warmth: liveControls.warmth || 0,
+        tint: 0, highlights: 0, shadows: 0
+      });
+      const L = getLUT(liveControls.lut);
+      if(L){ applyLUT(img.data, w, h, L.lut, L.N, 1); }
+      ctx.putImageData(img, 0, 0);
+    }catch(e){}
+    liveColorRAF = requestAnimationFrame(drawLiveColorPreview);
+  }
+
+  function startLiveColorPreview(){
+    if(liveColorRAF) return;
+    liveColorRAF = requestAnimationFrame(drawLiveColorPreview);
+  }
+
+  function stopLiveColorPreview(){
+    if(liveColorRAF){ cancelAnimationFrame(liveColorRAF); liveColorRAF = null; }
+    const canvas = $('livePreviewCanvas');
+    if(canvas) canvas.style.display = 'none';
+  }
+
   // Live AF Tracking Overlay & Rule of Thirds
   let liveTapFocus = null;
   let tapFocusTimer = null;
@@ -2818,18 +2883,21 @@
     $('liveExpSlider').addEventListener('input', (e)=>{
       liveControls.exp = parseInt(e.target.value, 10);
       $('liveExpVal').textContent = (liveControls.exp >= 0 ? '+' : '') + liveControls.exp;
+      startLiveColorPreview();
     });
   }
   if($('liveLutSelect')){
     $('liveLutSelect').addEventListener('change', (e)=>{
       liveControls.lut = e.target.value;
       toast('LUT khi chụp: ' + e.target.value);
+      startLiveColorPreview();
     });
   }
   if($('liveWarmthSlider')){
     $('liveWarmthSlider').addEventListener('input', (e)=>{
       liveControls.warmth = parseInt(e.target.value, 10);
       $('liveWarmthVal').textContent = liveControls.warmth;
+      startLiveColorPreview();
     });
   }
 
@@ -2868,13 +2936,14 @@
     shot.edits.lut = liveControls.lut || 'none';
     shot.edits.lutStrength = 100;
     if(liveControls.warmth){ shot.edits.warmth = liveControls.warmth; }
+    if(liveControls.exp){ shot.edits.exposure = liveControls.exp; }
     flashScreen();
 
     if(state.batchAutoMode){
-      // Continuous shooting mode: stay on capture screen, queue for original upload to Drive
+      // Continuous shooting mode: stay on capture screen, queue for color-graded upload to Drive
       state.batchQueue.push({shotIndex: idx, status: 'pending'});
       updateBatchUI();
-      toast('Đã chụp ảnh #' + (idx+1) + ' — đang upload ảnh gốc lên Drive');
+      toast('Đã chụp ảnh #' + (idx+1) + ' — đang áp màu & upload lên Drive');
       processBatchNext();
     } else {
       openEditor(idx);
@@ -2979,10 +3048,15 @@
           shot.autoDone = true;
           await dbPutShot(shot);
 
-          // Upload the ORIGINAL frame straight to the project's Drive folder
+          // iPad native camera shots keep the untouched original; HDMI/capture-card shots get live color applied
           if(state.activeProject && state.activeProject.driveFolder){
-            const blob = await new Promise(res=> shot.canvas.toBlob(res, 'image/jpeg', 0.95));
-            await uploadBlobToDrive(blob, state.activeProject.driveFolder.id);
+            if(shot.keepOriginal && shot.originalFile){
+              await uploadOriginalFileToDrive(shot.originalFile, state.activeProject.driveFolder.id);
+            } else {
+              const outputCanvas = renderOutputForShot(item.shotIndex);
+              const blob = await new Promise(res=> outputCanvas.toBlob(res, 'image/jpeg', 0.95));
+              await uploadBlobToDrive(blob, state.activeProject.driveFolder.id);
+            }
           }
 
           item.status = 'done';
@@ -3042,6 +3116,32 @@
     const p2 = n => ('0'+n).slice(-2);
     const ts = d.getFullYear() + p2(d.getMonth()+1) + p2(d.getDate()) + '-' + p2(d.getHours()) + p2(d.getMinutes()) + p2(d.getSeconds());
     return (slug || 'lenslab') + '-' + ts + '.' + exportExt();
+  }
+
+  async function uploadOriginalFileToDrive(file, folderId, _retried){
+    let token = state.googleAccessToken || await getAccessToken();
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const name = exportName().replace(/\.(jpg|png)$/i, '.' + ext);
+    const meta = { name, mimeType: file.type || 'image/jpeg' };
+    if(folderId && folderId !== 'root'){ meta.parents = [folderId]; }
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify(meta)], {type:'application/json'}));
+    form.append('file', file, name);
+    const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token },
+      body: form
+    });
+    if(resp.status === 401){
+      if(_retried){ clearGoogleToken(); throw new Error('Phiên Google đã hết hạn'); }
+      clearGoogleToken();
+      return uploadOriginalFileToDrive(file, folderId, true);
+    }
+    if(!resp.ok){
+      let msg = 'Lỗi ' + resp.status;
+      try{ const j = await resp.json(); if(j && j.error && j.error.message) msg = j.error.message; }catch(e){}
+      throw new Error(msg);
+    }
   }
 
   async function uploadBlobToDrive(blob, folderId, _retried){
