@@ -1939,6 +1939,7 @@
       updateGoogleStatus('ok');
       localStorage.removeItem('lenslab_pkce_verifier');
       localStorage.removeItem('lenslab_pkce_state');
+      setSessionCookie();
       toast('Đã đăng nhập Google ✓ — phiên lưu lâu dài, không cần đăng nhập lại');
     }catch(err){
       toast('Lỗi đăng nhập Google: ' + (err.message || err));
@@ -1970,8 +1971,40 @@
       sessionStorage.setItem('lenslab_google_token_expiry', String(state.googleTokenExpiry));
       if(data.refresh_token){ localStorage.setItem('lenslab_google_refresh_token', data.refresh_token); }
       updateGoogleStatus('ok');
+      setSessionCookie();
       return data.access_token;
     }catch(e){ return null; }
+  }
+
+  // ---------------- cookie mirror of the session (survives Safari -> PWA install) ----------------
+  function setSessionCookie(){
+    const auth = state.auth || {};
+    const refresh = localStorage.getItem('lenslab_google_refresh_token') || '';
+    try{
+      const payload = { email: auth.email || '', name: auth.name || '', initial: auth.initial || '', picture: auth.picture || '', refresh_token: refresh };
+      document.cookie = 'lenslab_session=' + encodeURIComponent(JSON.stringify(payload)) + '; max-age=34560000; path=/; SameSite=Lax';
+    }catch(e){}
+  }
+  function getSessionCookie(){
+    try{
+      const m = document.cookie.match(/(?:^|;\s*)lenslab_session=([^;]+)/);
+      if(!m) return null;
+      return safeJSON(decodeURIComponent(m[1]), null);
+    }catch(e){ return null; }
+  }
+  function clearSessionCookie(){
+    try{ document.cookie = 'lenslab_session=; max-age=0; path=/'; }catch(e){}
+  }
+  function restoreFromCookie(){
+    const sess = getSessionCookie();
+    if(!sess) return;
+    if(!state.auth && sess.email){
+      state.auth = { provider:'google', verifiedAt: Date.now(), name: sess.name || sess.email, email: sess.email, initial: sess.initial || 'G', picture: sess.picture || '' };
+      localStorage.setItem('lenslab_auth', JSON.stringify(state.auth));
+    }
+    if(sess.refresh_token && !localStorage.getItem('lenslab_google_refresh_token')){
+      localStorage.setItem('lenslab_google_refresh_token', sess.refresh_token);
+    }
   }
 
   function applyAuthSession(auth){
@@ -1994,6 +2027,7 @@
     localStorage.removeItem('lenslab_google_refresh_token');
     sessionStorage.removeItem('lenslab_google_access_token');
     sessionStorage.removeItem('lenslab_google_token_expiry');
+    clearSessionCookie();
     showScreen('auth');
     toast('Đã đăng xuất tài khoản');
   }
@@ -2098,6 +2132,7 @@
 
   handleAuthRedirect().then(handled=>{
     if(handled) return; // OAuth redirect was processed; screen already switched
+    restoreFromCookie();
     if(state.auth && state.auth.provider){
       applyAuthSession(state.auth);
     } else {
