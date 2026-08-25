@@ -929,7 +929,6 @@
           </div>
           <div class="rec-pill" style="left:auto; right:14px; display:none;"><div class="rdot"></div><span class="mono">LIVE TETHER</span></div>
           <div class="device-chip" id="deviceChip" style="top:52px; right:14px;">—</div>
-          <div class="af-status-chip" id="afStatusChip" style="top:90px; right:14px; display:none;">AF-C • EYE TRACKING</div>
 
           <!-- Left Bottom Floating Shutter Trigger -->
           <div class="live-shutter-wrap">
@@ -982,18 +981,10 @@
         <!-- 2. Camera Input Source & Focus Overlay Tools -->
         <div class="sidebar-block">
           <div class="block-title">
-            <span>📷 Nguồn & Khung lấy nét (AF Grid)</span>
+            <span>📷 Nguồn & Lưới bố cục</span>
           </div>
           <div class="device-select" style="width:100%;">
             <select id="deviceSelect" style="width:100%;"></select>
-          </div>
-
-          <div class="tether-switch-row">
-            <div class="ts-info">
-              <strong>Khung lấy nét AI (Eye / Face AF)</strong>
-              <small>Vẽ khung bắt nét khuôn mặt & con mắt</small>
-            </div>
-            <label class="switch"><input type="checkbox" id="liveAfToggle"><span class="slider round"></span></label>
           </div>
 
           <div class="tether-switch-row">
@@ -1020,37 +1011,10 @@
           </div>
         </div>
 
-        <!-- 4. Real-time Live Tuning Sliders -->
+        <!-- 4. Live Color (áp dụng trước khi chụp, xem trước ngay trên live view) -->
         <div class="sidebar-block">
           <div class="block-title">
-            <span>🎨 Tinh chỉnh thông số AI (Live Presets)</span>
-          </div>
-          
-          <div class="live-ctrl-row">
-            <div class="lc-top"><label>Làm mịn da (Skin Smooth)</label><span id="liveSkinVal">12</span></div>
-            <input type="range" id="liveSkinSlider" min="0" max="80" value="12">
-          </div>
-
-          <div class="live-ctrl-row">
-            <div class="lc-top"><label>Khử khuyết điểm / Mụn</label><span id="liveBlemishVal">10</span></div>
-            <input type="range" id="liveBlemishSlider" min="0" max="80" value="10">
-          </div>
-
-          <div class="live-ctrl-row">
-            <div class="lc-top"><label>Làm sáng mắt & Khử quầng</label><span id="liveEyeVal">14</span></div>
-            <input type="range" id="liveEyeSlider" min="0" max="60" value="14">
-          </div>
-
-          <div class="live-ctrl-row">
-            <div class="lc-top"><label>Bù sáng tự động (EV Offset)</label><span id="liveExpVal">0</span></div>
-            <input type="range" id="liveExpSlider" min="-30" max="30" value="0">
-          </div>
-        </div>
-
-        <!-- LUT & Color applied on capture -->
-        <div class="sidebar-block">
-          <div class="block-title">
-            <span>🎞️ LUT & Màu khi chụp</span>
+            <span>🎨 Màu khi chụp (Live)</span>
           </div>
           <select id="liveLutSelect" style="width:100%; background:#181a1e; border:1px solid #23272e; color:#d6dbe0; border-radius:8px; padding:9px 10px; font-size:12px;">
             <option value="none" selected>Không LUT</option>
@@ -1066,6 +1030,10 @@
           <div class="live-ctrl-row">
             <div class="lc-top"><label>Ấm / Lạnh (Temp)</label><span id="liveWarmthVal">0</span></div>
             <input type="range" id="liveWarmthSlider" min="-100" max="100" value="0">
+          </div>
+          <div class="live-ctrl-row">
+            <div class="lc-top"><label>Bù sáng (EV)</label><span id="liveExpVal">0</span></div>
+            <input type="range" id="liveExpSlider" min="-30" max="30" value="0">
           </div>
         </div>
 
@@ -2956,8 +2924,8 @@
       drawChannel(bBins, 'rgba(59,130,246,0.75)', 'rgba(59,130,246,0.12)');
       drawChannel(lBins, 'rgba(240,244,248,0.85)', 'rgba(255,255,255,0.06)');
 
-      // Draw Dynamic AF Tracking Overlay on Live Video
-      drawLiveAfOverlay();
+      // Draw Rule of Thirds Grid on Live Video
+      drawLiveOverlay();
 
     }catch(e){}
     histRAF = requestAnimationFrame(updateLiveHistogram);
@@ -3015,10 +2983,7 @@
     if(canvas) canvas.style.display = 'none';
   }
 
-  // Live AF Tracking Overlay & Rule of Thirds
-  let liveTapFocus = null;
-  let tapFocusTimer = null;
-
+  // Live Rule of Thirds Grid overlay
   // Live pinch-to-zoom (visual + applied to capture)
   let liveZoom = 1;
   let pinchStartDist = 0;
@@ -3058,14 +3023,6 @@
     const activePointers = new Map();
     vwEl.addEventListener('pointerdown', (e)=>{
       activePointers.set(e.pointerId, true);
-      if(activePointers.size > 1) return;
-      if(e.target.closest('button, .shutter, .live-overlay-bar, .live-shutter-wrap, .zoom-badge')) return;
-      const rect = vwEl.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = (e.clientY - rect.top) / rect.height;
-      liveTapFocus = { x, y, time: Date.now() };
-      clearTimeout(tapFocusTimer);
-      tapFocusTimer = setTimeout(()=>{ liveTapFocus = null; }, 2500);
     });
     vwEl.addEventListener('pointerup', (e)=>{ activePointers.delete(e.pointerId); });
     vwEl.addEventListener('pointercancel', (e)=>{ activePointers.delete(e.pointerId); });
@@ -3090,7 +3047,7 @@
   }
   if($('liveZoomBadge')) $('liveZoomBadge').addEventListener('click', resetLiveZoom);
 
-  function drawLiveAfOverlay(){
+  function drawLiveOverlay(){
     const afCanvas = $('liveAfCanvas');
     if(!afCanvas || !video || video.readyState < 2) return;
     const cw = afCanvas.offsetWidth, ch = afCanvas.offsetHeight;
@@ -3102,10 +3059,8 @@
     actx.clearRect(0, 0, cw, ch);
 
     const showGrid = $('liveGridToggle') ? $('liveGridToggle').checked : true;
-    const showAf = $('liveAfToggle') ? $('liveAfToggle').checked : true;
-    if($('afStatusChip')) $('afStatusChip').style.display = showAf ? 'flex' : 'none';
 
-    // 1. Draw Rule of Thirds Grid
+    // Draw Rule of Thirds Grid
     if(showGrid && cw > 50 && ch > 50){
       actx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
       actx.lineWidth = 1;
@@ -3120,74 +3075,15 @@
       actx.stroke();
       actx.setLineDash([]);
     }
-
-    // 2. Draw AF Focus Brackets / Tap Focus Target (Sony/Canon Studio AF Box)
-    if(showAf && cw > 50 && ch > 50){
-      const afTarget = liveTapFocus || { x: 0.5, y: 0.42 }; // Studio portrait head zone
-      const tx = afTarget.x * cw;
-      const ty = afTarget.y * ch;
-      const boxSize = Math.max(40, Math.min(cw, ch) * 0.14);
-      const hs = boxSize / 2;
-      const corner = boxSize * 0.28;
-
-      actx.strokeStyle = '#10b981'; // AF-C Active Lock Green
-      actx.lineWidth = 2;
-
-      // Draw Top-Left Corner
-      actx.beginPath();
-      actx.moveTo(tx - hs, ty - hs + corner);
-      actx.lineTo(tx - hs, ty - hs);
-      actx.lineTo(tx - hs + corner, ty - hs);
-      // Draw Top-Right Corner
-      actx.moveTo(tx + hs - corner, ty - hs);
-      actx.lineTo(tx + hs, ty - hs);
-      actx.lineTo(tx + hs, ty - hs + corner);
-      // Draw Bottom-Right Corner
-      actx.moveTo(tx + hs, ty + hs - corner);
-      actx.lineTo(tx + hs, ty + hs);
-      actx.lineTo(tx + hs - corner, ty + hs);
-      // Draw Bottom-Left Corner
-      actx.moveTo(tx - hs + corner, ty + hs);
-      actx.lineTo(tx - hs, ty + hs);
-      actx.lineTo(tx - hs, ty + hs - corner);
-      actx.stroke();
-
-      // Center crosshair dot
-      actx.fillStyle = 'rgba(16, 185, 129, 0.9)';
-      actx.beginPath();
-      actx.arc(tx, ty, 2.5, 0, Math.PI * 2);
-      actx.fill();
-    }
   }
 
   // Live sidebar sliders & toggles wiring
   const liveControls = {
-    skin: 12,
-    blemish: 10,
-    eye: 14,
     exp: 0,
     lut: 'none',
     warmth: 0
   };
 
-  if($('liveSkinSlider')){
-    $('liveSkinSlider').addEventListener('input', (e)=>{
-      liveControls.skin = parseInt(e.target.value, 10);
-      $('liveSkinVal').textContent = liveControls.skin;
-    });
-  }
-  if($('liveBlemishSlider')){
-    $('liveBlemishSlider').addEventListener('input', (e)=>{
-      liveControls.blemish = parseInt(e.target.value, 10);
-      $('liveBlemishVal').textContent = liveControls.blemish;
-    });
-  }
-  if($('liveEyeSlider')){
-    $('liveEyeSlider').addEventListener('input', (e)=>{
-      liveControls.eye = parseInt(e.target.value, 10);
-      $('liveEyeVal').textContent = liveControls.eye;
-    });
-  }
   if($('liveExpSlider')){
     $('liveExpSlider').addEventListener('input', (e)=>{
       liveControls.exp = parseInt(e.target.value, 10);
