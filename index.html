@@ -649,6 +649,8 @@
   .project-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
   .project-open{border:1px solid #3b4148;background:#24282d;color:#dfe1e3;border-radius:6px;padding:7px 11px;font-size:11px;cursor:pointer;transition:background .15s,color .15s;}
   .project-open:hover{background:#32383f;color:#fff;}
+  .project-edit{border:1px solid #3b4148;background:#24282d;color:#a9c2d9;border-radius:6px;padding:7px 9px;font-size:11px;cursor:pointer;transition:background .15s,color .15s;}
+  .project-edit:hover{background:#2c343d;color:#cfe3f5;}
   .project-delete{border:1px solid #5a3a36;background:#241d1e;color:#ef8f86;border-radius:6px;padding:7px 9px;font-size:11px;cursor:pointer;transition:background .15s,color .15s;}
   .project-delete:hover{background:#3a2527;color:#ff9e96;border-color:#784742;}
   .empty-project{grid-column:1/-1;border:1px dashed #3a4047;border-radius:8px;padding:42px 20px;text-align:center;color:#858c94;background:#17191c;}
@@ -1393,7 +1395,7 @@
 <!-- Project Modal -->
 <div class="project-modal" id="projectModal">
   <div class="project-modal-card">
-    <div class="project-modal-head"><h3>Tạo dự án chụp ảnh</h3><button class="modal-close" id="projectModalClose">×</button></div>
+    <div class="project-modal-head"><h3 id="projectModalTitle">Tạo dự án chụp ảnh</h3><button class="modal-close" id="projectModalClose">×</button></div>
     <div class="project-form">
       <div class="form-field"><label for="projectNameInput">Tên dự án</label><input id="projectNameInput" value="Buổi chụp mới" autocomplete="off"></div>
       <div class="form-row"><div class="form-field"><label for="cameraSourceSelect">Nguồn máy ảnh</label><select id="cameraSourceSelect"><option>Capture card / Webcam</option><option>Nikon DSLR</option><option>Canon DSLR</option><option>Sony Alpha</option></select></div><div class="form-field"><label for="projectFormatSelect">Định dạng xem trước</label><select id="projectFormatSelect"><option>RAW + JPEG</option><option>JPEG</option><option>RAW</option></select></div></div>
@@ -1515,7 +1517,7 @@
     },
     auth: safeJSON(localStorage.getItem('lenslab_auth'), null),
     googleAccessToken: sessionStorage.getItem('lenslab_google_access_token') || null,
-    projects: safeJSON(localStorage.getItem('lenslab_projects'), []),
+    projects: [],
     faceLandmarker: null,
     mpLoading: null,
     segmenter: null,
@@ -1566,6 +1568,26 @@
     }
   }
 
+  // ---------------- per-account project persistence ----------------
+  function projectsStorageKey(){
+    const email = (state.auth && state.auth.email) ? state.auth.email : 'guest';
+    return 'lenslab_projects_' + email;
+  }
+  function loadProjects(){
+    const key = projectsStorageKey();
+    let arr = safeJSON(localStorage.getItem(key), null);
+    if(arr === null){
+      // migrate the old shared key on first run so existing projects aren't lost
+      const legacy = safeJSON(localStorage.getItem('lenslab_projects'), null);
+      arr = Array.isArray(legacy) ? legacy : [];
+      if(legacy){ try{ localStorage.setItem(key, JSON.stringify(legacy)); localStorage.removeItem('lenslab_projects'); }catch(e){} }
+    }
+    state.projects = Array.isArray(arr) ? arr : [];
+  }
+  function saveProjects(){
+    try{ localStorage.setItem(projectsStorageKey(), JSON.stringify(state.projects)); }catch(e){ toast('Không lưu được dự án'); }
+  }
+
   function renderProjects(){
     const grid = $('projectGrid');
     if(!grid) return;
@@ -1577,8 +1599,12 @@
     state.projects.forEach((p, i)=>{
       const card = document.createElement('article'); card.className='project-card';
       const driveInfo = p.driveFolder ? '<br>📁 ' + esc(p.driveFolder.name) : '';
-      card.innerHTML = '<div class="project-thumb"><div class="thumb-orbit"></div></div><div class="project-card-body"><div><h3>'+esc(p.name)+'</h3><div class="project-meta">'+esc(p.source)+' · '+esc(p.format)+driveInfo+'<br>'+esc(p.created)+'</div></div><div class="project-actions"><button class="project-open" data-project="'+i+'">Mở</button><button class="project-delete" data-delete="'+i+'" title="Xóa dự án này">Xóa</button></div></div>';
+      card.innerHTML = '<div class="project-thumb"><div class="thumb-orbit"></div></div><div class="project-card-body"><div><h3>'+esc(p.name)+'</h3><div class="project-meta">'+esc(p.source)+' · '+esc(p.format)+driveInfo+'<br>'+esc(p.created)+'</div></div><div class="project-actions"><button class="project-open" data-project="'+i+'">Mở</button><button class="project-edit" data-edit="'+i+'" title="Sửa dự án này">Sửa</button><button class="project-delete" data-delete="'+i+'" title="Xóa dự án này">Xóa</button></div></div>';
       card.querySelector('.project-open').addEventListener('click', ()=> startProject(p));
+      card.querySelector('.project-edit').addEventListener('click', (e)=>{
+        e.stopPropagation();
+        editProject(i);
+      });
       card.querySelector('.project-delete').addEventListener('click', (e)=>{
         e.stopPropagation();
         deleteProject(i);
@@ -1592,7 +1618,7 @@
     if(!p) return;
     if(confirm(`Bạn có chắc chắn muốn xóa dự án "${p.name}" không?`)){
       state.projects.splice(index, 1);
-      localStorage.setItem('lenslab_projects', JSON.stringify(state.projects));
+      saveProjects();
       if(state.activeProject && state.activeProject.name === p.name){
         state.activeProject = null;
         const badge = $('activeProjectBadge');
@@ -1601,6 +1627,40 @@
       renderProjects();
       toast(`Đã xóa dự án: ${p.name}`);
     }
+  }
+
+  let editingProjectIndex = -1;
+
+  function openProjectModal(){
+    editingProjectIndex = -1;
+    $('projectNameInput').value = 'Buổi chụp mới';
+    $('cameraSourceSelect').value = 'Capture card / Webcam';
+    $('projectFormatSelect').value = 'RAW + JPEG';
+    $('autoDriveToggle').checked = true;
+    $('driveFolderField').style.display = 'grid';
+    state.projectDriveFolder = { id:'root', name:'My Drive' };
+    $('projectDriveFolderName').textContent = 'My Drive (Mặc định)';
+    $('projectModalTitle').textContent = 'Tạo dự án chụp ảnh';
+    $('projectCreateSubmit').textContent = 'Tạo và bắt đầu chụp';
+    $('projectModal').classList.add('show');
+    $('projectNameInput').focus();
+  }
+
+  function editProject(index){
+    const p = state.projects[index];
+    if(!p) return;
+    editingProjectIndex = index;
+    $('projectNameInput').value = p.name || '';
+    $('cameraSourceSelect').value = p.source || 'Capture card / Webcam';
+    $('projectFormatSelect').value = p.format || 'RAW + JPEG';
+    $('autoDriveToggle').checked = !!p.autoUpload;
+    $('driveFolderField').style.display = p.autoUpload ? 'grid' : 'none';
+    state.projectDriveFolder = p.driveFolder || { id:'root', name:'My Drive' };
+    $('projectDriveFolderName').textContent = state.projectDriveFolder.name || 'My Drive (Mặc định)';
+    $('projectModalTitle').textContent = 'Sửa dự án';
+    $('projectCreateSubmit').textContent = 'Lưu thay đổi';
+    $('projectModal').classList.add('show');
+    $('projectNameInput').focus();
   }
 
   function startProject(project){
@@ -1686,6 +1746,7 @@
     localStorage.setItem('lenslab_auth', JSON.stringify(auth));
     $('accountName').textContent = auth.name;
     $('accountAvatar').textContent = auth.initial || 'G';
+    loadProjects();
     renderProjects();
     showScreen('projects');
   }
@@ -1727,7 +1788,7 @@
     loginWithGoogle();
   });
 
-  $('btnNewProject').addEventListener('click', ()=>{ $('projectModal').classList.add('show'); $('projectNameInput').focus(); });
+  $('btnNewProject').addEventListener('click', ()=> openProjectModal());
   $('btnQuickCapture').addEventListener('click', ()=> connectCamera(state.activeDeviceId));
   $('btnQuickOpen').addEventListener('click', ()=>{ const fi = $('fileInput'); if(fi) fi.click(); });
   $('projectModalClose').addEventListener('click', ()=> $('projectModal').classList.remove('show'));
@@ -1746,15 +1807,36 @@
   $('projectCreateSubmit').addEventListener('click', ()=>{
     const name = $('projectNameInput').value.trim() || 'Buổi chụp mới';
     const autoUpload = $('autoDriveToggle').checked;
-    const project = {
+    const data = {
       name,
       source: $('cameraSourceSelect').value,
       format: $('projectFormatSelect').value,
-      created: new Date().toLocaleDateString('vi-VN'),
       autoUpload: autoUpload,
       driveFolder: autoUpload ? (state.projectDriveFolder || {id:'root', name:'My Drive'}) : null
     };
-    state.projects.unshift(project); localStorage.setItem('lenslab_projects', JSON.stringify(state.projects));
+
+    if(editingProjectIndex >= 0 && state.projects[editingProjectIndex]){
+      const wasActive = (state.activeProject === state.projects[editingProjectIndex]);
+      state.projects[editingProjectIndex] = Object.assign({}, state.projects[editingProjectIndex], data);
+      saveProjects();
+      $('projectModal').classList.remove('show');
+      renderProjects();
+      if(wasActive){
+        state.activeProject = state.projects[editingProjectIndex];
+        if($('activeProjectBadge')) $('activeProjectBadge').textContent = data.name;
+        if($('liveProjectName')) $('liveProjectName').textContent = data.name;
+        if($('liveDriveFolder')) $('liveDriveFolder').textContent = data.driveFolder ? data.driveFolder.name : 'Không đồng bộ';
+        if($('liveDriveToggle')) $('liveDriveToggle').checked = !!data.autoUpload;
+        state.batchAutoMode = !!data.autoUpload;
+        updateBatchShutter();
+      }
+      toast('Đã lưu thay đổi dự án ✓');
+      return;
+    }
+
+    const project = Object.assign({ created: new Date().toLocaleDateString('vi-VN') }, data);
+    state.projects.unshift(project);
+    saveProjects();
     $('projectModal').classList.remove('show');
     renderProjects(); startProject(project);
   });
