@@ -1859,10 +1859,10 @@
     try{
       toast('Đang chuyển sang Google để đăng nhập…');
       const verifier = randomString(64);
-      sessionStorage.setItem('lenslab_pkce_verifier', verifier);
+      localStorage.setItem('lenslab_pkce_verifier', verifier);
       const challenge = await pkceChallenge(verifier);
       const stateVal = randomString(24);
-      sessionStorage.setItem('lenslab_pkce_state', stateVal);
+      localStorage.setItem('lenslab_pkce_state', stateVal);
       const params = new URLSearchParams({
         client_id: cid,
         redirect_uri: googleRedirectUri(),
@@ -1891,10 +1891,12 @@
       toast('Đăng nhập Google bị huỷ hoặc lỗi: ' + oauthErr);
       return true;
     }
-    const verifier = sessionStorage.getItem('lenslab_pkce_verifier');
-    const savedState = sessionStorage.getItem('lenslab_pkce_state');
+    const verifier = localStorage.getItem('lenslab_pkce_verifier');
+    const savedState = localStorage.getItem('lenslab_pkce_state');
     if(!verifier || stateVal !== savedState){
       toast('Phiên đăng nhập Google không hợp lệ — hãy thử lại');
+      localStorage.removeItem('lenslab_pkce_verifier');
+      localStorage.removeItem('lenslab_pkce_state');
       return true;
     }
     const cid = state.settings.driveClientId;
@@ -1935,6 +1937,8 @@
       };
       applyAuthSession(auth);
       updateGoogleStatus('ok');
+      localStorage.removeItem('lenslab_pkce_verifier');
+      localStorage.removeItem('lenslab_pkce_state');
       toast('Đã đăng nhập Google ✓ — phiên lưu lâu dài, không cần đăng nhập lại');
     }catch(err){
       toast('Lỗi đăng nhập Google: ' + (err.message || err));
