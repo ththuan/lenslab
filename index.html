@@ -1849,9 +1849,11 @@
 
   async function loginWithGoogle(){
     const cid = state.settings.driveClientId;
-    if(!cid){
+    if(!cid || !state.settings.driveClientSecret){
       $('googleSetupModal').classList.add('show');
-      $('googleClientIdSetupInput').focus();
+      $('googleClientIdSetupInput').value = cid || '';
+      $('googleClientSecretSetupInput').value = state.settings.driveClientSecret || '';
+      $('googleClientSecretSetupInput').focus();
       return;
     }
     try{
