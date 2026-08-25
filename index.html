@@ -1835,7 +1835,9 @@
     return base64UrlEncode(new Uint8Array(hash));
   }
   function googleRedirectUri(){
-    return window.location.origin + window.location.pathname;
+    const p = window.location.pathname;
+    const path = p.endsWith('/') ? p : (p + '/');
+    return window.location.origin + path;
   }
 
   async function loginWithGoogle(){
