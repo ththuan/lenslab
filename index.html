@@ -1586,6 +1586,75 @@
   }
   function saveProjects(){
     try{ localStorage.setItem(projectsStorageKey(), JSON.stringify(state.projects)); }catch(e){ toast('Không lưu được dự án'); }
+    // Sync the full project list to the account's Drive app-data (hidden) folder
+    if(state.auth && state.auth.email && state.googleAccessToken && state.settings.driveClientId){
+      driveWriteProjects(state.projects).catch(err=> console.warn('Drive project push failed:', err));
+    }
+  }
+
+  // ---------------- Drive-backed project sync (appDataFolder) ----------------
+  const PROJECTS_FILE_NAME = 'lenslab-projects.json';
+
+  async function driveProjectsFileId(token){
+    const q = "name='" + PROJECTS_FILE_NAME + "' and trashed=false";
+    const resp = await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name)&pageSize=20&q=' + encodeURIComponent(q), {
+      headers: { Authorization: 'Bearer ' + token, Accept: 'application/json' }
+    });
+    if(!resp.ok) return null;
+    const j = await resp.json();
+    return (j.files && j.files[0] && j.files[0].id) || null;
+  }
+
+  async function driveReadProjects(){
+    const token = state.googleAccessToken || await getAccessToken();
+    const id = await driveProjectsFileId(token);
+    if(!id) return null;
+    const resp = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if(!resp.ok) return null;
+    return safeJSON(await resp.text(), null);
+  }
+
+  async function driveWriteProjects(list){
+    const token = state.googleAccessToken || await getAccessToken();
+    const content = JSON.stringify(list);
+    const id = await driveProjectsFileId(token);
+    if(id){
+      const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files/' + id + '?uploadType=media', {
+        method: 'PATCH',
+        headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: new Blob([content], {type:'application/json'})
+      });
+      return resp.ok;
+    }
+    const form = new FormData();
+    form.append('metadata', new Blob([JSON.stringify({ name: PROJECTS_FILE_NAME, mimeType: 'application/json', parents: ['appDataFolder'] })], {type:'application/json'}));
+    form.append('file', new Blob([content], {type:'application/json'}), PROJECTS_FILE_NAME);
+    const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + token },
+      body: form
+    });
+    return resp.ok;
+  }
+
+  async function syncProjectsFromDrive(){
+    if(!(state.auth && state.auth.email)) return;
+    if(!state.googleAccessToken) return;
+    try{
+      const remote = await driveReadProjects();
+      if(remote && Array.isArray(remote)){
+        state.projects = remote;
+        try{ localStorage.setItem(projectsStorageKey(), JSON.stringify(remote)); }catch(e){}
+        renderProjects();
+      } else if(state.projects.length){
+        // Nothing stored on Drive yet — push the local cache up so it's backed up
+        await driveWriteProjects(state.projects);
+      }
+    }catch(err){
+      console.warn('Drive project sync failed:', err);
+    }
   }
 
   function renderProjects(){
@@ -1749,6 +1818,7 @@
     loadProjects();
     renderProjects();
     showScreen('projects');
+    syncProjectsFromDrive();
   }
 
   function logoutSession(){
@@ -4994,7 +5064,7 @@
 
   // ---------------- Google Drive export ----------------
   const GSI_URL = 'https://accounts.google.com/gsi/client';
-  const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
+  const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/drive.appdata';
 
   function loadGsi(){
     if(window.google && window.google.accounts && window.google.accounts.oauth2){
