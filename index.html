@@ -246,6 +246,7 @@
   .live-ctrl-row{
     display:flex; flex-direction:column; gap:4px;
   }
+  .timer-btn.active{border-color:var(--teal); color:var(--teal); background:rgba(101,217,202,0.12);}
   .live-ctrl-row .lc-top{
     display:flex; justify-content:space-between; font-size:11.5px; color:#9ba5b0;
   }
@@ -1016,6 +1017,14 @@
           <div class="block-title">
             <span>🎨 Màu khi chụp (Live)</span>
           </div>
+          <select id="liveWbSelect" style="width:100%; background:#181a1e; border:1px solid #23272e; color:#d6dbe0; border-radius:8px; padding:9px 10px; font-size:12px;">
+            <option value="auto" selected>Cân bằng trắng: Tự động</option>
+            <option value="daylight">Ánh nắng</option>
+            <option value="cloudy">Trời mây</option>
+            <option value="shade">Bóng râm</option>
+            <option value="tungsten">Đèn vàng (trong nhà)</option>
+            <option value="fluorescent">Đèn huỳnh quang</option>
+          </select>
           <div class="live-ctrl-row">
             <div class="lc-top"><label>Ấm / Lạnh (Temp)</label><span id="liveWarmthVal">0</span></div>
             <input type="range" id="liveWarmthSlider" min="-100" max="100" value="0">
@@ -1023,6 +1032,43 @@
           <div class="live-ctrl-row">
             <div class="lc-top"><label>Bù sáng (EV)</label><span id="liveExpVal">0</span></div>
             <input type="range" id="liveExpSlider" min="-30" max="30" value="0">
+          </div>
+          <div class="live-ctrl-row">
+            <div class="lc-top"><label>Tương phản (Contrast)</label><span id="liveContrastVal">0</span></div>
+            <input type="range" id="liveContrastSlider" min="-50" max="50" value="0">
+          </div>
+          <div class="live-ctrl-row">
+            <div class="lc-top"><label>Bão hòa (Saturation)</label><span id="liveSaturationVal">0</span></div>
+            <input type="range" id="liveSaturationSlider" min="-100" max="100" value="0">
+          </div>
+          <div class="live-ctrl-row">
+            <div class="lc-top"><label>Vùng sáng (Highlights)</label><span id="liveHighlightsVal">0</span></div>
+            <input type="range" id="liveHighlightsSlider" min="-100" max="100" value="0">
+          </div>
+          <div class="live-ctrl-row">
+            <div class="lc-top"><label>Vùng tối (Shadows)</label><span id="liveShadowsVal">0</span></div>
+            <input type="range" id="liveShadowsSlider" min="-100" max="100" value="0">
+          </div>
+        </div>
+
+        <!-- 4b. Framing & Timer -->
+        <div class="sidebar-block">
+          <div class="block-title">
+            <span>📐 Khung hình & Hẹn giờ</span>
+          </div>
+          <select id="liveAspectSelect" style="width:100%; background:#181a1e; border:1px solid #23272e; color:#d6dbe0; border-radius:8px; padding:9px 10px; font-size:12px;">
+            <option value="free" selected>Khung: Tự do</option>
+            <option value="1">1:1 (Vuông)</option>
+            <option value="1.333333">4:3</option>
+            <option value="1.5">3:2</option>
+            <option value="1.777778">16:9</option>
+            <option value="0.5625">9:16 (Dọc)</option>
+          </select>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;">
+            <button type="button" class="form-cancel timer-btn" data-timer="0" style="flex:1; padding:8px 0; font-size:12px;">Tắt hẹn giờ</button>
+            <button type="button" class="form-cancel timer-btn" data-timer="3" style="flex:1; padding:8px 0; font-size:12px;">3s</button>
+            <button type="button" class="form-cancel timer-btn" data-timer="5" style="flex:1; padding:8px 0; font-size:12px;">5s</button>
+            <button type="button" class="form-cancel timer-btn" data-timer="10" style="flex:1; padding:8px 0; font-size:12px;">10s</button>
           </div>
         </div>
 
@@ -2920,11 +2966,34 @@
     histRAF = requestAnimationFrame(updateLiveHistogram);
   }
 
-  // ---------------- Live Color Preview (LUT / temp / exposure on the live view) ----------------
+  // ---------------- Live Color Preview (temp/EV/contrast/sat/highlights/shadows + WB on the live view) ----------------
   const LIVE_PREVIEW_MAX = 480;
 
+  const WB_PRESETS = {
+    'auto': { w:0, t:0 },
+    'daylight': { w:8, t:0 },
+    'cloudy': { w:22, t:0 },
+    'shade': { w:32, t:0 },
+    'tungsten': { w:-38, t:0 },
+    'fluorescent': { w:12, t:22 }
+  };
+
+  function effectiveColor(){
+    const wb = WB_PRESETS[liveControls.wb] || WB_PRESETS.auto;
+    return {
+      exposure: liveControls.exp || 0,
+      warmth: (liveControls.warmth || 0) + wb.w,
+      tint: wb.t || 0,
+      contrast: liveControls.contrast || 0,
+      saturation: liveControls.saturation || 0,
+      highlights: liveControls.highlights || 0,
+      shadows: liveControls.shadows || 0
+    };
+  }
+
   function liveColorActive(){
-    return (liveControls.lut && liveControls.lut !== 'none') || liveControls.warmth !== 0 || liveControls.exp !== 0;
+    const c = effectiveColor();
+    return c.warmth !== 0 || c.tint !== 0 || c.exposure !== 0 || c.contrast !== 0 || c.saturation !== 0 || c.highlights !== 0 || c.shadows !== 0;
   }
 
   function drawLiveColorPreview(){
@@ -2949,13 +3018,7 @@
       const ctx = canvas.getContext('2d', {willReadFrequently:true});
       ctx.drawImage(video, 0, 0, w, h);
       const img = ctx.getImageData(0, 0, w, h);
-      applyToneAndColor(img.data, w, h, {
-        exposure: liveControls.exp || 0,
-        contrast: 0, saturation: 0, warmth: liveControls.warmth || 0,
-        tint: 0, highlights: 0, shadows: 0
-      });
-      const L = getLUT(liveControls.lut);
-      if(L){ applyLUT(img.data, w, h, L.lut, L.N, 1); }
+      applyToneAndColor(img.data, w, h, effectiveColor());
       ctx.putImageData(img, 0, 0);
     }catch(e){}
     liveColorRAF = requestAnimationFrame(drawLiveColorPreview);
@@ -3064,15 +3127,46 @@
       actx.stroke();
       actx.setLineDash([]);
     }
+
+    // Aspect ratio framing guide
+    if(liveControls.aspect && liveControls.aspect !== 'free' && cw > 50 && ch > 50){
+      const target = parseFloat(liveControls.aspect);
+      let aw, ah;
+      if(cw / ch > target){ ah = ch; aw = ch * target; }
+      else { aw = cw; ah = cw / target; }
+      const ax = (cw - aw) / 2, ay = (ch - ah) / 2;
+      // dim the area outside the frame
+      actx.fillStyle = 'rgba(0,0,0,0.45)';
+      actx.fillRect(0, 0, cw, ay);
+      actx.fillRect(0, ay + ah, cw, ch - (ay + ah));
+      actx.fillRect(0, ay, ax, ah);
+      actx.fillRect(ax + aw, ay, cw - (ax + aw), ah);
+      // frame border
+      actx.strokeStyle = 'rgba(255,255,255,0.9)';
+      actx.lineWidth = 2;
+      actx.strokeRect(ax, ay, aw, ah);
+    }
   }
 
   // Live sidebar sliders & toggles wiring
   const liveControls = {
     exp: 0,
-    lut: 'none',
-    warmth: 0
+    warmth: 0,
+    wb: 'auto',
+    contrast: 0,
+    saturation: 0,
+    highlights: 0,
+    shadows: 0,
+    aspect: 'free',
+    timer: 0
   };
 
+  if($('liveWbSelect')){
+    $('liveWbSelect').addEventListener('change', (e)=>{
+      liveControls.wb = e.target.value;
+      startLiveColorPreview();
+    });
+  }
   if($('liveExpSlider')){
     $('liveExpSlider').addEventListener('input', (e)=>{
       liveControls.exp = parseInt(e.target.value, 10);
@@ -3087,6 +3181,46 @@
       startLiveColorPreview();
     });
   }
+  if($('liveContrastSlider')){
+    $('liveContrastSlider').addEventListener('input', (e)=>{
+      liveControls.contrast = parseInt(e.target.value, 10);
+      $('liveContrastVal').textContent = liveControls.contrast;
+      startLiveColorPreview();
+    });
+  }
+  if($('liveSaturationSlider')){
+    $('liveSaturationSlider').addEventListener('input', (e)=>{
+      liveControls.saturation = parseInt(e.target.value, 10);
+      $('liveSaturationVal').textContent = liveControls.saturation;
+      startLiveColorPreview();
+    });
+  }
+  if($('liveHighlightsSlider')){
+    $('liveHighlightsSlider').addEventListener('input', (e)=>{
+      liveControls.highlights = parseInt(e.target.value, 10);
+      $('liveHighlightsVal').textContent = liveControls.highlights;
+      startLiveColorPreview();
+    });
+  }
+  if($('liveShadowsSlider')){
+    $('liveShadowsSlider').addEventListener('input', (e)=>{
+      liveControls.shadows = parseInt(e.target.value, 10);
+      $('liveShadowsVal').textContent = liveControls.shadows;
+      startLiveColorPreview();
+    });
+  }
+  if($('liveAspectSelect')){
+    $('liveAspectSelect').addEventListener('change', (e)=>{
+      liveControls.aspect = e.target.value;
+    });
+  }
+  document.querySelectorAll('.timer-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      liveControls.timer = parseInt(btn.dataset.timer || '0', 10);
+      document.querySelectorAll('.timer-btn').forEach(b=> b.classList.toggle('active', b === btn));
+      toast(liveControls.timer > 0 ? ('Hẹn giờ ' + liveControls.timer + ' giây') : 'Đã tắt hẹn giờ');
+    });
+  });
 
   if($('liveDriveToggle')){
     $('liveDriveToggle').addEventListener('change', (e)=>{
@@ -3122,14 +3256,20 @@
     }
   });
 
-  $('btnShutter').addEventListener('click', ()=>{
+  let shutterBusy = false;
+
+  function runShutter(){
     if(!video.videoWidth){ toast('Chưa có tín hiệu camera để chụp'); return; }
     const idx = addShotFromImage(captureFrame());
     const shot = state.shots[idx];
-    shot.edits.lut = liveControls.lut || 'none';
-    shot.edits.lutStrength = 100;
-    if(liveControls.warmth){ shot.edits.warmth = liveControls.warmth; }
-    if(liveControls.exp){ shot.edits.exposure = liveControls.exp; }
+    const c = effectiveColor();
+    shot.edits.exposure = c.exposure;
+    shot.edits.warmth = c.warmth;
+    shot.edits.tint = c.tint;
+    shot.edits.contrast = c.contrast;
+    shot.edits.saturation = c.saturation;
+    shot.edits.highlights = c.highlights;
+    shot.edits.shadows = c.shadows;
     flashScreen();
 
     if(state.batchAutoMode){
@@ -3140,6 +3280,40 @@
       processBatchNext();
     } else {
       openEditor(idx);
+    }
+  }
+
+  function showCountdown(seconds, done){
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.35);pointer-events:none;';
+    const num = document.createElement('div');
+    num.style.cssText = 'font-size:120px;font-weight:800;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,0.6);';
+    overlay.appendChild(num);
+    document.body.appendChild(overlay);
+    let n = seconds;
+    num.textContent = String(n);
+    const t = setInterval(()=>{
+      n--;
+      if(n <= 0){
+        clearInterval(t);
+        overlay.remove();
+        done();
+      } else {
+        num.textContent = String(n);
+      }
+    }, 1000);
+  }
+
+  $('btnShutter').addEventListener('click', ()=>{
+    if(shutterBusy) return;
+    if(liveControls.timer > 0){
+      shutterBusy = true;
+      showCountdown(liveControls.timer, ()=>{
+        shutterBusy = false;
+        runShutter();
+      });
+    } else {
+      runShutter();
     }
   });
 
