@@ -1075,6 +1075,10 @@
             <b id="liveDriveFolder" class="val">My Drive</b>
           </div>
           <div class="session-stat-row">
+            <span class="lbl">Google:</span>
+            <b id="liveGoogleStatus" class="val" style="color:#9ba1a8;">Chưa kiểm tra</b>
+          </div>
+          <div class="session-stat-row">
             <span class="lbl">Tốc độ xử lý:</span>
             <span class="mono" style="color:var(--teal); font-size:11px;">Real-time (~0.3s/ảnh)</span>
           </div>
@@ -1519,6 +1523,7 @@
     },
     auth: safeJSON(localStorage.getItem('lenslab_auth'), null),
     googleAccessToken: sessionStorage.getItem('lenslab_google_access_token') || null,
+    googleTokenExpiry: +(sessionStorage.getItem('lenslab_google_token_expiry') || 0),
     projects: [],
     faceLandmarker: null,
     mpLoading: null,
@@ -1756,6 +1761,8 @@
     showScreen('welcome');
     connectCamera(state.activeDeviceId);
     loadProjectShots(project);
+    if(project.autoUpload){ ensureDriveToken(); }
+    else { updateGoogleStatus('checking'); }
   }
 
   // Restore previously-captured shots of this project into the filmstrip
@@ -1817,7 +1824,7 @@
           client_id: cid,
           scope: 'openid profile email ' + DRIVE_SCOPE,
           callback: resp=> {
-            if(resp && resp.access_token) resolve(resp.access_token);
+            if(resp && resp.access_token) resolve(resp);
             else if(resp && resp.error) reject(new Error(resp.error_description || resp.error));
             else reject(new Error('Người dùng đã đóng cửa sổ Google'));
           }
@@ -1827,7 +1834,7 @@
 
       toast('Đang lấy thông tin hồ sơ Google…');
       const profileResp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers:{Authorization:'Bearer ' + token}
+        headers:{Authorization:'Bearer ' + token.access_token}
       });
       
       if(!profileResp.ok) throw new Error('Không lấy được thông tin hồ sơ từ Google');
@@ -1842,9 +1849,14 @@
         picture: profile.picture || ''
       };
 
-      state.googleAccessToken = token;
-      sessionStorage.setItem('lenslab_google_access_token', token);
+      state.googleAccessToken = token.access_token;
+      sessionStorage.setItem('lenslab_google_access_token', token.access_token);
+      if(token.expires_in){
+        state.googleTokenExpiry = Date.now() + (token.expires_in * 1000);
+        sessionStorage.setItem('lenslab_google_token_expiry', String(state.googleTokenExpiry));
+      }
       applyAuthSession(auth);
+      updateGoogleStatus('ok');
       toast('Đã đăng nhập tài khoản Google: ' + auth.name + ' ✓');
     }catch(err){
       console.error('Google OAuth error:', err);
@@ -1871,9 +1883,11 @@
   function logoutSession(){
     state.auth = null;
     state.googleAccessToken = null;
+    state.googleTokenExpiry = 0;
     stopCamera();
     localStorage.removeItem('lenslab_auth');
     sessionStorage.removeItem('lenslab_google_access_token');
+    sessionStorage.removeItem('lenslab_google_token_expiry');
     showScreen('auth');
     toast('Đã đăng xuất tài khoản');
   }
@@ -3174,7 +3188,7 @@
   }
 
   async function uploadOriginalFileToDrive(file, folderId, _retried){
-    let token = state.googleAccessToken || await getAccessToken();
+    let token = await getAccessToken();
     const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
     const name = exportName().replace(/\.(jpg|png)$/i, '.' + ext);
     const meta = { name, mimeType: file.type || 'image/jpeg' };
@@ -3200,7 +3214,7 @@
   }
 
   async function uploadBlobToDrive(blob, folderId, _retried){
-    let token = state.googleAccessToken || await getAccessToken();
+    let token = await getAccessToken();
     const meta = { name: exportName(), mimeType: 'image/jpeg' };
     if(folderId && folderId !== 'root'){ meta.parents = [folderId]; }
     const form = new FormData();
@@ -5251,21 +5265,55 @@
     });
   }
 
-  function getAccessToken(){
+  function getAccessToken(force){
     const cid = state.settings.driveClientId;
     if(!cid) return Promise.reject(new Error('Chưa cài Google Client ID (vào ⚙ Cài đặt)'));
-    if(state.googleAccessToken){ return Promise.resolve(state.googleAccessToken); }
+    if(!force && state.googleAccessToken){
+      const exp = state.googleTokenExpiry || 0;
+      // auto-renew only if already expired; otherwise reuse
+      if(!exp || Date.now() < exp){ return Promise.resolve(state.googleAccessToken); }
+    }
     return loadGsi().then(()=> new Promise((resolve, reject)=>{
       const client = google.accounts.oauth2.initTokenClient({
         client_id: cid,
         scope: 'openid profile email ' + DRIVE_SCOPE,
         callback: (resp)=>{
-          if(resp.error) reject(new Error(resp.error));
-          else { state.googleAccessToken = resp.access_token; sessionStorage.setItem('lenslab_google_access_token', resp.access_token); resolve(resp.access_token); }
+          if(resp.error){ updateGoogleStatus('error'); reject(new Error(resp.error)); }
+          else {
+            state.googleAccessToken = resp.access_token;
+            sessionStorage.setItem('lenslab_google_access_token', resp.access_token);
+            if(resp.expires_in){
+              state.googleTokenExpiry = Date.now() + (resp.expires_in * 1000);
+              sessionStorage.setItem('lenslab_google_token_expiry', String(state.googleTokenExpiry));
+            }
+            updateGoogleStatus('ok');
+            resolve(resp.access_token);
+          }
         }
       });
       client.requestAccessToken();
     }));
+  }
+
+  function updateGoogleStatus(status){
+    const el = $('liveGoogleStatus');
+    if(!el) return;
+    if(status === 'ok'){ el.textContent = 'Sẵn sàng'; el.style.color = 'var(--teal)'; }
+    else if(status === 'checking'){ el.textContent = 'Đang kiểm tra…'; el.style.color = '#9ba1a8'; }
+    else { el.textContent = 'Cần đăng nhập'; el.style.color = 'var(--danger)'; }
+  }
+
+  async function ensureDriveToken(){
+    updateGoogleStatus('checking');
+    try{
+      await getAccessToken();
+      updateGoogleStatus('ok');
+      return true;
+    }catch(err){
+      updateGoogleStatus('error');
+      toast('Cần đăng nhập Google để upload ảnh: ' + (err && err.message ? err.message : err));
+      return false;
+    }
   }
 
   // ---- folder browser ----
@@ -5315,7 +5363,10 @@
 
   function clearGoogleToken(){
     state.googleAccessToken = null; driveToken = null;
+    state.googleTokenExpiry = 0;
     sessionStorage.removeItem('lenslab_google_access_token');
+    sessionStorage.removeItem('lenslab_google_token_expiry');
+    updateGoogleStatus('error');
   }
 
   async function refreshDriveList(){
