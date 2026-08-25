@@ -942,6 +942,8 @@
             <button id="btnSwitchCam" title="Đổi nhanh camera (DSLR / iPad) [Phím C]" style="background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:20px;padding:8px 14px;font-size:12px;backdrop-filter:blur(6px);cursor:pointer;display:flex;align-items:center;gap:4px;">🔄 Đổi Cam</button>
             <button id="btnNativeCamera" title="Chụp ảnh gốc 12MP bằng Camera iPad [Phím F]" style="background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.25);color:#fff;border-radius:20px;padding:8px 14px;font-size:12px;backdrop-filter:blur(6px);cursor:pointer;display:flex;align-items:center;gap:4px;">📷 12MP Gốc</button>
           </div>
+
+          <div class="zoom-badge" id="liveZoomBadge" title="Chạm để về 1x" style="position:absolute; bottom:18px; right:18px; z-index:16; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.65); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.15); color:#fff; border-radius:16px; padding:4px 12px; font-size:12px; font-weight:700; cursor:pointer;">1.0×</div>
         </div>
 
         <!-- Bottom Filmstrip -->
@@ -2393,6 +2395,7 @@
   }
 
   function stopCamera(){
+    resetLiveZoom();
     if(state.stream){
       state.stream.getTracks().forEach(t=>t.stop());
       state.stream = null;
@@ -2828,17 +2831,76 @@
   let liveTapFocus = null;
   let tapFocusTimer = null;
 
+  // Live pinch-to-zoom (visual + applied to capture)
+  let liveZoom = 1;
+  let pinchStartDist = 0;
+  let pinchStartZoom = 1;
+
+  function applyLiveZoom(){
+    const z = liveZoom;
+    const t = (z > 1.001) ? ('scale(' + z + ')') : '';
+    [$('liveVideo'), $('livePreviewCanvas'), $('liveAfCanvas')].forEach(el=>{
+      if(el) el.style.transform = t;
+    });
+    const badge = $('liveZoomBadge');
+    if(badge){
+      badge.textContent = z.toFixed(1) + '×';
+      badge.style.display = (z > 1.001) ? 'flex' : 'none';
+    }
+  }
+  function resetLiveZoom(){
+    liveZoom = 1;
+    applyLiveZoom();
+  }
+  function captureFrame(){
+    if(!video || liveZoom <= 1.001) return video;
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if(!vw || !vh) return video;
+    const cw = vw / liveZoom, ch = vh / liveZoom;
+    const sx = (vw - cw) / 2, sy = (vh - ch) / 2;
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.round(cw));
+    c.height = Math.max(1, Math.round(ch));
+    c.getContext('2d').drawImage(video, sx, sy, cw, ch, 0, 0, c.width, c.height);
+    return c;
+  }
+
   if($('viewportWrap')){
-    $('viewportWrap').addEventListener('pointerdown', (e)=>{
-      if(e.target.closest('button, .shutter, .live-overlay-bar, .live-shutter-wrap')) return;
-      const rect = $('viewportWrap').getBoundingClientRect();
+    const vwEl = $('viewportWrap');
+    const activePointers = new Map();
+    vwEl.addEventListener('pointerdown', (e)=>{
+      activePointers.set(e.pointerId, true);
+      if(activePointers.size > 1) return;
+      if(e.target.closest('button, .shutter, .live-overlay-bar, .live-shutter-wrap, .zoom-badge')) return;
+      const rect = vwEl.getBoundingClientRect();
       const x = (e.clientX - rect.left) / rect.width;
       const y = (e.clientY - rect.top) / rect.height;
       liveTapFocus = { x, y, time: Date.now() };
       clearTimeout(tapFocusTimer);
       tapFocusTimer = setTimeout(()=>{ liveTapFocus = null; }, 2500);
     });
+    vwEl.addEventListener('pointerup', (e)=>{ activePointers.delete(e.pointerId); });
+    vwEl.addEventListener('pointercancel', (e)=>{ activePointers.delete(e.pointerId); });
+
+    vwEl.addEventListener('touchstart', (e)=>{
+      if(e.touches.length === 2){
+        pinchStartDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        pinchStartZoom = liveZoom;
+      }
+    }, {passive:true});
+    vwEl.addEventListener('touchmove', (e)=>{
+      if(e.touches.length === 2 && pinchStartDist > 0){
+        e.preventDefault();
+        const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        liveZoom = Math.min(4, Math.max(1, pinchStartZoom * d / pinchStartDist));
+        applyLiveZoom();
+      }
+    }, {passive:false});
+    vwEl.addEventListener('touchend', (e)=>{
+      if(e.touches.length < 2){ pinchStartDist = 0; }
+    });
   }
+  if($('liveZoomBadge')) $('liveZoomBadge').addEventListener('click', resetLiveZoom);
 
   function drawLiveAfOverlay(){
     const afCanvas = $('liveAfCanvas');
@@ -2996,7 +3058,7 @@
 
   $('btnShutter').addEventListener('click', ()=>{
     if(!video.videoWidth){ toast('Chưa có tín hiệu camera để chụp'); return; }
-    const idx = addShotFromImage(video);
+    const idx = addShotFromImage(captureFrame());
     const shot = state.shots[idx];
     shot.edits.lut = liveControls.lut || 'none';
     shot.edits.lutStrength = 100;
