@@ -1016,17 +1016,6 @@
           <div class="block-title">
             <span>🎨 Màu khi chụp (Live)</span>
           </div>
-          <select id="liveLutSelect" style="width:100%; background:#181a1e; border:1px solid #23272e; color:#d6dbe0; border-radius:8px; padding:9px 10px; font-size:12px;">
-            <option value="none" selected>Không LUT</option>
-            <option value="portra-clean">01_Portra_Clean — Tự nhiên</option>
-            <option value="portra-warm">02_Portra_Warm — Ấm (hội trường)</option>
-            <option value="portra-soft">03_Portra_Soft — Pastel mềm</option>
-            <option value="fuji-400h-clean">04_Fuji_400H_Clean — Xanh sạch</option>
-            <option value="fuji-400h-pastel">05_Fuji_400H_Pastel — Pastel</option>
-            <option value="event-natural">06_Event_Natural — Trung tính</option>
-            <option value="event-indoor">07_Event_Indoor — Trong nhà</option>
-            <option value="portrait-premium">08_Portrait_Premium — Đậm (khách)</option>
-          </select>
           <div class="live-ctrl-row">
             <div class="lc-top"><label>Ấm / Lạnh (Temp)</label><span id="liveWarmthVal">0</span></div>
             <input type="range" id="liveWarmthSlider" min="-100" max="100" value="0">
@@ -3088,13 +3077,6 @@
     $('liveExpSlider').addEventListener('input', (e)=>{
       liveControls.exp = parseInt(e.target.value, 10);
       $('liveExpVal').textContent = (liveControls.exp >= 0 ? '+' : '') + liveControls.exp;
-      startLiveColorPreview();
-    });
-  }
-  if($('liveLutSelect')){
-    $('liveLutSelect').addEventListener('change', (e)=>{
-      liveControls.lut = e.target.value;
-      toast('LUT khi chụp: ' + e.target.value);
       startLiveColorPreview();
     });
   }
