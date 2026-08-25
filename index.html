@@ -1621,7 +1621,7 @@
   }
 
   async function driveReadProjects(){
-    const token = state.googleAccessToken || await getAccessToken();
+    const token = await getAccessToken();
     const id = await driveProjectsFileId(token);
     if(!id) return null;
     const resp = await fetch('https://www.googleapis.com/drive/v3/files/' + id + '?alt=media', {
@@ -1632,7 +1632,7 @@
   }
 
   async function driveWriteProjects(list){
-    const token = state.googleAccessToken || await getAccessToken();
+    const token = await getAccessToken();
     const content = JSON.stringify(list);
     const id = await driveProjectsFileId(token);
     if(id){
@@ -1656,7 +1656,8 @@
 
   async function syncProjectsFromDrive(){
     if(!(state.auth && state.auth.email)) return;
-    if(!state.googleAccessToken) return;
+    const hasRefresh = !!localStorage.getItem('lenslab_google_refresh_token');
+    if(!state.googleAccessToken && !hasRefresh) return;
     try{
       const remote = await driveReadProjects();
       if(remote && Array.isArray(remote)){
@@ -1810,67 +1811,150 @@
     }
   }
 
+  // ---------------- Google OAuth PKCE (refresh token => no re-login) ----------------
+  const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
+  const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+  const GOOGLE_SCOPES = 'openid profile email https://www.googleapis.com/auth/drive';
+
+  function randomString(len){
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    const a = new Uint8Array(len);
+    if(crypto.getRandomValues) crypto.getRandomValues(a);
+    let s = '';
+    for(let i=0;i<len;i++) s += chars[a[i] % chars.length];
+    return s;
+  }
+  function base64UrlEncode(bytes){
+    let s = '';
+    for(let i=0;i<bytes.length;i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+  async function pkceChallenge(verifier){
+    const data = new TextEncoder().encode(verifier);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return base64UrlEncode(new Uint8Array(hash));
+  }
+  function googleRedirectUri(){
+    return window.location.origin + window.location.pathname;
+  }
+
   async function loginWithGoogle(){
-    let cid = state.settings.driveClientId;
-    
-    // If no Client ID configured yet, open dedicated Google setup modal
+    const cid = state.settings.driveClientId;
     if(!cid){
       $('googleSetupModal').classList.add('show');
       $('googleClientIdSetupInput').focus();
       return;
     }
-
     try{
-      toast('Đang mở cửa sổ đăng nhập Google…');
-      await loadGsi();
-      const token = await new Promise((resolve, reject)=>{
-        const client = google.accounts.oauth2.initTokenClient({
-          client_id: cid,
-          scope: 'openid profile email ' + DRIVE_SCOPE,
-          callback: resp=> {
-            if(resp && resp.access_token) resolve(resp);
-            else if(resp && resp.error) reject(new Error(resp.error_description || resp.error));
-            else reject(new Error('Người dùng đã đóng cửa sổ Google'));
-          }
-        });
-        client.requestAccessToken({prompt:'consent'});
+      toast('Đang chuyển sang Google để đăng nhập…');
+      const verifier = randomString(64);
+      sessionStorage.setItem('lenslab_pkce_verifier', verifier);
+      const challenge = await pkceChallenge(verifier);
+      const stateVal = randomString(24);
+      sessionStorage.setItem('lenslab_pkce_state', stateVal);
+      const params = new URLSearchParams({
+        client_id: cid,
+        redirect_uri: googleRedirectUri(),
+        response_type: 'code',
+        scope: GOOGLE_SCOPES,
+        access_type: 'offline',
+        prompt: 'consent',
+        code_challenge: challenge,
+        code_challenge_method: 'S256',
+        state: stateVal
       });
+      window.location.href = GOOGLE_AUTH_URL + '?' + params.toString();
+    }catch(err){
+      toast('Không khởi tạo được đăng nhập Google: ' + (err.message || err));
+    }
+  }
 
-      toast('Đang lấy thông tin hồ sơ Google…');
-      const profileResp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers:{Authorization:'Bearer ' + token.access_token}
+  async function handleAuthRedirect(){
+    const q = new URLSearchParams(window.location.search);
+    const code = q.get('code');
+    const stateVal = q.get('state');
+    const oauthErr = q.get('error');
+    if(!code && !oauthErr) return false;
+    window.history.replaceState({}, '', window.location.pathname);
+    if(oauthErr){
+      toast('Đăng nhập Google bị huỷ hoặc lỗi: ' + oauthErr);
+      return true;
+    }
+    const verifier = sessionStorage.getItem('lenslab_pkce_verifier');
+    const savedState = sessionStorage.getItem('lenslab_pkce_state');
+    if(!verifier || stateVal !== savedState){
+      toast('Phiên đăng nhập Google không hợp lệ — hãy thử lại');
+      return true;
+    }
+    const cid = state.settings.driveClientId;
+    try{
+      const body = new URLSearchParams({
+        code: code,
+        client_id: cid,
+        redirect_uri: googleRedirectUri(),
+        grant_type: 'authorization_code',
+        code_verifier: verifier
       });
-      
-      if(!profileResp.ok) throw new Error('Không lấy được thông tin hồ sơ từ Google');
-      const profile = await profileResp.json();
-      
+      const resp = await fetch(GOOGLE_TOKEN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+      const data = await resp.json();
+      if(!resp.ok || !data.access_token) throw new Error(data.error_description || data.error || 'Lỗi đổi mã đăng nhập');
+      state.googleAccessToken = data.access_token;
+      state.googleTokenExpiry = Date.now() + ((data.expires_in || 3600) * 1000);
+      sessionStorage.setItem('lenslab_google_access_token', data.access_token);
+      sessionStorage.setItem('lenslab_google_token_expiry', String(state.googleTokenExpiry));
+      if(data.refresh_token){ localStorage.setItem('lenslab_google_refresh_token', data.refresh_token); }
+
+      let profile = null;
+      try{
+        const pr = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers:{Authorization:'Bearer ' + data.access_token} });
+        if(pr.ok) profile = await pr.json();
+      }catch(e){}
       const auth = {
         provider: 'google',
         verifiedAt: Date.now(),
-        name: profile.name || profile.email || 'Tài khoản Google',
-        email: profile.email || '',
-        initial: (profile.name || profile.email || 'G').trim().charAt(0).toUpperCase(),
-        picture: profile.picture || ''
+        name: (profile && (profile.name || profile.email)) || 'Tài khoản Google',
+        email: (profile && profile.email) || '',
+        initial: ((profile && (profile.name || profile.email)) || 'G').trim().charAt(0).toUpperCase(),
+        picture: (profile && profile.picture) || ''
       };
-
-      state.googleAccessToken = token.access_token;
-      sessionStorage.setItem('lenslab_google_access_token', token.access_token);
-      if(token.expires_in){
-        state.googleTokenExpiry = Date.now() + (token.expires_in * 1000);
-        sessionStorage.setItem('lenslab_google_token_expiry', String(state.googleTokenExpiry));
-      }
       applyAuthSession(auth);
       updateGoogleStatus('ok');
-      toast('Đã đăng nhập tài khoản Google: ' + auth.name + ' ✓');
+      toast('Đã đăng nhập Google ✓ — phiên lưu lâu dài, không cần đăng nhập lại');
     }catch(err){
-      console.error('Google OAuth error:', err);
-      const msg = err && err.message ? err.message : String(err);
-      if(msg.includes('origin_mismatch') || msg.includes('idpiframe_initialization_failed')){
-        alert('Lỗi Origin Google: Bạn cần thêm domain trang web (https://ththuan.github.io) vào mục "Authorized JavaScript origins" trên Google Cloud Console.');
-      } else {
-        toast('Lỗi đăng nhập Google: ' + msg);
-      }
+      toast('Lỗi đăng nhập Google: ' + (err.message || err));
     }
+    return true;
+  }
+
+  async function refreshAccessToken(){
+    const refresh = localStorage.getItem('lenslab_google_refresh_token');
+    const cid = state.settings.driveClientId;
+    if(!refresh || !cid) return null;
+    try{
+      const body = new URLSearchParams({
+        client_id: cid,
+        grant_type: 'refresh_token',
+        refresh_token: refresh
+      });
+      const resp = await fetch(GOOGLE_TOKEN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      });
+      const data = await resp.json();
+      if(!resp.ok || !data.access_token) return null;
+      state.googleAccessToken = data.access_token;
+      state.googleTokenExpiry = Date.now() + ((data.expires_in || 3600) * 1000);
+      sessionStorage.setItem('lenslab_google_access_token', data.access_token);
+      sessionStorage.setItem('lenslab_google_token_expiry', String(state.googleTokenExpiry));
+      if(data.refresh_token){ localStorage.setItem('lenslab_google_refresh_token', data.refresh_token); }
+      updateGoogleStatus('ok');
+      return data.access_token;
+    }catch(e){ return null; }
   }
 
   function applyAuthSession(auth){
@@ -1890,6 +1974,7 @@
     state.googleTokenExpiry = 0;
     stopCamera();
     localStorage.removeItem('lenslab_auth');
+    localStorage.removeItem('lenslab_google_refresh_token');
     sessionStorage.removeItem('lenslab_google_access_token');
     sessionStorage.removeItem('lenslab_google_token_expiry');
     showScreen('auth');
@@ -1991,13 +2076,16 @@
   $('btnCulling').addEventListener('click', runSmartCulling);
   $('btnWorkspaceSettings').addEventListener('click', ()=> showScreen('settings'));
 
-  if(state.auth && state.auth.provider){
-    applyAuthSession(state.auth);
-  } else {
-    state.auth = null;
-    localStorage.removeItem('lenslab_auth');
-    document.body.classList.add('auth-mode');
-  }
+  handleAuthRedirect().then(handled=>{
+    if(handled) return; // OAuth redirect was processed; screen already switched
+    if(state.auth && state.auth.provider){
+      applyAuthSession(state.auth);
+    } else {
+      state.auth = null;
+      localStorage.removeItem('lenslab_auth');
+      document.body.classList.add('auth-mode');
+    }
+  });
 
   function toast(msg){
     $('toastMsg').textContent = msg;
@@ -5334,15 +5422,20 @@
     });
   }
 
-  function getAccessToken(force){
+  async function getAccessToken(force){
     const cid = state.settings.driveClientId;
-    if(!cid) return Promise.reject(new Error('Chưa cài Google Client ID (vào ⚙ Cài đặt)'));
+    if(!cid) throw new Error('Chưa cài Google Client ID (vào ⚙ Cài đặt)');
     if(!force && state.googleAccessToken){
       const exp = state.googleTokenExpiry || 0;
       // auto-renew only if already expired; otherwise reuse
-      if(!exp || Date.now() < exp){ return Promise.resolve(state.googleAccessToken); }
+      if(!exp || Date.now() < exp){ return state.googleAccessToken; }
     }
-    return loadGsi().then(()=> new Promise((resolve, reject)=>{
+    // 1) try offline renewal with the stored refresh token (no re-login needed)
+    const refreshed = await refreshAccessToken();
+    if(refreshed) return refreshed;
+    // 2) fallback: interactive popup flow (requires a user gesture)
+    await loadGsi();
+    return new Promise((resolve, reject)=>{
       const client = google.accounts.oauth2.initTokenClient({
         client_id: cid,
         scope: 'openid profile email ' + DRIVE_SCOPE,
@@ -5361,7 +5454,7 @@
         }
       });
       client.requestAccessToken();
-    }));
+    });
   }
 
   function updateGoogleStatus(status){
