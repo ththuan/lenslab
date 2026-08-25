@@ -1755,6 +1755,48 @@
     updateBatchShutter();
     showScreen('welcome');
     connectCamera(state.activeDeviceId);
+    loadProjectShots(project);
+  }
+
+  // Restore previously-captured shots of this project into the filmstrip
+  async function loadProjectShots(project){
+    if(!project || !project.name) return;
+    try{
+      const rows = await dbAllShots();
+      const mine = rows
+        .filter(r => (r.project || '') === project.name)
+        .sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+      const restored = mine.map(r => ({
+        id: r.id,
+        canvas: null,            // lazy: reconstructed from blob when opened
+        blob: r.blob || null,
+        thumb: r.thumb || '',
+        edits: r.edits || defaultEdits(),
+        faceMasks: null,
+        faceLandmarks: null,
+        hasFace: !!r.hasFace,
+        aiRetouchedCanvas: null,
+        aiRetouchMeta: r.aiRetouchMeta || null,
+        aiEngine: r.aiEngine || '',
+        autoDone: true,
+        createdAt: r.createdAt || Date.now(),
+        history: [],
+        canvasBlob: null,
+        rating: r.rating || 0,
+        label: r.label || '',
+        flag: !!r.flag,
+        project: r.project || project.name,
+        keepOriginal: false,
+        originalFile: null
+      }));
+      // keep any shots captured during the async load (rare) at the end
+      const during = state.shots.filter(s => s && s.canvas);
+      state.shots = restored.concat(during);
+      renderFilmstrip();
+      if($('livePhotoCount')) $('livePhotoCount').textContent = state.shots.length;
+    }catch(e){
+      console.warn('loadProjectShots failed:', e);
+    }
   }
 
   async function loginWithGoogle(){
@@ -3194,13 +3236,29 @@
   let cropDragging = null;
   let faceRefreshTimer = null;
 
-  function openEditor(index, opts){
+  async function openEditor(index, opts){
     opts = opts || {};
     cropMode = false;
     lastSliderEdit = 0;
     $('cropOverlay').classList.remove('show');
     state.activeShotIndex = index;
     const shot = state.shots[index];
+    if(!shot){ return; }
+    // Lazy-load full canvas for shots restored from the library
+    if(!shot.canvas && shot.blob){
+      try{
+        const img = await loadImageFromBlob(shot.blob);
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth || img.width;
+        c.height = img.naturalHeight || img.height;
+        c.getContext('2d').drawImage(img, 0, 0);
+        shot.canvas = c;
+      }catch(e){
+        toast('Không mở được ảnh (mất dữ liệu gốc)');
+        return;
+      }
+    }
+    if(!shot.canvas){ toast('Không mở được ảnh (mất dữ liệu gốc)'); return; }
     state.edits = shot.edits;
     const engineBadge = $('aiEngineBadge');
     if(engineBadge){
